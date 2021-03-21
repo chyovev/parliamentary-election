@@ -1,0 +1,59 @@
+@blue:     #18457B;
+@darkblue: #000A28;
+@grey:     #F2F3F4;
+
+/* --------------- */
+@import "../../js/lou-multi-select/multi-select.less";
+/* --------------- */
+
+* { box-sizing: border-box; }
+html, body {
+    margin: 0px;
+    min-height: 100vh;
+}
+body {
+    background-color: @darkblue;
+    font-family: sans-serif;
+}
+.body-wrapper {
+    max-width: 1280px;
+    margin: 0px auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+header {
+    background: url(../img/parliament.jpg) no-repeat 50% 40%;
+    background-size: cover;
+    padding: 2em;
+    display: flex;
+    align-items: center;
+    .coat {
+        flex: 1;
+        text-align: center;
+        img {
+            width: 100%;
+            max-width: 150px;
+        }
+    }
+    .title {
+        flex: 3;
+        color: white;
+        padding-left: 2em;
+        text-shadow: 2px 2px black;
+        text-transform: uppercase;
+        font-size: 2em;
+        font-weight: bold;
+    }
+}
+main {
+    background-color: @grey;
+    padding: 50px;
+    flex-grow: 1;
+}
+footer {
+    background-color: @blue;
+    color: white;
+    text-align: center;
+    padding: 10px;
+}
