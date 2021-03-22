@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<database name="default" defaultIdMethod="native" defaultPhpNamingMethod="underscore">
+
+    <table name="assembly_types">
+        <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
+        <column name="title" type="varchar" size="50" required="true" />
+        <column name="minimum_constituency_mandates" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="total_mandates" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="threshold_percentage" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+    </table>
+
+    <table name="constituencies">
+        <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
+        <column name="title" type="varchar" size="191" />
+        <column name="coordinates" type="longvarchar" />
+        <unique name="title">
+            <unique-column name="title" />
+        </unique>
+    </table>
+
+    <table name="constituencies_censuses">
+        <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
+        <column name="constituency_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="population_census_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="population" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <foreign-key foreignTable="constituencies" name="FK_constituencies_censuses_constituencies" onUpdate="cascade">
+            <reference local="constituency_id" foreign="id" />
+        </foreign-key>
+        <foreign-key foreignTable="population_censuses" name="FK_constituencies_censuses_population_censuses" onUpdate="cascade">
+            <reference local="population_census_id" foreign="id" />
+        </foreign-key>
+        <index name="FK_constituencies_censuses_constituencies">
+            <index-column name="constituency_id" />
+        </index>
+        <index name="FK_constituencies_censuses_population_censuses">
+            <index-column name="population_census_id" />
+        </index>
+    </table>
+
+    <table name="elections">
+        <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
+        <column name="slug" type="varchar" required="true" />
+        <column name="assembly_type_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="population_census_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="active_suffrage" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="official" type="BOOLEAN" sqlType="tinyint(3) unsigned" required="true" defaultValue="0" />
+        <foreign-key foreignTable="assembly_types" name="FK_elections_assembly_types" onUpdate="cascade">
+            <reference local="assembly_type_id" foreign="id" />
+        </foreign-key>
+        <foreign-key foreignTable="population_censuses" name="FK_elections_population_censuses" onUpdate="cascade">
+            <reference local="population_census_id" foreign="id" />
+        </foreign-key>
+        <index name="FK_elections_assembly_types">
+            <index-column name="assembly_type_id" />
+        </index>
+        <index name="FK_elections_population_censuses">
+            <index-column name="population_census_id" />
+        </index>
+        <unique name="slug">
+            <unique-column name="slug" />
+        </unique>
+    </table>
+
+    <table name="elections_independent_candidates">
+        <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
+        <column name="election_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="constituency_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="name" type="varchar" required="true" />
+        <column name="votes" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <foreign-key foreignTable="constituencies" name="FK_elections_independent_candidates_constituencies" onUpdate="cascade">
+            <reference local="constituency_id" foreign="id" />
+        </foreign-key>
+        <foreign-key foreignTable="elections" name="FK_elections_independent_candidates_elections" onDelete="cascade" onUpdate="cascade">
+            <reference local="election_id" foreign="id" />
+        </foreign-key>
+        <index name="constituency">
+            <index-column name="constituency_id" />
+        </index>
+        <index name="FK_elections_independent_candidates_elections">
+            <index-column name="election_id" />
+        </index>
+    </table>
+
+    <table name="elections_parties">
+        <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
+        <column name="election_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="list_number" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="party_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="party_color" type="CHAR" size="7" />
+        <column name="total_votes" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="ord" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <foreign-key foreignTable="elections" name="FK_elections_parties_elections" onDelete="cascade" onUpdate="cascade">
+            <reference local="election_id" foreign="id" />
+        </foreign-key>
+        <foreign-key foreignTable="parties" name="FK_elections_parties_parties" onUpdate="cascade">
+            <reference local="party_id" foreign="id" />
+        </foreign-key>
+        <index name="FK_elections_parties_elections">
+            <index-column name="election_id" />
+        </index>
+        <index name="FK_elections_parties_parties">
+            <index-column name="party_id" />
+        </index>
+    </table>
+
+    <table name="elections_parties_votes">
+        <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
+        <column name="election_party_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="constituency_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="votes" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <foreign-key foreignTable="constituencies" name="FK_elections_parties_votes_constituencies" onUpdate="cascade">
+            <reference local="constituency_id" foreign="id" />
+        </foreign-key>
+        <foreign-key foreignTable="elections_parties" name="FK_elections_parties_votes_elections_parties" onDelete="cascade" onUpdate="cascade">
+            <reference local="election_party_id" foreign="id" />
+        </foreign-key>
+        <index name="FK_elections_parties_votes_elections_parties">
+            <index-column name="election_party_id" />
+        </index>
+        <index name="FK_elections_parties_votes_constituencies">
+            <index-column name="constituency_id" />
+        </index>
+    </table>
+
+    <table name="parties">
+        <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
+        <column name="title" type="varchar" />
+        <column name="abbreviation" type="varchar" size="50" />
+        <column name="created_at" type="TIMESTAMP" />
+        <vendor type="mysql">
+            <parameter name="Engine" value="InnoDB" />
+        </vendor>
+    </table>
+
+    <table name="population_censuses">
+        <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
+        <column name="year" type="integer" size="4" required="true" />
+        <unique name="year">
+            <unique-column name="year" />
+        </unique>
+    </table>
+
+</database>

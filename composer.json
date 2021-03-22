@@ -1,0 +1,19 @@
+{
+    "name": "chyovev/parliamentary-election",
+    "description": "Distribution of mandates in parliamentary elections in the Republic of Bulgaria",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Christo Yovev",
+            "email": "yovev@xroads-bg.com"
+        }
+    ],
+    "require": {
+        "propel/propel": "~2.0@dev"
+    },
+    "autoload": {
+        "classmap": [
+            "src/models/propel/generated-classes/"
+        ]
+    }
+}
