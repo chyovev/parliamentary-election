@@ -99,16 +99,20 @@
       var that = this,
           ms = that.$element,
           attributes = "",
+          abbr = "",
           $option = $(option);
 
       for (var cpt = 0; cpt < option.attributes.length; cpt++){
         var attr = option.attributes[cpt];
 
-        if(attr.name !== 'value' && attr.name !== 'disabled'){
+        if(attr.name !== 'value' && attr.name !== 'disabled' && attr.name !== 'data-abbr'){
           attributes += attr.name+'="'+attr.value+'" ';
         }
+        else if (attr.name === 'data-abbr') {
+            abbr = '<span class="none">' + that.escapeHTML(attr.value) + '</span>';
+        }
       }
-      var selectableLi = $('<li '+attributes+'><span>'+that.escapeHTML($option.text())+'</span></li>'),
+      var selectableLi = $('<li '+attributes+'><span>'+that.escapeHTML($option.text())+'</span>' + abbr + '</li>'),
           selectedLi = selectableLi.clone(),
           value = $option.val(),
           elementId = that.sanitize(value);
