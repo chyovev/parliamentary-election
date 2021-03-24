@@ -15,7 +15,6 @@ CREATE TABLE `assembly_types`
     `title` VARCHAR(50) NOT NULL,
     `minimum_constituency_mandates` int(11) unsigned DEFAULT 0 NOT NULL,
     `total_mandates` int(11) unsigned DEFAULT 0 NOT NULL,
-    `threshold_percentage` int(11) unsigned DEFAULT 0 NOT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
 
@@ -72,7 +71,10 @@ CREATE TABLE `elections`
     `assembly_type_id` int(11) unsigned DEFAULT 0 NOT NULL,
     `population_census_id` int(11) unsigned DEFAULT 0 NOT NULL,
     `active_suffrage` int(11) unsigned DEFAULT 0 NOT NULL,
+    `threshold_percentage` int(11) unsigned DEFAULT 0 NOT NULL,
     `official` tinyint(3) unsigned DEFAULT 0 NOT NULL,
+    `created_at` DATETIME,
+    `updated_at` DATETIME,
     PRIMARY KEY (`id`),
     UNIQUE INDEX `slug` (`slug`),
     INDEX `FK_elections_assembly_types` (`assembly_type_id`),

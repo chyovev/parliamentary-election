@@ -12,6 +12,8 @@ abstract class Initializer {
                ->addPluginsDir(SMARTY_PATH  . '/plugins')
                ->setTemplateDir(TEMPLATES_PATH);
 
+        $smarty->assign('_root', WEBROOT);
+
        return $smarty;
     }
 

@@ -15,15 +15,16 @@ abstract class Router {
      * @param  array $params Parameters for the url (controller, action, etc.)
      * @return string route URL
      */
-    public static function url(array $params) {
+    public static function url(array $params, bool $includeHost = false) {
         // filter out empty paremeters
         $params = array_filter($params);
         $route  = self::findRouteMatchForParams($params);
         $url    = $route;
+        $prefix = $includeHost ? HOST_URL : '';
 
         // if there's no matching route specified, generate a default url
         if ( ! $route) {
-            return self::generateNoRouteMatchUrl($params);
+            return $prefix . self::generateNoRouteMatchUrl($params);
         }
 
         // which parameters does the root expect for a complete match
@@ -48,7 +49,7 @@ abstract class Router {
         // add any extra parameters as query params
         $url .= self::generateQueryParameters(array_intersect_key($params, array_flip($extraParams))); 
 
-        return $url;
+        return $prefix . $url;
     }
 
     ///////////////////////////////////////////////////////////////////////////////

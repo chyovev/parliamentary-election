@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <database name="default" defaultIdMethod="native" defaultPhpNamingMethod="underscore">
 
-    <table name="assembly_types">
+    <table name="assembly_types" phpName="AssemblyType">
         <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
         <column name="title" type="varchar" size="50" required="true" />
         <column name="minimum_constituency_mandates" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
         <column name="total_mandates" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
-        <column name="threshold_percentage" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
     </table>
 
-    <table name="constituencies">
+    <table name="constituencies" phpName="Constituency">
         <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
         <column name="title" type="varchar" size="191" />
         <column name="coordinates" type="longvarchar" />
@@ -18,7 +17,7 @@
         </unique>
     </table>
 
-    <table name="constituencies_censuses">
+    <table name="constituencies_censuses" phpName="ConstituencyCensus">
         <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
         <column name="constituency_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
         <column name="population_census_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
@@ -37,12 +36,13 @@
         </index>
     </table>
 
-    <table name="elections">
+    <table name="elections" phpName="Election">
         <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
         <column name="slug" type="varchar" required="true" />
         <column name="assembly_type_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
         <column name="population_census_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
         <column name="active_suffrage" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="threshold_percentage" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
         <column name="official" type="BOOLEAN" sqlType="tinyint(3) unsigned" required="true" defaultValue="0" />
         <foreign-key foreignTable="assembly_types" name="FK_elections_assembly_types" onUpdate="cascade">
             <reference local="assembly_type_id" foreign="id" />
@@ -59,9 +59,12 @@
         <unique name="slug">
             <unique-column name="slug" />
         </unique>
+
+        <!-- Auto-update created_at and updated_at fields -->
+        <behavior name="timestampable" />
     </table>
 
-    <table name="elections_independent_candidates">
+    <table name="elections_independent_candidates" phpName="IndependentCandidate">
         <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
         <column name="election_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
         <column name="constituency_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
@@ -81,7 +84,7 @@
         </index>
     </table>
 
-    <table name="elections_parties">
+    <table name="elections_parties" phpName="ElectionParty">
         <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
         <column name="election_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
         <column name="list_number" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
@@ -103,7 +106,7 @@
         </index>
     </table>
 
-    <table name="elections_parties_votes">
+    <table name="elections_parties_votes" phpName="ElectionPartyVote">
         <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
         <column name="election_party_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
         <column name="constituency_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
@@ -122,17 +125,18 @@
         </index>
     </table>
 
-    <table name="parties">
+    <table name="parties" phpName="Party">
         <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
         <column name="title" type="varchar" />
         <column name="abbreviation" type="varchar" size="50" />
-        <column name="created_at" type="TIMESTAMP" />
-        <vendor type="mysql">
-            <parameter name="Engine" value="InnoDB" />
-        </vendor>
+
+        <!-- Auto-generate created_at field -->
+        <behavior name="timestampable">
+            <parameter name="disable_updated_at" value="true" />
+        </behavior>
     </table>
 
-    <table name="population_censuses">
+    <table name="population_censuses" phpName="PopulationCensus">
         <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
         <column name="year" type="integer" size="4" required="true" />
         <unique name="year">

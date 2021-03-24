@@ -6,3 +6,4 @@ define('SMARTY_PATH',     realpath(dirname(__FILE__) . '/smarty'));
 define('TEMPLATES_PATH',  realpath(dirname(__FILE__) . '/../views'));
 define('ROOT',            dirname(dirname(dirname(__FILE__))));
 define('WEBROOT',         substr(ROOT, strlen($_SERVER['DOCUMENT_ROOT'])) . DS);
+define('HOST_URL',        $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST']);
