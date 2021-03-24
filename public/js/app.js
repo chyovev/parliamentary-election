@@ -13,7 +13,6 @@ var App = {
         }
         App.bind();
 
-        // App.initMultiSelect();
         App.initSortable();
         App.initSpectrumColorPicker();
         App.initQuickSearch();
@@ -21,16 +20,9 @@ var App = {
 
     ///////////////////////////////////////////////////////////////////////////
     bind: function() {
-        $('select[name="assembly_type"]').on('change', App.updateThresholdPercentage);
         $(document).on('click', '.ms-elem-selectable', App.addParty);
         $(document).on('click', '.edit-votes', App.editVotes);
         $(document).on('click', '.remove-party', App.removeParty);
-    },
-
-    ///////////////////////////////////////////////////////////////////////////
-    updateThresholdPercentage: function() {
-        var percentage = $(this).find(':selected').attr('data-percentage');
-        $('.threshold').html(percentage);
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -54,6 +46,7 @@ var App = {
         $('input[name$="[ord]"]:last').val(addedPartiesCount);
 
         App.updateQuickSearchCache();
+        App.updatePartiesCount();
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -83,6 +76,14 @@ var App = {
         $selected.removeClass('ms-selected');
 
         App.updateQuickSearchCache();
+        App.updatePartiesCount();
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    updatePartiesCount: function() {
+        var count = $('.ms-elem-selection').length;
+
+        $('#parties-count').html(count);
     },
 
     ///////////////////////////////////////////////////////////////////////////

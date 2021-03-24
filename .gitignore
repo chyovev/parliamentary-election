@@ -10,3 +10,5 @@ Thumbs.db
 *.sublime-workspace
 *.vscode
 vendor/
+src/core/smarty/cache/
+src/core/smarty/compile/
