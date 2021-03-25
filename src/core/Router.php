@@ -5,7 +5,8 @@ abstract class Router {
     private static $requestParams = [];
 
     private static $routes = [
-        '/' => ['controller' => 'home', 'action' => 'index'],
+        '/'        => ['controller' => 'home',    'action' => 'index'],
+        '/results' => ['controller' => 'results', 'action' => 'preliminary'],
     ];
 
     ///////////////////////////////////////////////////////////////////////////////

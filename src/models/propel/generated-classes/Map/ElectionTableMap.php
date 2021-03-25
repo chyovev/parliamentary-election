@@ -58,7 +58,7 @@ class ElectionTableMap extends TableMap
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 9;
+    const NUM_COLUMNS = 11;
 
     /**
      * The number of lazy-loaded columns
@@ -68,7 +68,7 @@ class ElectionTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 9;
+    const NUM_HYDRATE_COLUMNS = 11;
 
     /**
      * the column name for the id field
@@ -101,6 +101,16 @@ class ElectionTableMap extends TableMap
     const COL_THRESHOLD_PERCENTAGE = 'elections.threshold_percentage';
 
     /**
+     * the column name for the total_valid_votes field
+     */
+    const COL_TOTAL_VALID_VOTES = 'elections.total_valid_votes';
+
+    /**
+     * the column name for the total_invalid_votes field
+     */
+    const COL_TOTAL_INVALID_VOTES = 'elections.total_invalid_votes';
+
+    /**
      * the column name for the official field
      */
     const COL_OFFICIAL = 'elections.official';
@@ -127,11 +137,11 @@ class ElectionTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'Slug', 'AssemblyTypeId', 'PopulationCensusId', 'ActiveSuffrage', 'ThresholdPercentage', 'Official', 'CreatedAt', 'UpdatedAt', ),
-        self::TYPE_CAMELNAME     => array('id', 'slug', 'assemblyTypeId', 'populationCensusId', 'activeSuffrage', 'thresholdPercentage', 'official', 'createdAt', 'updatedAt', ),
-        self::TYPE_COLNAME       => array(ElectionTableMap::COL_ID, ElectionTableMap::COL_SLUG, ElectionTableMap::COL_ASSEMBLY_TYPE_ID, ElectionTableMap::COL_POPULATION_CENSUS_ID, ElectionTableMap::COL_ACTIVE_SUFFRAGE, ElectionTableMap::COL_THRESHOLD_PERCENTAGE, ElectionTableMap::COL_OFFICIAL, ElectionTableMap::COL_CREATED_AT, ElectionTableMap::COL_UPDATED_AT, ),
-        self::TYPE_FIELDNAME     => array('id', 'slug', 'assembly_type_id', 'population_census_id', 'active_suffrage', 'threshold_percentage', 'official', 'created_at', 'updated_at', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, )
+        self::TYPE_PHPNAME       => array('Id', 'Slug', 'AssemblyTypeId', 'PopulationCensusId', 'ActiveSuffrage', 'ThresholdPercentage', 'TotalValidVotes', 'TotalInvalidVotes', 'Official', 'CreatedAt', 'UpdatedAt', ),
+        self::TYPE_CAMELNAME     => array('id', 'slug', 'assemblyTypeId', 'populationCensusId', 'activeSuffrage', 'thresholdPercentage', 'totalValidVotes', 'totalInvalidVotes', 'official', 'createdAt', 'updatedAt', ),
+        self::TYPE_COLNAME       => array(ElectionTableMap::COL_ID, ElectionTableMap::COL_SLUG, ElectionTableMap::COL_ASSEMBLY_TYPE_ID, ElectionTableMap::COL_POPULATION_CENSUS_ID, ElectionTableMap::COL_ACTIVE_SUFFRAGE, ElectionTableMap::COL_THRESHOLD_PERCENTAGE, ElectionTableMap::COL_TOTAL_VALID_VOTES, ElectionTableMap::COL_TOTAL_INVALID_VOTES, ElectionTableMap::COL_OFFICIAL, ElectionTableMap::COL_CREATED_AT, ElectionTableMap::COL_UPDATED_AT, ),
+        self::TYPE_FIELDNAME     => array('id', 'slug', 'assembly_type_id', 'population_census_id', 'active_suffrage', 'threshold_percentage', 'total_valid_votes', 'total_invalid_votes', 'official', 'created_at', 'updated_at', ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, )
     );
 
     /**
@@ -141,11 +151,11 @@ class ElectionTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'Slug' => 1, 'AssemblyTypeId' => 2, 'PopulationCensusId' => 3, 'ActiveSuffrage' => 4, 'ThresholdPercentage' => 5, 'Official' => 6, 'CreatedAt' => 7, 'UpdatedAt' => 8, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'slug' => 1, 'assemblyTypeId' => 2, 'populationCensusId' => 3, 'activeSuffrage' => 4, 'thresholdPercentage' => 5, 'official' => 6, 'createdAt' => 7, 'updatedAt' => 8, ),
-        self::TYPE_COLNAME       => array(ElectionTableMap::COL_ID => 0, ElectionTableMap::COL_SLUG => 1, ElectionTableMap::COL_ASSEMBLY_TYPE_ID => 2, ElectionTableMap::COL_POPULATION_CENSUS_ID => 3, ElectionTableMap::COL_ACTIVE_SUFFRAGE => 4, ElectionTableMap::COL_THRESHOLD_PERCENTAGE => 5, ElectionTableMap::COL_OFFICIAL => 6, ElectionTableMap::COL_CREATED_AT => 7, ElectionTableMap::COL_UPDATED_AT => 8, ),
-        self::TYPE_FIELDNAME     => array('id' => 0, 'slug' => 1, 'assembly_type_id' => 2, 'population_census_id' => 3, 'active_suffrage' => 4, 'threshold_percentage' => 5, 'official' => 6, 'created_at' => 7, 'updated_at' => 8, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, )
+        self::TYPE_PHPNAME       => array('Id' => 0, 'Slug' => 1, 'AssemblyTypeId' => 2, 'PopulationCensusId' => 3, 'ActiveSuffrage' => 4, 'ThresholdPercentage' => 5, 'TotalValidVotes' => 6, 'TotalInvalidVotes' => 7, 'Official' => 8, 'CreatedAt' => 9, 'UpdatedAt' => 10, ),
+        self::TYPE_CAMELNAME     => array('id' => 0, 'slug' => 1, 'assemblyTypeId' => 2, 'populationCensusId' => 3, 'activeSuffrage' => 4, 'thresholdPercentage' => 5, 'totalValidVotes' => 6, 'totalInvalidVotes' => 7, 'official' => 8, 'createdAt' => 9, 'updatedAt' => 10, ),
+        self::TYPE_COLNAME       => array(ElectionTableMap::COL_ID => 0, ElectionTableMap::COL_SLUG => 1, ElectionTableMap::COL_ASSEMBLY_TYPE_ID => 2, ElectionTableMap::COL_POPULATION_CENSUS_ID => 3, ElectionTableMap::COL_ACTIVE_SUFFRAGE => 4, ElectionTableMap::COL_THRESHOLD_PERCENTAGE => 5, ElectionTableMap::COL_TOTAL_VALID_VOTES => 6, ElectionTableMap::COL_TOTAL_INVALID_VOTES => 7, ElectionTableMap::COL_OFFICIAL => 8, ElectionTableMap::COL_CREATED_AT => 9, ElectionTableMap::COL_UPDATED_AT => 10, ),
+        self::TYPE_FIELDNAME     => array('id' => 0, 'slug' => 1, 'assembly_type_id' => 2, 'population_census_id' => 3, 'active_suffrage' => 4, 'threshold_percentage' => 5, 'total_valid_votes' => 6, 'total_invalid_votes' => 7, 'official' => 8, 'created_at' => 9, 'updated_at' => 10, ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, )
     );
 
     /**
@@ -171,6 +181,8 @@ class ElectionTableMap extends TableMap
         $this->addForeignKey('population_census_id', 'PopulationCensusId', 'INTEGER', 'population_censuses', 'id', true, null, 0);
         $this->addColumn('active_suffrage', 'ActiveSuffrage', 'INTEGER', true, null, 0);
         $this->addColumn('threshold_percentage', 'ThresholdPercentage', 'INTEGER', true, null, 0);
+        $this->addColumn('total_valid_votes', 'TotalValidVotes', 'INTEGER', true, null, 0);
+        $this->addColumn('total_invalid_votes', 'TotalInvalidVotes', 'INTEGER', true, null, 0);
         $this->addColumn('official', 'Official', 'BOOLEAN', true, 1, false);
         $this->addColumn('created_at', 'CreatedAt', 'TIMESTAMP', false, null, null);
         $this->addColumn('updated_at', 'UpdatedAt', 'TIMESTAMP', false, null, null);
@@ -381,6 +393,8 @@ class ElectionTableMap extends TableMap
             $criteria->addSelectColumn(ElectionTableMap::COL_POPULATION_CENSUS_ID);
             $criteria->addSelectColumn(ElectionTableMap::COL_ACTIVE_SUFFRAGE);
             $criteria->addSelectColumn(ElectionTableMap::COL_THRESHOLD_PERCENTAGE);
+            $criteria->addSelectColumn(ElectionTableMap::COL_TOTAL_VALID_VOTES);
+            $criteria->addSelectColumn(ElectionTableMap::COL_TOTAL_INVALID_VOTES);
             $criteria->addSelectColumn(ElectionTableMap::COL_OFFICIAL);
             $criteria->addSelectColumn(ElectionTableMap::COL_CREATED_AT);
             $criteria->addSelectColumn(ElectionTableMap::COL_UPDATED_AT);
@@ -391,6 +405,8 @@ class ElectionTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.population_census_id');
             $criteria->addSelectColumn($alias . '.active_suffrage');
             $criteria->addSelectColumn($alias . '.threshold_percentage');
+            $criteria->addSelectColumn($alias . '.total_valid_votes');
+            $criteria->addSelectColumn($alias . '.total_invalid_votes');
             $criteria->addSelectColumn($alias . '.official');
             $criteria->addSelectColumn($alias . '.created_at');
             $criteria->addSelectColumn($alias . '.updated_at');

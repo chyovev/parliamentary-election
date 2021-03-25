@@ -14,7 +14,7 @@
             <span>Население на Република България по данни на НСИ от:</span>
             <select name="population_census">
             {foreach $censuses as $item}
-                <option value="{$item->getId()}">{$item->getYear()} г. ({$item->getPopulation()|number_format:0:',':' '} души)</option>
+                <option value="{$item->getId()}">{$item->getYear()} г. ({$item->getPopulation()|number} души)</option>
             {/foreach}
             </select>
         </div>
@@ -30,10 +30,13 @@
         </div>
 
         <div class="row">
+            <span>Брой <em>недействителни</em> гласове в страната и чужбина:</span>
+            <input type="number" size="5" name="total_invalid_votes" min="0" value="0" placeholder="0" required="true" />
+        </div>
+
+        <div class="row">
             <span>Долна граница за представителство:</span>
-            <select name="threshold_percentage">
-                <option value="4">4%</option>
-            </select>
+            <input type="number" size="5" name="threshold_percentage" min="1" max="100" value="4" placeholder="1" required="true" />
         </div>
     </section>
 

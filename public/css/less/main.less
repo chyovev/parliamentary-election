@@ -1,11 +1,13 @@
 @blue:     #18457B;
 @darkblue: #000A28;
+@lightblue: #CCCCE7;
 @grey:     #F2F3F4;
 
 /* --------------- */
 @import "../../js/lou-multi-select/multi-select.less";
 @import "../../js/jquery-ui/jquery-ui.less";
 @import "../../js/spectrum-color-picker/spectrum.less";
+@import "../../js/jqplot/jquery.jqplot.less";
 /* --------------- */
 
 * { box-sizing: border-box; }
@@ -86,6 +88,15 @@ abbr {
 .center {
     text-align: center;
 }
+.left {
+    text-align: left;
+}
+.bold {
+    font-weight: bold;
+}
+.red {
+    color: red;
+}
 section {
     .row {
         line-height: 1.7em;
@@ -112,4 +123,39 @@ button {
     &:hover, &:focus {
         border-color: @darkblue;
     }
+}
+table.results, table.results tr, table.results th, table.results td {
+    border: 1px solid #7892B0;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+table.results {
+    width: 100%;
+    margin: 20px 0px;
+    tr {
+        &:nth-of-type(even) {
+            background-color: #EEEFF0
+        }
+        &:nth-of-type(odd) {
+            background-color: #F9F9FA;
+        }
+        &:not(.heading):hover {
+            background-color: @lightblue;
+        }
+        th {
+            background-color: @blue;
+            color: white;
+            padding: 10px 5px;
+        }
+        td {
+            padding: 5px;
+        }
+    }
+}
+.chart-wrapper {
+    margin: 50px 0px;
+}
+#piechart {
+    width: 50%;
+    float: left;
 }

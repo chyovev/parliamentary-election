@@ -5,7 +5,7 @@
     </span>
     <span class="none">{$label|default:'%label%'}</span>
     <span class="votes">
-        (<em><span class="count">0</span> гласа</em>)
+        (<span class="count">0</span> гласа)
         <input type="hidden" value="0" name="parties[{$id|default:'%id%'}][total_votes]" />
     </span>
     <span class="edit-votes" title="Промени броя гласове"></span>

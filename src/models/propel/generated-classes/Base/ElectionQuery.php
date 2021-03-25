@@ -26,6 +26,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElectionQuery orderByPopulationCensusId($order = Criteria::ASC) Order by the population_census_id column
  * @method     ChildElectionQuery orderByActiveSuffrage($order = Criteria::ASC) Order by the active_suffrage column
  * @method     ChildElectionQuery orderByThresholdPercentage($order = Criteria::ASC) Order by the threshold_percentage column
+ * @method     ChildElectionQuery orderByTotalValidVotes($order = Criteria::ASC) Order by the total_valid_votes column
+ * @method     ChildElectionQuery orderByTotalInvalidVotes($order = Criteria::ASC) Order by the total_invalid_votes column
  * @method     ChildElectionQuery orderByOfficial($order = Criteria::ASC) Order by the official column
  * @method     ChildElectionQuery orderByCreatedAt($order = Criteria::ASC) Order by the created_at column
  * @method     ChildElectionQuery orderByUpdatedAt($order = Criteria::ASC) Order by the updated_at column
@@ -36,6 +38,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElectionQuery groupByPopulationCensusId() Group by the population_census_id column
  * @method     ChildElectionQuery groupByActiveSuffrage() Group by the active_suffrage column
  * @method     ChildElectionQuery groupByThresholdPercentage() Group by the threshold_percentage column
+ * @method     ChildElectionQuery groupByTotalValidVotes() Group by the total_valid_votes column
+ * @method     ChildElectionQuery groupByTotalInvalidVotes() Group by the total_invalid_votes column
  * @method     ChildElectionQuery groupByOfficial() Group by the official column
  * @method     ChildElectionQuery groupByCreatedAt() Group by the created_at column
  * @method     ChildElectionQuery groupByUpdatedAt() Group by the updated_at column
@@ -99,6 +103,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElection findOneByPopulationCensusId(int $population_census_id) Return the first ChildElection filtered by the population_census_id column
  * @method     ChildElection findOneByActiveSuffrage(int $active_suffrage) Return the first ChildElection filtered by the active_suffrage column
  * @method     ChildElection findOneByThresholdPercentage(int $threshold_percentage) Return the first ChildElection filtered by the threshold_percentage column
+ * @method     ChildElection findOneByTotalValidVotes(int $total_valid_votes) Return the first ChildElection filtered by the total_valid_votes column
+ * @method     ChildElection findOneByTotalInvalidVotes(int $total_invalid_votes) Return the first ChildElection filtered by the total_invalid_votes column
  * @method     ChildElection findOneByOfficial(boolean $official) Return the first ChildElection filtered by the official column
  * @method     ChildElection findOneByCreatedAt(string $created_at) Return the first ChildElection filtered by the created_at column
  * @method     ChildElection findOneByUpdatedAt(string $updated_at) Return the first ChildElection filtered by the updated_at column *
@@ -112,6 +118,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElection requireOneByPopulationCensusId(int $population_census_id) Return the first ChildElection filtered by the population_census_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElection requireOneByActiveSuffrage(int $active_suffrage) Return the first ChildElection filtered by the active_suffrage column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElection requireOneByThresholdPercentage(int $threshold_percentage) Return the first ChildElection filtered by the threshold_percentage column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildElection requireOneByTotalValidVotes(int $total_valid_votes) Return the first ChildElection filtered by the total_valid_votes column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildElection requireOneByTotalInvalidVotes(int $total_invalid_votes) Return the first ChildElection filtered by the total_invalid_votes column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElection requireOneByOfficial(boolean $official) Return the first ChildElection filtered by the official column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElection requireOneByCreatedAt(string $created_at) Return the first ChildElection filtered by the created_at column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElection requireOneByUpdatedAt(string $updated_at) Return the first ChildElection filtered by the updated_at column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -123,6 +131,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElection[]|ObjectCollection findByPopulationCensusId(int $population_census_id) Return ChildElection objects filtered by the population_census_id column
  * @method     ChildElection[]|ObjectCollection findByActiveSuffrage(int $active_suffrage) Return ChildElection objects filtered by the active_suffrage column
  * @method     ChildElection[]|ObjectCollection findByThresholdPercentage(int $threshold_percentage) Return ChildElection objects filtered by the threshold_percentage column
+ * @method     ChildElection[]|ObjectCollection findByTotalValidVotes(int $total_valid_votes) Return ChildElection objects filtered by the total_valid_votes column
+ * @method     ChildElection[]|ObjectCollection findByTotalInvalidVotes(int $total_invalid_votes) Return ChildElection objects filtered by the total_invalid_votes column
  * @method     ChildElection[]|ObjectCollection findByOfficial(boolean $official) Return ChildElection objects filtered by the official column
  * @method     ChildElection[]|ObjectCollection findByCreatedAt(string $created_at) Return ChildElection objects filtered by the created_at column
  * @method     ChildElection[]|ObjectCollection findByUpdatedAt(string $updated_at) Return ChildElection objects filtered by the updated_at column
@@ -224,7 +234,7 @@ abstract class ElectionQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, slug, assembly_type_id, population_census_id, active_suffrage, threshold_percentage, official, created_at, updated_at FROM elections WHERE id = :p0';
+        $sql = 'SELECT id, slug, assembly_type_id, population_census_id, active_suffrage, threshold_percentage, total_valid_votes, total_invalid_votes, official, created_at, updated_at FROM elections WHERE id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -546,6 +556,88 @@ abstract class ElectionQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(ElectionTableMap::COL_THRESHOLD_PERCENTAGE, $thresholdPercentage, $comparison);
+    }
+
+    /**
+     * Filter the query on the total_valid_votes column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByTotalValidVotes(1234); // WHERE total_valid_votes = 1234
+     * $query->filterByTotalValidVotes(array(12, 34)); // WHERE total_valid_votes IN (12, 34)
+     * $query->filterByTotalValidVotes(array('min' => 12)); // WHERE total_valid_votes > 12
+     * </code>
+     *
+     * @param     mixed $totalValidVotes The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildElectionQuery The current query, for fluid interface
+     */
+    public function filterByTotalValidVotes($totalValidVotes = null, $comparison = null)
+    {
+        if (is_array($totalValidVotes)) {
+            $useMinMax = false;
+            if (isset($totalValidVotes['min'])) {
+                $this->addUsingAlias(ElectionTableMap::COL_TOTAL_VALID_VOTES, $totalValidVotes['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($totalValidVotes['max'])) {
+                $this->addUsingAlias(ElectionTableMap::COL_TOTAL_VALID_VOTES, $totalValidVotes['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        return $this->addUsingAlias(ElectionTableMap::COL_TOTAL_VALID_VOTES, $totalValidVotes, $comparison);
+    }
+
+    /**
+     * Filter the query on the total_invalid_votes column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByTotalInvalidVotes(1234); // WHERE total_invalid_votes = 1234
+     * $query->filterByTotalInvalidVotes(array(12, 34)); // WHERE total_invalid_votes IN (12, 34)
+     * $query->filterByTotalInvalidVotes(array('min' => 12)); // WHERE total_invalid_votes > 12
+     * </code>
+     *
+     * @param     mixed $totalInvalidVotes The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildElectionQuery The current query, for fluid interface
+     */
+    public function filterByTotalInvalidVotes($totalInvalidVotes = null, $comparison = null)
+    {
+        if (is_array($totalInvalidVotes)) {
+            $useMinMax = false;
+            if (isset($totalInvalidVotes['min'])) {
+                $this->addUsingAlias(ElectionTableMap::COL_TOTAL_INVALID_VOTES, $totalInvalidVotes['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($totalInvalidVotes['max'])) {
+                $this->addUsingAlias(ElectionTableMap::COL_TOTAL_INVALID_VOTES, $totalInvalidVotes['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        return $this->addUsingAlias(ElectionTableMap::COL_TOTAL_INVALID_VOTES, $totalInvalidVotes, $comparison);
     }
 
     /**

@@ -43,6 +43,8 @@
         <column name="population_census_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
         <column name="active_suffrage" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
         <column name="threshold_percentage" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="total_valid_votes" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="total_invalid_votes" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
         <column name="official" type="BOOLEAN" sqlType="tinyint(3) unsigned" required="true" defaultValue="0" />
         <foreign-key foreignTable="assembly_types" name="FK_elections_assembly_types" onUpdate="cascade">
             <reference local="assembly_type_id" foreign="id" />

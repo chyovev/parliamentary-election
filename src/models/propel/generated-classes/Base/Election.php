@@ -120,6 +120,22 @@ abstract class Election implements ActiveRecordInterface
     protected $threshold_percentage;
 
     /**
+     * The value for the total_valid_votes field.
+     *
+     * Note: this column has a database default value of: 0
+     * @var        int
+     */
+    protected $total_valid_votes;
+
+    /**
+     * The value for the total_invalid_votes field.
+     *
+     * Note: this column has a database default value of: 0
+     * @var        int
+     */
+    protected $total_invalid_votes;
+
+    /**
      * The value for the official field.
      *
      * Note: this column has a database default value of: false
@@ -195,6 +211,8 @@ abstract class Election implements ActiveRecordInterface
         $this->population_census_id = 0;
         $this->active_suffrage = 0;
         $this->threshold_percentage = 0;
+        $this->total_valid_votes = 0;
+        $this->total_invalid_votes = 0;
         $this->official = false;
     }
 
@@ -486,6 +504,26 @@ abstract class Election implements ActiveRecordInterface
     }
 
     /**
+     * Get the [total_valid_votes] column value.
+     *
+     * @return int
+     */
+    public function getTotalValidVotes()
+    {
+        return $this->total_valid_votes;
+    }
+
+    /**
+     * Get the [total_invalid_votes] column value.
+     *
+     * @return int
+     */
+    public function getTotalInvalidVotes()
+    {
+        return $this->total_invalid_votes;
+    }
+
+    /**
      * Get the [official] column value.
      *
      * @return boolean
@@ -674,6 +712,46 @@ abstract class Election implements ActiveRecordInterface
     } // setThresholdPercentage()
 
     /**
+     * Set the value of [total_valid_votes] column.
+     *
+     * @param int $v new value
+     * @return $this|\Election The current object (for fluent API support)
+     */
+    public function setTotalValidVotes($v)
+    {
+        if ($v !== null) {
+            $v = (int) $v;
+        }
+
+        if ($this->total_valid_votes !== $v) {
+            $this->total_valid_votes = $v;
+            $this->modifiedColumns[ElectionTableMap::COL_TOTAL_VALID_VOTES] = true;
+        }
+
+        return $this;
+    } // setTotalValidVotes()
+
+    /**
+     * Set the value of [total_invalid_votes] column.
+     *
+     * @param int $v new value
+     * @return $this|\Election The current object (for fluent API support)
+     */
+    public function setTotalInvalidVotes($v)
+    {
+        if ($v !== null) {
+            $v = (int) $v;
+        }
+
+        if ($this->total_invalid_votes !== $v) {
+            $this->total_invalid_votes = $v;
+            $this->modifiedColumns[ElectionTableMap::COL_TOTAL_INVALID_VOTES] = true;
+        }
+
+        return $this;
+    } // setTotalInvalidVotes()
+
+    /**
      * Sets the value of the [official] column.
      * Non-boolean arguments are converted using the following rules:
      *   * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
@@ -767,6 +845,14 @@ abstract class Election implements ActiveRecordInterface
                 return false;
             }
 
+            if ($this->total_valid_votes !== 0) {
+                return false;
+            }
+
+            if ($this->total_invalid_votes !== 0) {
+                return false;
+            }
+
             if ($this->official !== false) {
                 return false;
             }
@@ -815,16 +901,22 @@ abstract class Election implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ElectionTableMap::translateFieldName('ThresholdPercentage', TableMap::TYPE_PHPNAME, $indexType)];
             $this->threshold_percentage = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : ElectionTableMap::translateFieldName('Official', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : ElectionTableMap::translateFieldName('TotalValidVotes', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->total_valid_votes = (null !== $col) ? (int) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : ElectionTableMap::translateFieldName('TotalInvalidVotes', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->total_invalid_votes = (null !== $col) ? (int) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : ElectionTableMap::translateFieldName('Official', TableMap::TYPE_PHPNAME, $indexType)];
             $this->official = (null !== $col) ? (boolean) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : ElectionTableMap::translateFieldName('CreatedAt', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : ElectionTableMap::translateFieldName('CreatedAt', TableMap::TYPE_PHPNAME, $indexType)];
             if ($col === '0000-00-00 00:00:00') {
                 $col = null;
             }
             $this->created_at = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : ElectionTableMap::translateFieldName('UpdatedAt', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : ElectionTableMap::translateFieldName('UpdatedAt', TableMap::TYPE_PHPNAME, $indexType)];
             if ($col === '0000-00-00 00:00:00') {
                 $col = null;
             }
@@ -837,7 +929,7 @@ abstract class Election implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 9; // 9 = ElectionTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 11; // 11 = ElectionTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Election'), 0, $e);
@@ -1134,6 +1226,12 @@ abstract class Election implements ActiveRecordInterface
         if ($this->isColumnModified(ElectionTableMap::COL_THRESHOLD_PERCENTAGE)) {
             $modifiedColumns[':p' . $index++]  = 'threshold_percentage';
         }
+        if ($this->isColumnModified(ElectionTableMap::COL_TOTAL_VALID_VOTES)) {
+            $modifiedColumns[':p' . $index++]  = 'total_valid_votes';
+        }
+        if ($this->isColumnModified(ElectionTableMap::COL_TOTAL_INVALID_VOTES)) {
+            $modifiedColumns[':p' . $index++]  = 'total_invalid_votes';
+        }
         if ($this->isColumnModified(ElectionTableMap::COL_OFFICIAL)) {
             $modifiedColumns[':p' . $index++]  = 'official';
         }
@@ -1171,6 +1269,12 @@ abstract class Election implements ActiveRecordInterface
                         break;
                     case 'threshold_percentage':
                         $stmt->bindValue($identifier, $this->threshold_percentage, PDO::PARAM_INT);
+                        break;
+                    case 'total_valid_votes':
+                        $stmt->bindValue($identifier, $this->total_valid_votes, PDO::PARAM_INT);
+                        break;
+                    case 'total_invalid_votes':
+                        $stmt->bindValue($identifier, $this->total_invalid_votes, PDO::PARAM_INT);
                         break;
                     case 'official':
                         $stmt->bindValue($identifier, (int) $this->official, PDO::PARAM_INT);
@@ -1262,12 +1366,18 @@ abstract class Election implements ActiveRecordInterface
                 return $this->getThresholdPercentage();
                 break;
             case 6:
-                return $this->getOfficial();
+                return $this->getTotalValidVotes();
                 break;
             case 7:
-                return $this->getCreatedAt();
+                return $this->getTotalInvalidVotes();
                 break;
             case 8:
+                return $this->getOfficial();
+                break;
+            case 9:
+                return $this->getCreatedAt();
+                break;
+            case 10:
                 return $this->getUpdatedAt();
                 break;
             default:
@@ -1306,16 +1416,18 @@ abstract class Election implements ActiveRecordInterface
             $keys[3] => $this->getPopulationCensusId(),
             $keys[4] => $this->getActiveSuffrage(),
             $keys[5] => $this->getThresholdPercentage(),
-            $keys[6] => $this->getOfficial(),
-            $keys[7] => $this->getCreatedAt(),
-            $keys[8] => $this->getUpdatedAt(),
+            $keys[6] => $this->getTotalValidVotes(),
+            $keys[7] => $this->getTotalInvalidVotes(),
+            $keys[8] => $this->getOfficial(),
+            $keys[9] => $this->getCreatedAt(),
+            $keys[10] => $this->getUpdatedAt(),
         );
-        if ($result[$keys[7]] instanceof \DateTimeInterface) {
-            $result[$keys[7]] = $result[$keys[7]]->format('c');
+        if ($result[$keys[9]] instanceof \DateTimeInterface) {
+            $result[$keys[9]] = $result[$keys[9]]->format('c');
         }
 
-        if ($result[$keys[8]] instanceof \DateTimeInterface) {
-            $result[$keys[8]] = $result[$keys[8]]->format('c');
+        if ($result[$keys[10]] instanceof \DateTimeInterface) {
+            $result[$keys[10]] = $result[$keys[10]]->format('c');
         }
 
         $virtualColumns = $this->virtualColumns;
@@ -1437,12 +1549,18 @@ abstract class Election implements ActiveRecordInterface
                 $this->setThresholdPercentage($value);
                 break;
             case 6:
-                $this->setOfficial($value);
+                $this->setTotalValidVotes($value);
                 break;
             case 7:
-                $this->setCreatedAt($value);
+                $this->setTotalInvalidVotes($value);
                 break;
             case 8:
+                $this->setOfficial($value);
+                break;
+            case 9:
+                $this->setCreatedAt($value);
+                break;
+            case 10:
                 $this->setUpdatedAt($value);
                 break;
         } // switch()
@@ -1490,13 +1608,19 @@ abstract class Election implements ActiveRecordInterface
             $this->setThresholdPercentage($arr[$keys[5]]);
         }
         if (array_key_exists($keys[6], $arr)) {
-            $this->setOfficial($arr[$keys[6]]);
+            $this->setTotalValidVotes($arr[$keys[6]]);
         }
         if (array_key_exists($keys[7], $arr)) {
-            $this->setCreatedAt($arr[$keys[7]]);
+            $this->setTotalInvalidVotes($arr[$keys[7]]);
         }
         if (array_key_exists($keys[8], $arr)) {
-            $this->setUpdatedAt($arr[$keys[8]]);
+            $this->setOfficial($arr[$keys[8]]);
+        }
+        if (array_key_exists($keys[9], $arr)) {
+            $this->setCreatedAt($arr[$keys[9]]);
+        }
+        if (array_key_exists($keys[10], $arr)) {
+            $this->setUpdatedAt($arr[$keys[10]]);
         }
     }
 
@@ -1556,6 +1680,12 @@ abstract class Election implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ElectionTableMap::COL_THRESHOLD_PERCENTAGE)) {
             $criteria->add(ElectionTableMap::COL_THRESHOLD_PERCENTAGE, $this->threshold_percentage);
+        }
+        if ($this->isColumnModified(ElectionTableMap::COL_TOTAL_VALID_VOTES)) {
+            $criteria->add(ElectionTableMap::COL_TOTAL_VALID_VOTES, $this->total_valid_votes);
+        }
+        if ($this->isColumnModified(ElectionTableMap::COL_TOTAL_INVALID_VOTES)) {
+            $criteria->add(ElectionTableMap::COL_TOTAL_INVALID_VOTES, $this->total_invalid_votes);
         }
         if ($this->isColumnModified(ElectionTableMap::COL_OFFICIAL)) {
             $criteria->add(ElectionTableMap::COL_OFFICIAL, $this->official);
@@ -1657,6 +1787,8 @@ abstract class Election implements ActiveRecordInterface
         $copyObj->setPopulationCensusId($this->getPopulationCensusId());
         $copyObj->setActiveSuffrage($this->getActiveSuffrage());
         $copyObj->setThresholdPercentage($this->getThresholdPercentage());
+        $copyObj->setTotalValidVotes($this->getTotalValidVotes());
+        $copyObj->setTotalInvalidVotes($this->getTotalInvalidVotes());
         $copyObj->setOfficial($this->getOfficial());
         $copyObj->setCreatedAt($this->getCreatedAt());
         $copyObj->setUpdatedAt($this->getUpdatedAt());
@@ -2350,6 +2482,8 @@ abstract class Election implements ActiveRecordInterface
         $this->population_census_id = null;
         $this->active_suffrage = null;
         $this->threshold_percentage = null;
+        $this->total_valid_votes = null;
+        $this->total_invalid_votes = null;
         $this->official = null;
         $this->created_at = null;
         $this->updated_at = null;

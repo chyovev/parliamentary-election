@@ -25,15 +25,4 @@ class PopulationCensusQuery extends BasePopulationCensusQuery
         return $types;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    public function getTypeWithPopulation(int $id = NULL) {
-        $types = $this
-                    ->useConstituencyCensusQuery()
-                        ->addAsColumn('population', 'SUM(population)')
-                    ->endUse()
-                    ->groupById()
-                    ->findPk($id);
-
-        return $types;
-    }
 }

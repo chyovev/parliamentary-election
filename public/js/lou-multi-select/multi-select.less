@@ -97,6 +97,11 @@
             background-color: @blue;
         }
     }
+    .ms-selection li {
+        &.ms-hover, &:hover {
+            background-color: @lightblue;
+        }
+    }
     .ms-elem-selection {
         background: #fff;
     }
@@ -113,7 +118,8 @@
     position: absolute;
 }
 .votes {
-    margin-left: 20px;
+    float: right;
+    margin-right: 60px;
 }
 .edit-votes {
     background-image: url(../img/edit.png);

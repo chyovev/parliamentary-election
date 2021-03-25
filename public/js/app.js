@@ -1,8 +1,6 @@
 var App = {
     hasInited: false,
-    colors: ['#e6194B', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#42d4f4',
-             '#f032e6', '#bfef45', '#fabed4', '#469990', '#dcbeff', '#9A6324', '#fffac8',
-             '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#a9a9a9'],
+    pieChart: false,
     qs1: false,
     qs2: false,
 
@@ -16,6 +14,7 @@ var App = {
         App.initSortable();
         App.initSpectrumColorPicker();
         App.initQuickSearch();
+        App.drawPieChart();
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -146,7 +145,14 @@ var App = {
                 ["#c00","#e69138","#f1c232","#6aa84f","#45818e","#3d85c6","#674ea7","#a64d79"],
                 ["#900","#b45f06","#bf9000","#38761d","#134f5c","#0b5394","#351c75","#741b47"],
                 ["#600","#783f04","#7f6000","#274e13","#0c343d","#073763","#20124d","#4c1130"]
-            ]
+            ],
+            change: function(color) {
+                // redraw the piechart with the new color
+                var index = $(this).attr('data-colors-index');
+                piechart_colors[index] = color.toHexString();
+                App.pieChart.destroy();
+                App.drawPieChart();
+            }
         });
     },
 
@@ -168,6 +174,50 @@ var App = {
     updateQuickSearchCache: function() {
         App.qs1.cache();
         App.qs2.cache();
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    drawPieChart: function() {
+        if (typeof piechart_data === 'undefined') {
+            return;
+        }
+
+        App.pieChart = $.jqplot('piechart', [piechart_data], {
+            title: '',
+            grid: {
+                shadow: false,
+                background: 'transparent',
+                borderWidth: 0,
+            },
+            seriesDefaults: {
+                renderer: $.jqplot.PieRenderer,
+                rendererOptions: {
+                    showDataLabels: true,
+                    padding: 10,
+                    sliceMargin: 0,
+                    shadow: false
+                }
+            },
+            series: [
+                {seriesColors: piechart_colors},
+            ],
+            legend: {
+                location: 'nw',
+                renderer: $.jqplot.EnhancedLegendRenderer,
+                rendererOptions: {
+                    numberColumns: 1
+                },
+                show: true
+            },
+            highlighter: {
+                show: true,
+                useAxesFormatters: false,
+                tooltipFormatString: '%s',
+                tooltipContentEditor: function(str, seriesIndex, pointIndex, jqPlot) {
+                    return str + '%';
+                }
+            }
+        });
     },
 
 }

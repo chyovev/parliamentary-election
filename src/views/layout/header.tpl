@@ -12,7 +12,7 @@
 <body>
     <div class="body-wrapper">
         <header>
-            <a href="#" class="coat"><img src="{$_root}img/coat.png" alt="Герб на Република България" title="Начало" /></a>
+            <a href="{url controller='home' action='index'}" class="coat"><img src="{$_root}img/coat.png" alt="Герб на Република България" title="Начало" /></a>
             <div class="title">Разпределяне на мандати<br /> при парламентарни избори<br /> в Република България</div>
         </header>
         <main>

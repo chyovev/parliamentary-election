@@ -27,6 +27,18 @@ abstract class AppController {
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    protected function setVar($var, $value): void {
+        $this->smarty->assign($var, $value);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function setVars(array $vars): void {
+        foreach ($vars as $key => $value) {
+            $this->setVar($key, $value);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     protected function renderJSONContent($array): void {
         if (!is_array($array)) {
             $array = [$array];
