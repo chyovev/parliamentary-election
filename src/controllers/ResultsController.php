@@ -15,6 +15,10 @@ class ResultsController extends AppController {
             $electionParties = $this->getPartiesFromRequest();
             $passedParties   = $this->getPassedPartiesAsArray($election, $electionParties);
 
+            if (count($passedParties)) {
+                $this->setMapConstituencies();
+            }
+
             $viewVars = [
                 'electionParties' => $electionParties,
                 'passedParties'   => $passedParties,
@@ -132,7 +136,8 @@ class ResultsController extends AppController {
         foreach ($passedParties as $item) {
             $party    = $item->getParty();
             $result[] = [
-                'party'            => $party->getTitle(),
+                'id'               => $item->getPartyId(),
+                'title'            => $party->getTitle(),
                 'abbreviation'     => $party->getAbbreviation(),
                 'votes'            => $item->getTotalVotes(),
                 'votes_percentage' => $item->getVotesPercentage(),
@@ -142,6 +147,20 @@ class ResultsController extends AppController {
         }
 
         return $result;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    private function setMapConstituencies(): void {
+        $constituencies  = ConstituencyQuery::create()->find();
+        $coordinates     = $constituencies->toKeyValue('PrimaryKey', 'Coordinates');
+
+        // sort by ID desc to avoid overlapping of Plovdiv and Plovdiv City
+        krsort($coordinates);
+
+        $this->setVars([
+            'constituencies' => $constituencies->toKeyIndex(),
+            'coordinates'    => $coordinates,
+        ]);
     }
 
     ///////////////////////////////////////////////////////////////////////////

@@ -22,6 +22,15 @@ var App = {
         $(document).on('click', '.ms-elem-selectable', App.addParty);
         $(document).on('click', '.edit-votes', App.editVotes);
         $(document).on('click', '.remove-party', App.removeParty);
+        $(document).on('mouseenter', 'a[data-constituency-id]', App.hoverConstituency);
+        $(document).on('mouseleave', 'a[data-constituency-id]', App.unhoverConstituency);
+        $(document).on('click', '[data-constituency-id]', App.mapConstituencyClick);
+        $(document).keyup(App.onKeyUp);
+        $(document).on('click', '.close-modal', App.dismissModal);
+        $(document).on('submit', '.modal-wrapper', App.saveConstituencyData);
+        $(document).on('click', '.add-independent', App.addIndependentCandidate);
+        $(document).on('click', '.remove-independent', App.removeIndependentCandidate);
+        $(document).on('click', 'a[href^="#"]', App.scrollToElement); // keep last in bind function
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -214,10 +223,168 @@ var App = {
                 useAxesFormatters: false,
                 tooltipFormatString: '%s',
                 tooltipContentEditor: function(str, seriesIndex, pointIndex, jqPlot) {
-                    return str + '%';
+                    var el       = jqPlot.data[seriesIndex][pointIndex],
+                        label    = el[0],
+                        mandates = el[2]
+                        suffix   = el[2] > 1 ? 'мандата' : 'мандат';
+
+                    return label + ': ' + mandates + ' ' + suffix;
                 }
             }
         });
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    hoverConstituency: function() {
+        var id = $(this).attr('data-constituency-id');
+        $('path[data-constituency-id="'+id+'"]').addClass('hover');
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    unhoverConstituency: function() {
+        var id = $(this).attr('data-constituency-id');
+        $('path[data-constituency-id="'+id+'"]').removeClass('hover');
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    mapConstituencyClick: function(e) {
+        e.preventDefault();
+
+        var $this            = $(this),
+            id               = $this.attr('data-constituency-id'),
+            title            = $this.attr('data-title'),
+            $fieldsRepo      = $('#constituency-' + id),
+            $modalForm       = $('.modal-wrapper'),
+            $modalFormTitle  = $modalForm.find('.mmc'),
+            $modalFormBody   = $modalForm.find('.parties'),
+            $target          = ($this.prop('getName') === 'path')
+                             ? $this
+                             : $('path[data-constituency-id="'+id+'"]');
+                    
+        $target.addClass('active');
+
+        if ($modalFormBody.html() === '') {
+            $modalFormTitle.html(title);
+            $modalFormBody.html($fieldsRepo.html());
+            $modalForm.attr('data-const-id', id);
+        }
+
+        // reset the form before showing it to get rid of potential
+        // previous red borders of required validation
+        $modalForm.trigger('reset').fadeIn();
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    saveConstituencyData: function(e) {
+        var $modalForm     = $(this),
+            constId        = $modalForm.attr('data-const-id'),
+            $modalFormBody = $modalForm.find('.parties'),
+            $fieldsRepo    = $('#constituency-' + constId),
+            $mapItem       = $('path[data-constituency-id="'+constId+'"]'),
+            $listItem      = $('a[data-constituency-id="'+constId+'"]'),
+            independent    = $modalForm.find('.independent-item').length;
+
+        // update input fields' values to DOM before using html() function
+        $modalFormBody.find('input').each(function() {
+            $(this).attr('value', $(this).val());
+        });
+
+        // take modal body and set it in the main form
+        $fieldsRepo.html($modalFormBody.html());
+
+        // mark the constituency as completed on the map
+        $mapItem.addClass('completed');
+
+        // mark the constituency as completed on the list, too
+        $listItem.addClass('completed');
+
+        // if there are any independent candidates,
+        // show an icon next to the list
+        independent
+            ? $listItem.addClass('independent')
+            : $listItem.removeClass('independent');
+
+        App.dismissModal();
+
+        App.toggleFormSubmitButton();
+
+        e.preventDefault();
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    dismissModal: function() {
+        var $modalForm     = $('.modal-wrapper'),
+            $modalFormBody = $modalForm.find('.parties');
+
+        $modalForm.fadeOut();
+        $modalFormBody.html('');
+        $('path').removeClass('active');
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    toggleFormSubmitButton: function() {
+        var $mainForm             = $('form:first'),
+            missingConstituencies = $('path:not([class$=border]):not(.completed)').length,
+            $submitButton         = $mainForm.find('button'),
+            tooltip               = $submitButton.attr('title') || $submitButton.attr('data-title');
+
+        if (missingConstituencies) {
+            $submitButton.attr('disabled', 'disabled').attr('title', tooltip);
+        }
+        else {
+            $submitButton.removeAttr('disabled').attr('data-title', tooltip).removeAttr('title');
+        }
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    onKeyUp: function(e) {
+        if (e.key === 'Escape') {
+            App.dismissModal();
+        }
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    addIndependentCandidate: function(e) {
+        e.preventDefault();
+
+        var iterator   = independent_counter;
+            $modalForm = $(this).closest('.modal-wrapper'),
+            constId    = $modalForm.attr('data-const-id'),
+            $counter   = $modalForm.find('.local-ind-counter'),
+            html       = App.getTemplate('#independent-template', {iterator: iterator, constituency_id: constId}),
+            $wrapper   = $modalForm.find('.independent-list');
+
+        $wrapper.append(html);
+
+        $counter.html(parseInt($counter.html()) + 1);
+
+        // increase global counter which makes sure there are no collisions
+        independent_counter++;
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    removeIndependentCandidate: function(e) {
+        e.preventDefault();
+
+        var $this      = $(this),
+            $row       = $this.closest('.row'),
+            $modalForm = $this.closest('.modal-wrapper'),
+            $counter   = $modalForm.find('.local-ind-counter');
+
+        $row.remove();
+
+        $counter.html(parseInt($counter.html()) - 1);
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    scrollToElement: function(e) {
+        var target = $(this).attr('href');
+
+        if (target !== '#' && $(target).length) {
+            e.stopImmediatePropagation();
+            $('body, html').animate({scrollTop: $(target).offset().top - 20 });
+            return false;
+        }
     },
 
 }

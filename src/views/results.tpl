@@ -1,4 +1,5 @@
 <form method="post" action="#">
+    <script type="text/javascript">var independent_counter = 0;</script>
     <section>
         <h2>Обща информация</h2>
 
@@ -48,71 +49,126 @@
     <section>
         <h2>Предварителни резултати</h2>
 
+        {if $passedParties|@count === 0}
+            <div class="row">Нито една партия не е преминала долната граница за представителство.</div>
+        {else}
+            <div class="row">
+                <span>Общ брой на партиите и коалициите (без независими кандидати): <strong>{$electionParties->count()}</strong></span>
+            </div>
 
-        <div class="row">
-            <span>Общ брой на партиите и коалициите (без независими кандидати): <strong>{$electionParties->count()}</strong></span>
-        </div>
+            <div class="row">
+                <span>Общ брой на партиите и коалициите, преминали долната граница: <strong>{$passedParties|@count}</strong></span>
+            </div>
 
-        <div class="row">
-            <span>Общ брой на партиите и коалициите, преминали долната граница: <strong>{$passedParties|@count}</strong></span>
-        </div>
-
-        <table class="results">
-            <tr class="heading">
-                <th>#</th>
-                <th>Цвят</th>
-                <th class="left">Партия/коалиция</th>
-                <th>Гласове</th>
-                <th>Процент</th>
-                <th>Мандати</th>
-            </tr>
-            
-            {assign var=votes value=0}
-            {assign var=mandates value=0}
-            {assign var=percentages value=0}
-
-            {foreach $passedParties as $item}
-                {$votes       = $votes + $item['votes']}
-                {$mandates    = $mandates + $item['mandates']}
-                {$percentages = $percentages + $item['votes_percentage']}
-                <tr>
-                    <td class="center">{$item@iteration}</td>
-                    <td class="center"><input type="hidden" class="color-picker" value="{$item['color']}" data-colors-index="{$item@index}" /></td>
-                    <td>{$item['party']|escape}</td>
-                    <td class="center">{$item['votes']|number}</td>
-                    <td class="center">{$item['votes_percentage']|percentage}%</td>
-                    <td class="center">{$item['mandates']}</td>
+            <table class="results">
+                <tr class="heading">
+                    <th>#</th>
+                    <th>Цвят</th>
+                    <th class="left">Партия/коалиция</th>
+                    <th>Гласове</th>
+                    <th>Процент</th>
+                    <th>Мандати</th>
                 </tr>
-            {/foreach}
-            <tr class="bold">
-                <td class="center">&mdash;</td>
-                <td class="center">&mdash;</td>
-                <td>Общо</td>
-                <td class="center">{$votes|number}</td>
-                <td class="center">{min($percentages, 100)|percentage}%</td>
-                {if $assembly->getTotalMandates() > $mandates}
-                <td class="center red"><em><abbr title="Възможен е жребий на ЦИК за преразпределяне на липсващите мандати">{$mandates}</abbr></em></td>
-                {else}
-                <td class="center">{$mandates}</td>
-                {/if}
-            </tr>
-        </table>
-
-        <div class="chart-wrapper">
-            <div id="piechart"></div>
-            <script type="text/javascript">
-            var piechart_data   = [],
-                piechart_colors = [];
                 
-            {foreach $passedParties as $item}
-                piechart_data.push(['{$item["party"]|escape}', {$item["votes_percentage"]|percentage}]);
-                piechart_colors.push('{$item['color']}');
-            {/foreach}
-            </script>
+                {assign var=votes value=0}
+                {assign var=mandates value=0}
+                {assign var=percentages value=0}
 
-            <p><strong title="Nota bene">NB!</strong>За крайните резултати трябва във всеки МИР да въведете получените гласове за всяка от партиите, преминали границата за представителство, и за независимите кандидати.</p>
-        </div>
+                {foreach $passedParties as $item}
+                    {$votes       = $votes + $item['votes']}
+                    {$mandates    = $mandates + $item['mandates']}
+                    {$percentages = $percentages + $item['votes_percentage']}
+                    <tr>
+                        <td class="center">{$item@iteration}</td>
+                        <td class="center"><input type="hidden" class="color-picker" value="{$item['color']}" data-colors-index="{$item@index}" /></td>
+                        <td>{$item['title']|escape}</td>
+                        <td class="center">{$item['votes']|number}</td>
+                        <td class="center">{$item['votes_percentage']|percentage}%</td>
+                        <td class="center">{$item['mandates']}</td>
+                    </tr>
+                {/foreach}
+                <tr class="bold">
+                    <td class="center">&mdash;</td>
+                    <td class="center">&mdash;</td>
+                    <td>Общо</td>
+                    <td class="center">{$votes|number}</td>
+                    <td class="center">{min($percentages, 100)|percentage}%</td>
+                    {if $assembly->getTotalMandates() > $mandates}
+                    <td class="center red"><em><abbr title="Възможен е жребий на ЦИК за преразпределяне на липсващите мандати">{$mandates}</abbr></em></td>
+                    {else}
+                    <td class="center">{$mandates}</td>
+                    {/if}
+                </tr>
+            </table>
+
+            <div class="chart-wrapper">
+                <div id="piechart"></div>
+                <script type="text/javascript">
+                var piechart_data   = [],
+                    piechart_colors = [];
+                    
+                {foreach $passedParties as $item}
+                    piechart_data.push(['{$item["title"]|escape}', {$item["votes_percentage"]|percentage}, {$item['mandates']}]);
+                    piechart_colors.push('{$item['color']}');
+                {/foreach}
+                </script>
+
+                <p><strong title="Nota bene">NB!</strong> За крайните резултати трябва във всеки МИР <a href="#map">да въведете</a> получените гласове за всяка от партиите, преминали границата за представителство, както и за независимите кандидати.</p>
+            </div>
+        {/if}
 
     </section>
+
+        {if $passedParties|@count > 1}
+        <hr />
+        <section>
+            <div class="center">
+                <h2 id="map">Въвеждане на гласове в МИР</h2>
+                <p>За да въведете гласовете в даден МИР, натиснете върху него.<br />Попълнените МИР-ове са оцветени в зелено на картата.</p>
+                {include file='elements/map-constituencies-bulgaria.tpl'}
+            </div>
+            <ol class="constituencies-list">
+                {foreach $constituencies as $item}
+                    <li><a href="#" data-constituency-id="{$item->getId()}" data-title="{$item->getTitle()|escape}">{$item->getTitle()|escape}</a></li>
+                {/foreach}
+            </ol>
+
+            <div class="none" id="constituencies-fields">
+            {foreach $constituencies as $const}
+                <div id="constituency-{$const->getId()}">
+                    <h3>Партии/коалиции</h3>
+                    {foreach $passedParties as $party}
+                        <div class="row">
+                            {$party['title']}: 
+                            <input type="number" min="0" size="5" name="parties_votes[{$party['id']}][{$const->getId()}]" placeholder="0" required="true" /> гласа
+                        </div>
+                    {/foreach}
+                    <br />
+                    <h3>Независими кандидати (<span class="local-ind-counter">0</span>)</h3>
+                    <a href="#" class="add-independent"><img src="{$_root}img/add.svg" title="Добави" />Добавяне на независим кандидат</a>
+                    <div class="independent-list"></div>
+                </div>
+            {/foreach}
+            </div>
+        </section>
+
+        <section class="center">
+            <button type="submit" disabled="disabled" title="За да видите окончателните резултати, трябва да попълните гласовете във всички райони.">Окончателни резултати</button>
+        </section>
+        {/if}
+
     {/if}
+</form>
+
+<script type="text/template" id="independent-template">
+    {include file='elements/independent-candidate-template.tpl'}
+</script>
+
+<form class="modal-wrapper" method="post">
+    <div id="modal">
+        <img src="{$_root}img/close.svg" title="Затвори" class="close-modal" />
+        <h2 class="center">Попълване на мандати за <span class="mmc"></span></h2>
+        <section class="parties"></section>
+        <button type="submit">Запази</button>
+    </div>
 </form>
