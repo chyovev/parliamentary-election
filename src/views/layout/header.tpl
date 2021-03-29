@@ -15,4 +15,5 @@
             <a href="{url controller='home' action='index'}" class="coat"><img src="{$_root}img/coat.png" alt="Герб на Република България" title="Начало" /></a>
             <div class="title">Разпределяне на мандати<br /> при парламентарни избори<br /> в Република България</div>
         </header>
+        <nav class="center">{$title|escape}</nav>
         <main>

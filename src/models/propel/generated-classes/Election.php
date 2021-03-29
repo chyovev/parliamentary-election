@@ -2,6 +2,8 @@
 
 use Base\Election as BaseElection;
 use \PopulationCensusQuery as ChildPopulationCensusQuery;
+use Propel\Runtime\Collection\ObjectCollection;
+use Propel\Runtime\Map\TableMap;
 
 /**
  * Skeleton subclass for representing a row from the 'elections' table.
@@ -16,6 +18,11 @@ class Election extends BaseElection
 {
 
     /**
+     * stores only those election parties which have surpassed the election threshold
+     * @var ObjectCollection */
+    private $passedParties;
+
+    /**
      * Calculates election activity in percentage using valid votes + invalid votes
      * and dividing by the active suffrage (the amount of people entitled to vote)
      *
@@ -26,7 +33,7 @@ class Election extends BaseElection
         $totalValidVotes   = $this->getTotalValidVotes();
         $totalInvalidVotes = $this->getTotalInvalidVotes();
         
-        if ($entitledToVote === 0) {
+        if ( ! $entitledToVote) {
             return 0;
         }
 
@@ -50,6 +57,41 @@ class Election extends BaseElection
         }
 
         return $this->aPopulationCensus;
+    }
+
+    /**
+     * Returns all parties which have surpassed the threshold percentage
+     *
+     * @return ObjectCollection $passedParties|NULL
+     */
+    public function getPassedParties(): ?ObjectCollection {
+        return $this->passedParties;
+    }
+
+    /**
+     * Returns all parties which have surpassed the threshold percentage
+     *
+     * @param ObjectCollection $passedParties
+     */
+    public function setPassedParties(ObjectCollection $passedParties): self {
+        $this->passedParties = $passedParties;
+
+        return $this;
+    }
+
+    /**
+     * Extending base toArray method to include also activity
+     *
+     * @return array
+     */
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = [], $includeForeignObjects = false) {
+        $array = parent::toArray($keyType, $includeLazyLoadColumns, $alreadyDumpedObjects, $includeForeignObjects);
+
+        if (is_array($array)) {
+            $array['activity'] = $this->getActivity();
+        }
+
+        return $array;
     }
 
 }

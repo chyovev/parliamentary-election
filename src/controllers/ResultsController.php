@@ -1,134 +1,64 @@
 <?php
 
 use Propel\Runtime\Collection\ObjectCollection;
+use Propel\Runtime\Map\TableMap;
+use FieldManager as FM;
 
 class ResultsController extends AppController {
 
     ///////////////////////////////////////////////////////////////////////////
     public function preliminary() {
-        if (strtolower($_SERVER['REQUEST_METHOD']) !== 'post') {
-            Router::redirect(['controller' => 'home', 'action' => 'index']);
+        $election = $this->populateElection('session');
+
+        // if no election could be loaded from the session,
+        // redirect to homepage
+        if ( ! $election) {
+            Router::redirect(['controller' => 'home', 'action' => 'index'], 302);
         }
 
-        try {
-            $election        = $this->generateNewElection();
-            $electionParties = $this->getPartiesFromRequest();
-            $passedParties   = $this->getPassedPartiesAsArray($election, $electionParties);
+        $assembly        = $election->getAssemblyType();
+        $census          = $election->getPopulationCensusWithPopulation();
+        $electionParties = $election->getElectionParties();
+        $passedParties   = $this->getPassedPartiesAsArray($election);
 
-            if (count($passedParties)) {
-                $this->setMapConstituencies();
-            }
+        // if there are any passed parties, set constituencies' data to draw a map
+        if ($passedParties) {
+            $this->setMapConstituencies();
+        }
 
-            $viewVars = [
-                'electionParties' => $electionParties,
-                'passedParties'   => $passedParties,
-            ];
-        }
-        catch (IncorrectInputDataException $e) {
-            // TODO: log exception
-            $viewVars = [
-                'error' => $e->getMessage(),
-            ];
-        }
+        $viewVars = [
+            'title'           => 'Стъпка 2: Предварителни резултати',
+            'election'        => $election->toArray(TableMap::TYPE_FIELDNAME),
+            'assembly'        => $assembly->toArray(TableMap::TYPE_FIELDNAME),
+            'census'          => $census->toArray(TableMap::TYPE_FIELDNAME),
+            'electionParties' => $electionParties,
+            'passedParties'   => $passedParties,
+            'candidates'      => $this->groupIndependentCandidatesByConstituencies($election),
+            'partiesVotes'    => $this->groupVotesByConstituencies($electionParties), 
+        ];
 
         $this->displayFullPage('results.tpl', $viewVars);
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    public function generateNewElection(): Election {
-        $assemblyTypeId      = (int) ($_POST['assembly_type']        ?? 0);
-        $populationCensusId  = (int) ($_POST['population_census']    ?? 0);
-        $activeSuffrage      = (int) ($_POST['active_suffrage']      ?? 0);
-        $thresholdPercentage = (int) ($_POST['threshold_percentage'] ?? 0);
-        $totalValidVotes     = (int) ($_POST['total_valid_votes']    ?? 0);
-        $totalInvalidVotes   = (int) ($_POST['total_invalid_votes']  ?? 0);
+    public function definitive() {
 
-        $election = new Election();
-
-        $election->setAssemblyTypeId($assemblyTypeId)
-                 ->setPopulationCensusId($populationCensusId)
-                 ->setActiveSuffrage($activeSuffrage)
-                 ->setThresholdPercentage($thresholdPercentage)
-                 ->setTotalValidVotes($totalValidVotes)
-                 ->setTotalInvalidVotes($totalInvalidVotes);
-
-        $this->validateElectionData($election);
-
-        return $election;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    private function validateElectionData(Election $election) {
-        $assembly          = $election->getAssemblyType();
-        $census            = $election->getPopulationCensusWithPopulation();
 
-        $totalValidVotes   = $election->getTotalValidVotes();
-        $totalInvalidVotes = $election->getTotalInvalidVotes();
-        $activeSuffrage    = $election->getActiveSuffrage();
 
-        if ( ! $assembly) {
-            $exception = 'No such assembly';
-        }
 
-        if ( ! $census) {
-            $exception = 'No such population census';
-        }
-
-        // if there are more votes than people entitled to vote, abort
-        if ($totalValidVotes + $totalInvalidVotes > $activeSuffrage) {
-            $exception = 'Dead souls trying to vote.';
-        }
-
-        if (isset($exception)) {
-            throw new IncorrectInputDataException($exception);
-        }
-
-        $this->setVars([
-            'election' => $election,
-            'assembly' => $assembly,
-            'census'   => $census,
-        ]);
-    }
 
     ///////////////////////////////////////////////////////////////////////////
-    private function getPartiesFromRequest(): ObjectCollection {
-        $parties = new ObjectCollection();
-
-        if (isset($_POST['parties'])) {
-            $i = 0;
-            foreach ($_POST['parties'] as $item) {
-                $party = new ElectionParty();
-
-                $party->setPartyId($item['party_id'])
-                      ->setTotalVotes($item['total_votes'])
-                      ->setOrd($item['ord'])
-                      ->setRandomColor($i);
-
-                $parties->append($party);
-                $i++;
-            }
-        }
-
-        return $parties;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    private function getPassedPartiesAsArray(Election $election, ObjectCollection $parties): array {
-        $totalValidVotes     = $election->getTotalValidVotes();
-        $thresholdPercentage = $election->getThresholdPercentage();
-        $totalMandates       = $election->getAssemblyType()->getTotalMandates();
-        
-        // filter parties based on their votes and the threshold
-        $passedParties       = $this->filterPassedParties($parties, $totalValidVotes, $thresholdPercentage);
+    private function getPassedPartiesAsArray(Election $election): array {
+        $passedParties = $election->getPassedParties();
+        $totalMandates = $election->getAssemblyType()->getTotalMandates();
 
         // roughly calculate how many mandates all passing parties would receive
         // if there are no independent candidates elected
-        try {
+        if ($passedParties->count()) {
             $hareNiemeyer = new HareNiemeyer();
             $hareNiemeyer->distributeMandates($passedParties, $totalMandates);
-        }
-        // if an airthmetic error occurs (too few parties), don't do anything
-        catch (ArithmeticError $e) {
         }
 
         $result = [];
@@ -136,13 +66,13 @@ class ResultsController extends AppController {
         foreach ($passedParties as $item) {
             $party    = $item->getParty();
             $result[] = [
-                'id'               => $item->getPartyId(),
+                FM::PARTY_ID       => $item->getPartyId(),
                 'title'            => $party->getTitle(),
                 'abbreviation'     => $party->getAbbreviation(),
                 'votes'            => $item->getTotalVotes(),
                 'votes_percentage' => $item->getVotesPercentage(),
                 'mandates'         => $item->getHareNiemeyerMandates(),
-                'color'            => $item->getPartyColor(),
+                FM::PARTY_COLOR    => $item->getPartyColor(),
             ];
         }
 
@@ -151,49 +81,51 @@ class ResultsController extends AppController {
 
     ///////////////////////////////////////////////////////////////////////////
     private function setMapConstituencies(): void {
-        $constituencies  = ConstituencyQuery::create()->find();
-        $coordinates     = $constituencies->toKeyValue('PrimaryKey', 'Coordinates');
+        $constituencies  = ConstituencyQuery::create()->find()->toArray(NULL, false, TableMap::TYPE_FIELDNAME);
+        $coordinates     = $constituencies;
 
-        // sort by ID desc to avoid overlapping of Plovdiv and Plovdiv City
+        // sort constituencies in reversed order when printing coordinates
+        // to avoid overlapping of Plovdiv and Plovdiv City
         krsort($coordinates);
 
         $this->setVars([
-            'constituencies' => $constituencies->toKeyIndex(),
+            'constituencies' => $constituencies,
             'coordinates'    => $coordinates,
         ]);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////
-    private function filterPassedParties(ObjectCollection $parties, int $totalVotes, int $thresholdPercentage): ObjectCollection {
-        $passed = new ObjectCollection();
+    private function groupIndependentCandidatesByConstituencies(Election $election): array {
+        $candidates = $election->getIndependentCandidates();
+        $result     = [];
 
-        foreach ($parties as $party) {
-            $partyVotes      = $party->getTotalVotes();
-            $partyPercentage = $this->calculatePartyPercentage($partyVotes, $totalVotes);
+        foreach ($candidates as $item) {
+            $constId            = $item->getConstituencyId();
+            $result[$constId][] = $item->toArray(TableMap::TYPE_FIELDNAME);
+        }
 
-            if ($partyPercentage >= $thresholdPercentage) {
-                $this->checkIfPartyExists($party);
-                $party->setVotesPercentage($partyPercentage);
-                $passed->append($party);
+        $this->setVar('independentCount', $candidates->count());
+
+        return $result;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    private function groupVotesByConstituencies(ObjectCollection $electionParties): array {
+        $result = [];
+
+        foreach ($electionParties as $party) {
+            $partyVotes = $party->getElectionPartyVotes();
+            $partyId    = $party->getPartyId();
+
+            foreach ($partyVotes as $item) {
+                $constituencyId = $item->getConstituencyId();
+
+                $result[$constituencyId][$partyId] = $item->getVotes();
             }
         }
 
-        return $passed;
+        return $result;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    private function calculatePartyPercentage(int $partyVotes, int $totalVotes): float {
-        if ($totalVotes === 0) {
-            return 0;
-        }
-
-        return $partyVotes / $totalVotes * 100;
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    private function checkIfPartyExists(ElectionParty $party): void {
-        if ( ! $party->getParty()) {
-            throw new IncorrectInputDataException('No such party: ' . $party->getPartyId());
-        }
-    }
 }

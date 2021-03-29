@@ -5,8 +5,12 @@ abstract class Router {
     private static $requestParams = [];
 
     private static $routes = [
-        '/'        => ['controller' => 'home',    'action' => 'index'],
-        '/results' => ['controller' => 'results', 'action' => 'preliminary'],
+        '/'                              => ['controller' => 'home',       'action' => 'index'],
+        '/results'                       => ['controller' => 'results',    'action' => 'preliminary'],
+        '/results/final'                 => ['controller' => 'results',    'action' => 'definitive'],
+        '/validation/election'           => ['controller' => 'validation', 'action' => 'election'],
+        '/validation/constituencies'     => ['controller' => 'validation', 'action' => 'constituencies'],
+        '/validation/constituencies/:id' => ['controller' => 'validation', 'action' => 'constituencies'],
     ];
 
     ///////////////////////////////////////////////////////////////////////////////

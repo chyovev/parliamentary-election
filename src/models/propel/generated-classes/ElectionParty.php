@@ -55,7 +55,7 @@ class ElectionParty extends BaseElectionParty implements HareNiemeyerInterface
      * when generating new parties, automatically assign a color to them
      * if it doesn't already have a color
      */
-    public function setRandomColor(int $iterator): self {
+    public function setPartyColorAutomatically(int $iterator): self {
         if ( ! $this->getPartyColor()) {
             // use the Nth predefined colors (N = $iterator),
             // on exhaustion generate a random color

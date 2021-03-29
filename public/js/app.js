@@ -15,6 +15,7 @@ var App = {
         App.initSpectrumColorPicker();
         App.initQuickSearch();
         App.drawPieChart();
+        App.drawBarChart();
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -26,8 +27,8 @@ var App = {
         $(document).on('mouseleave', 'a[data-constituency-id]', App.unhoverConstituency);
         $(document).on('click', '[data-constituency-id]', App.mapConstituencyClick);
         $(document).keyup(App.onKeyUp);
-        $(document).on('click', '.close-modal', App.dismissModal);
-        $(document).on('submit', '.modal-wrapper', App.saveConstituencyData);
+        $(document).on('click', '.close-popup', App.dismissModal);
+        $(document).on('submit', '.ajax-form', App.submitFormData);
         $(document).on('click', '.add-independent', App.addIndependentCandidate);
         $(document).on('click', '.remove-independent', App.removeIndependentCandidate);
         $(document).on('click', 'a[href^="#"]', App.scrollToElement); // keep last in bind function
@@ -101,12 +102,14 @@ var App = {
         var $this        = $(this),
             $wrapper     = $this.closest('.ms-elem-selection'),
             party        = $wrapper.find('.title').text().trim(),
-            votes        = prompt('Общ брой гласове в страната и чужбина за:\n' + party),
+            $counter     = $wrapper.find('.count'),
+            old_votes    = parseInt($counter.html())
+            votes        = prompt('Общ брой гласове в страната и чужбина за:\n' + party, old_votes),
             votes_number = isNaN(parseInt(votes)) ? 0 : parseInt(votes);
 
         // update the values only if the dialog window was *not* dismissed
         if (votes !== null) {
-            $wrapper.find('.count').html(votes_number);
+            $counter.html(votes_number);
             $wrapper.find('input[name$="[total_votes]"]').val(votes_number);
         }
     },
@@ -224,11 +227,42 @@ var App = {
                 tooltipFormatString: '%s',
                 tooltipContentEditor: function(str, seriesIndex, pointIndex, jqPlot) {
                     var el       = jqPlot.data[seriesIndex][pointIndex],
-                        label    = el[0],
-                        mandates = el[2]
-                        suffix   = el[2] > 1 ? 'мандата' : 'мандат';
+                        abbr     = el[2],
+                        mandates = el[3]
+                        suffix   = el[3] > 1 ? 'мандата' : 'мандат';
 
-                    return label + ': ' + mandates + ' ' + suffix;
+                    return abbr + ': ' + mandates + ' ' + suffix;
+                }
+            }
+        });
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    drawBarChart: function() {
+        $('#activity-chart').jqplot([barchart_data], {
+            title: 'Избирателна активност',
+            seriesColors: ['green', 'yellow'],
+            seriesDefaults: {
+                renderer: $.jqplot.BarRenderer,
+                rendererOptions: {
+                    varyBarColor: true
+                }
+            },
+            axes:{
+                xaxis:{
+                    renderer: $.jqplot.CategoryAxisRenderer
+                },
+                yaxis:{
+                    min: 0,
+                    max: 100
+                }
+            },
+            highlighter: {
+                show: true,
+                useAxesFormatters: false,
+                tooltipFormatString: '%s',
+                tooltipContentEditor: function(str, seriesIndex, pointIndex, jqPlot) {
+                    return jqPlot.data[seriesIndex][pointIndex][0] + ': ' + jqPlot.data[seriesIndex][pointIndex][1] + '%';
                 }
             }
         });
@@ -253,49 +287,105 @@ var App = {
         var $this            = $(this),
             id               = $this.attr('data-constituency-id'),
             title            = $this.attr('data-title'),
-            $fieldsRepo      = $('#constituency-' + id),
-            $modalForm       = $('.modal-wrapper'),
-            $modalFormTitle  = $modalForm.find('.mmc'),
-            $modalFormBody   = $modalForm.find('.parties'),
+            $fieldsRepo      = $('#constituency-' + id + '-data'),
+            $popupForm       = $('.popup-wrapper'),
+            $popupFormTitle  = $popupForm.find('.mmc'),
+            $popupFormBody   = $popupForm.find('.parties'),
             $target          = ($this.prop('getName') === 'path')
                              ? $this
                              : $('path[data-constituency-id="'+id+'"]');
                     
         $target.addClass('active');
 
-        if ($modalFormBody.html() === '') {
-            $modalFormTitle.html(title);
-            $modalFormBody.html($fieldsRepo.html());
-            $modalForm.attr('data-const-id', id);
+        if ($popupFormBody.html() === '') {
+            $popupFormTitle.html(title);
+            $popupFormBody.html($fieldsRepo.html());
+            $popupForm.attr('data-const-id', id);
         }
 
         // reset the form before showing it to get rid of potential
         // previous red borders of required validation
-        $modalForm.trigger('reset').fadeIn();
+        $popupForm.trigger('reset').fadeIn();
     },
 
     ///////////////////////////////////////////////////////////////////////////
-    saveConstituencyData: function(e) {
-        var $modalForm     = $(this),
-            constId        = $modalForm.attr('data-const-id'),
-            $modalFormBody = $modalForm.find('.parties'),
-            $fieldsRepo    = $('#constituency-' + constId),
-            $mapItem       = $('path[data-constituency-id="'+constId+'"]'),
-            $listItem      = $('a[data-constituency-id="'+constId+'"]'),
-            independent    = $modalForm.find('.independent-item').length;
+    submitFormData: function(e) {
+        e.preventDefault();
 
-        // update input fields' values to DOM before using html() function
-        $modalFormBody.find('input').each(function() {
-            $(this).attr('value', $(this).val());
+        var $form       = $(this),
+            type        = $form.attr('method'),
+            data        = $form.serialize(),
+            url         = $form.attr('action'),
+            successFunction = $form.attr('data-success-action');
+
+        $('.invalid-field').removeClass('invalid-field');
+
+        // when submitting constituency map, add its id at the end of the URL
+        if ($form.attr('data-const-id')) {
+            url += '/' + $form.attr('data-const-id');
+        }
+        
+        // wait for previous error messages to be hidden,
+        // and then proceed with the new AJAX request
+        $.when( $('.error-message').slideUp('fast') ).done(function() {
+            return $.ajax({
+                url:      url,
+                type:     type,
+                data:     data,
+                dataType: 'JSON',
+
+                success: function(response) {
+                    // if the status was true, redirect to next page
+                    if (response.status) {
+                        eval(successFunction);
+                    }
+
+                    // otherwise show errors
+                    else {
+                        $.each(response.errors, function(index, pair) {
+                            var field   = pair[0],
+                                message = pair[1];
+
+                            $('.' + field).addClass('invalid-field');
+                            $('.' + field + '_message').html(message).slideDown();
+                        });
+                    }
+                },
+
+                // if the request fails, notify the user
+                error: function () {
+                    alert('Възникна грешка. Моля, опитайте по-късно');
+                }
+            })
         });
 
-        // take modal body and set it in the main form
-        $fieldsRepo.html($modalFormBody.html());
+    },
 
-        // mark the constituency as completed on the map
+    ///////////////////////////////////////////////////////////////////////////
+    goToPage: function(url) {
+        window.location = url;
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    closePopupForm: function() {
+        var $popupForm     = $('.popup-wrapper'),
+            constId        = $popupForm.attr('data-const-id'),
+            $popupFormBody = $popupForm.find('.parties'),
+            $fieldsRepo    = $('#constituency-' + constId + '-data'),
+            $mapItem       = $('path[data-constituency-id="'+constId+'"]'),
+            $listItem      = $('a[data-constituency-id="'+constId+'"]'),
+            independent    = $popupForm.find('.independent-item').length;
+
+        // update input fields' values to DOM before using html() function
+        $popupFormBody.find('input').each(function() {
+            $(this).attr('value', ($(this).val() || '0'));
+        });
+
+        // take popup body and set it in the main form
+        $fieldsRepo.html($popupFormBody.html());
+
+        // mark the constituency as completed only if there are any votes
         $mapItem.addClass('completed');
-
-        // mark the constituency as completed on the list, too
         $listItem.addClass('completed');
 
         // if there are any independent candidates,
@@ -306,34 +396,17 @@ var App = {
 
         App.dismissModal();
 
-        App.toggleFormSubmitButton();
-
         e.preventDefault();
     },
 
     ///////////////////////////////////////////////////////////////////////////
     dismissModal: function() {
-        var $modalForm     = $('.modal-wrapper'),
-            $modalFormBody = $modalForm.find('.parties');
+        var $popupForm     = $('.popup-wrapper'),
+            $popupFormBody = $popupForm.find('.parties');
 
-        $modalForm.fadeOut();
-        $modalFormBody.html('');
+        $popupForm.fadeOut();
+        $popupFormBody.html('');
         $('path').removeClass('active');
-    },
-
-    ///////////////////////////////////////////////////////////////////////////
-    toggleFormSubmitButton: function() {
-        var $mainForm             = $('form:first'),
-            missingConstituencies = $('path:not([class$=border]):not(.completed)').length,
-            $submitButton         = $mainForm.find('button'),
-            tooltip               = $submitButton.attr('title') || $submitButton.attr('data-title');
-
-        if (missingConstituencies) {
-            $submitButton.attr('disabled', 'disabled').attr('title', tooltip);
-        }
-        else {
-            $submitButton.removeAttr('disabled').attr('data-title', tooltip).removeAttr('title');
-        }
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -348,13 +421,15 @@ var App = {
         e.preventDefault();
 
         var iterator   = independent_counter;
-            $modalForm = $(this).closest('.modal-wrapper'),
-            constId    = $modalForm.attr('data-const-id'),
-            $counter   = $modalForm.find('.local-ind-counter'),
+            $popupForm = $(this).closest('.popup-wrapper'),
+            constId    = $popupForm.attr('data-const-id'),
+            $counter   = $popupForm.find('.local-ind-counter'),
             html       = App.getTemplate('#independent-template', {iterator: iterator, constituency_id: constId}),
-            $wrapper   = $modalForm.find('.independent-list');
+            $wrapper   = $popupForm.find('.independent-list');
 
         $wrapper.append(html);
+
+        $wrapper.find('.row:hidden').slideDown('normal');
 
         $counter.html(parseInt($counter.html()) + 1);
 
@@ -368,10 +443,15 @@ var App = {
 
         var $this      = $(this),
             $row       = $this.closest('.row'),
-            $modalForm = $this.closest('.modal-wrapper'),
-            $counter   = $modalForm.find('.local-ind-counter');
+            $popupForm = $this.closest('.popup-wrapper'),
+            $counter   = $popupForm.find('.local-ind-counter');
 
-        $row.remove();
+        // reduce opacity, slide up and then remove from DOM
+        $row.animate({opacity: 0}, 300, function() {
+            $row.slideUp('normal', function() {
+                $row.remove();
+            });
+        });
 
         $counter.html(parseInt($counter.html()) - 1);
     },

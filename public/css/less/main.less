@@ -55,7 +55,7 @@ header {
 }
 main {
     background-color: @grey;
-    padding: 50px;
+    padding: 30px 50px 50px 50px;
     flex-grow: 1;
 }
 section {
@@ -84,6 +84,14 @@ input[type="text"], input[type="number"] {
         border-color: @blue;
         outline: none;
     }
+}
+.invalid-field {
+    border-color: red !important;
+}
+.error-message {
+    color: red;
+    font-size: 0.9em;
+    display: none;
 }
 .w-100 {
     width: 100%;
@@ -175,6 +183,10 @@ table.results {
         vertical-align: top;
     }
 }
+#activity-chart {
+    float: right;
+    width: 270px;
+}
 svg {
     .constituencies { fill: #cadddf; }
     .inner-border { fill: none; stroke: @darkblue; stroke-width:1; }
@@ -195,7 +207,7 @@ svg {
 .constituencies-list {
     columns: 4;
     max-width: 900px;
-    margin: 40px auto 20px auto;
+    margin: 40px auto 40px auto;
     a {
         &.completed {
             color: #26aa26;
@@ -213,9 +225,12 @@ svg {
                 position: absolute;
             }
         }
+        &.invalid-field {
+            color: red;
+        }
     }
 }
-.modal-wrapper {
+.popup-wrapper {
     position: fixed;
     top: 0px;
     left: 0px;
@@ -224,7 +239,7 @@ svg {
     height: 100%;
     background-color: fade(white, 85%);
     display: none;
-    #modal {
+    #popup {
         width: 60%;
         background-color: fade(@grey, 75%);
         border: 1px solid #CCC;
@@ -236,7 +251,7 @@ svg {
         left: 50%;
         transform: translate(-50%, -50%);
         padding: 30px 50px;
-        .close-modal {
+        .close-popup {
             position: absolute;
             top: 40px;
             right: 40px;
@@ -254,11 +269,15 @@ svg {
             overflow: auto;
             margin-top: 0px !important;
         }
-        button {
+        .bottom {
             position: absolute;
-            bottom: 40px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
+            width: 100%;
+            button {
+                margin-top: 20px;
+            }
         }
     }
 }
@@ -275,4 +294,18 @@ svg {
 }
 .independent-list {
     margin-top: 15px;
+    margin-bottom: 50px;
+}
+.mt-2 {
+    margin-top: 20px;
+}
+.mt-5 {
+    margin-top: 50px;
+}
+header + nav {
+    background-color: #FDFDFD;
+    color: @blue;
+    padding: 15px;
+    font-size: 21px;
+    font-weight: bold;
 }
