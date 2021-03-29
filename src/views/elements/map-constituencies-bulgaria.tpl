@@ -31,7 +31,7 @@
 
                 {foreach $passedParties as $party}
                     <div class="row">
-                        <strong>{$party['title']}:</strong>
+                        <strong>{$party['party_title']}:</strong>
                         <input type="text" size="5" name="{FieldManager::VOTES_FIELD}[{$party['party_id']}][{$const['id']}]" class="party-field-{$const['id']}-{$party['party_id']}" value="{$partiesVotes[$const['id']][$party['party_id']]|escape|default:0}" /> гласа
                     </div>
                 {/foreach}

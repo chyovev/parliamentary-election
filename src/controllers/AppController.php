@@ -97,10 +97,35 @@ abstract class AppController {
                  ->setTotalValidVotes($totalValidVotes)
                  ->setTotalInvalidVotes($totalInvalidVotes);
 
+        $election
+                 ->setVirtualColumn('activity', $this->calculateElectionActivity($totalValidVotes, $totalInvalidVotes, $activeSuffrage))
+                 ->setVirtualColumn('threshold_votes', $this->calculateThresholdVotes($thresholdPercentage, $totalValidVotes));
+
         $this->populateElectionPartiesFromData($election, $source);
         $this->populateIndependentCandidatesFromData($election, $source);
 
         return $election;
+    }
+
+    /**
+     * Calculate election activity percentage-wise
+     *
+     * @param  int $totalValidVotes
+     * @param  int $totalInvalidVotes
+     * @param  int $activeSuffrage
+     * @return float percent
+     */
+    private function calculateElectionActivity(int $totalValidVotes, int $totalInvalidVotes, int $activeSuffrage) {
+        return ($totalValidVotes + $totalInvalidVotes) / $activeSuffrage * 100;
+    }
+
+    /**
+     * Calculates what the threshold actually is number-wise
+     *
+     * @return int
+     */
+    public function calculateThresholdVotes(int $thresholdPercentage, int $totalValidVotes) {
+        return floor($thresholdPercentage * $totalValidVotes / 100);
     }
 
     /**
@@ -150,31 +175,37 @@ abstract class AppController {
             $partyVotes      = $item[FM::PARTY_TOTAL_VOTES];
             $partyPercentage = $this->calculatePartyPercentage($partyVotes, $totalVotes);
 
-            $party = new ElectionParty();
+            $electionParty = new ElectionParty();
 
-            $party->setPartyId($item[FM::PARTY_ID])
-                  ->setTotalVotes($partyVotes)
-                  ->setVotesPercentage($partyPercentage)
-                  ->setOrd($item[FM::PARTY_ORD]);
+            $electionParty->setPartyId($item[FM::PARTY_ID])
+                          ->setTotalVotes($partyVotes)
+                          ->setOrd($item[FM::PARTY_ORD]);
 
             if (isset($item[FM::PARTY_COLOR])) {
-                $party->setPartyColor($item[FM::PARTY_COLOR]);
+                $electionParty->setPartyColor($item[FM::PARTY_COLOR]);
             }
             else {
-                $party->setPartyColorAutomatically($i);
+                $electionParty->setPartyColorAutomatically($i);
                 $i++;
             }
 
             if ($partyPercentage >= $thresholdPercentage) {
-                $this->populateElectionPartyVotesFromData($party, $source);
-                $passedParties->append($party);
+                // load additional party information (title, abbreviation, percentage) for passed parties
+                $party = $electionParty->getParty();
+                $electionParty
+                              ->setVirtualColumn(FM::VOTES_PERCENTAGE, $partyPercentage)
+                              ->setVirtualColumn(FM::PARTY_TITLE, $party->getTitle())
+                              ->setVirtualColumn(FM::PARTY_ABBREVIATION, $party->getAbbreviation());
+
+                $this->populateElectionPartyVotesFromData($electionParty, $source);
+                $passedParties->append($electionParty);
             }
 
-            $electionParties->append($party);
+            $electionParties->append($electionParty);
         }
 
         $election->setElectionParties($electionParties);
-        $election->setPassedParties($passedParties);
+        $election->setVirtualColumn(FM::PASSED_PARTIES, $passedParties);
     }
 
     /**

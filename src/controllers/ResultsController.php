@@ -51,7 +51,7 @@ class ResultsController extends AppController {
 
     ///////////////////////////////////////////////////////////////////////////
     private function getPassedPartiesAsArray(Election $election): array {
-        $passedParties = $election->getPassedParties();
+        $passedParties = $election->getVirtualColumn(FM::PASSED_PARTIES);
         $totalMandates = $election->getAssemblyType()->getTotalMandates();
 
         // roughly calculate how many mandates all passing parties would receive
@@ -64,16 +64,7 @@ class ResultsController extends AppController {
         $result = [];
 
         foreach ($passedParties as $item) {
-            $party    = $item->getParty();
-            $result[] = [
-                FM::PARTY_ID       => $item->getPartyId(),
-                'title'            => $party->getTitle(),
-                'abbreviation'     => $party->getAbbreviation(),
-                'votes'            => $item->getTotalVotes(),
-                'votes_percentage' => $item->getVotesPercentage(),
-                'mandates'         => $item->getHareNiemeyerMandates(),
-                FM::PARTY_COLOR    => $item->getPartyColor(),
-            ];
+            $result[] = $item->toArray(TableMap::TYPE_FIELDNAME);
         }
 
         return $result;

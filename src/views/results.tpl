@@ -1,4 +1,4 @@
-<form class="ajax-form" method="post" action="{url controller='validation' action='constituencies'}" data-success-action="App.goToPage('{url controller='results' action='preliminary'}')">
+<form class="ajax-form" method="post" action="{url controller='validation' action='constituencies'}" data-success-action="App.goToPage('{url controller='results' action='definitive'}')">
     <script type="text/javascript">var independent_counter = {$independentCount|default:0};</script>
     
     <section>
@@ -33,7 +33,7 @@
         </div>
 
         <div class="row">
-            <span>Долна граница за представителство: <strong>{$election[FieldManager::THRESHOLD_FIELD]}%</strong></span>
+            <span>Долна граница за представителство: <strong>{$election[FieldManager::THRESHOLD_FIELD]}%</strong> (<em>{$election['threshold_votes']|number} гласа</em>)</span>
         </div>
 
     </section>
@@ -68,16 +68,16 @@
                 {assign var=percentages value=0}
 
                 {foreach $passedParties as $item}
-                    {$votes       = $votes + $item['votes']}
-                    {$mandates    = $mandates + $item['mandates']}
+                    {$votes       = $votes + $item['total_votes']}
+                    {$mandates    = $mandates + $item[HareNiemeyerInterface::MANDATES_COLUMN]}
                     {$percentages = $percentages + $item['votes_percentage']}
                     <tr>
                         <td class="center">{$item@iteration}</td>
                         <td class="center"><input type="hidden" class="color-picker" name="parties[{$item['party_id']}][{FieldManager::PARTY_COLOR}]" value="{$item[FieldManager::PARTY_COLOR]}" data-colors-index="{$item@index}" /></td>
-                        <td>{$item['title']|escape}</td>
-                        <td class="center">{$item['votes']|number}</td>
+                        <td>{$item[FieldManager::PARTY_TITLE]|escape}</td>
+                        <td class="center">{$item['total_votes']|number}</td>
                         <td class="center">{$item['votes_percentage']|percentage}%</td>
-                        <td class="center">{$item['mandates']}</td>
+                        <td class="center">{$item[HareNiemeyerInterface::MANDATES_COLUMN]}</td>
                     </tr>
                 {/foreach}
 
@@ -104,7 +104,7 @@
                     barchart_data   = [['Активност', {$election['activity']|percentage}], ['Преминали партии ({$passedParties|@count})', {($votes/$election[FieldManager::SUFFRAGE_FIELD]*100)|percentage}]];
                     
                 {foreach $passedParties as $item}
-                    piechart_data.push(['{$item["title"]|escape}', {$item["votes_percentage"]|percentage}, '{$item["abbreviation"]|escape}', {$item['mandates']}]);
+                    piechart_data.push(['{$item[FieldManager::PARTY_TITLE]|escape}', {$item["votes_percentage"]|percentage}, '{$item[FieldManager::PARTY_ABBREVIATION]|escape}', {$item[HareNiemeyerInterface::MANDATES_COLUMN]}]);
                     piechart_colors.push('{$item[FieldManager::PARTY_COLOR]}');
                 {/foreach}
                 </script>

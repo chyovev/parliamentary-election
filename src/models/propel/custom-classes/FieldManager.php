@@ -8,12 +8,16 @@ abstract class FieldManager {
           THRESHOLD_FIELD     = 'threshold_percentage',
           VALID_VOTES_FIELD   = 'total_valid_votes',
           INVALID_VOTES_FIELD = 'total_invalid_votes',
+          PASSED_PARTIES      = 'passed_parties',
 
           PARTIES_FIELD       = 'parties',
+          PARTY_TITLE         = 'party_title',
+          PARTY_ABBREVIATION  = 'party_abbreviation',
           PARTY_ID            = 'party_id',
           PARTY_TOTAL_VOTES   = 'total_votes',
           PARTY_ORD           = 'ord',
           PARTY_COLOR         = 'party_color',
+          VOTES_PERCENTAGE    = 'votes_percentage',
 
           CANDIDATES_FIELD    = 'independent_candidates',
           CAND_NAME_FIELD     = 'name',
@@ -25,5 +29,5 @@ abstract class FieldManager {
           VOTES_CONST_FIELD   = 'constituency_id',
           VOTES_VOTES_FIELD   = 'votes',
 
-          GLOBAL_CONSTITUENCY_MESSAGE           = 'constituencies_fields';
+          GLOBAL_CONSTITUENCY_MESSAGE = 'constituencies_fields';
 }
