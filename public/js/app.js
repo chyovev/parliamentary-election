@@ -239,6 +239,10 @@ var App = {
 
     ///////////////////////////////////////////////////////////////////////////
     drawBarChart: function() {
+        if (typeof barchart_data === 'undefined') {
+            return;
+        }
+        
         $('#activity-chart').jqplot([barchart_data], {
             title: 'Избирателна активност',
             seriesColors: ['green', 'yellow'],
