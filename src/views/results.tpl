@@ -1,42 +1,7 @@
 <form class="ajax-form" method="post" action="{url controller='validation' action='constituencies'}" data-success-action="App.goToPage('{url controller='results' action='definitive'}')">
-    <script type="text/javascript">var independent_counter = {$independentCount|default:0};</script>
+    <script type="text/javascript">var independent_counter = {$election[FieldManager::INDEPENDENT_COUNT]|default:0};</script>
     
-    <section>
-
-        {if isset($passedParties)}
-            <div id="activity-chart"></div>
-        {/if}
-
-        <h2>Обща информация</h2>
-        <div class="row">
-            <span>Парламентарни избори за: <strong>{$assembly['title']|escape} ({$assembly['total_mandates']} мандата)</strong></span>
-        </div>
-
-        <div class="row">
-            <span>Население на Република България по данни на НСИ от {$census['year']} г.: <strong>{$census['population']|number} души</strong></span>
-        </div>
-
-        <div class="row">
-            <span>Брой души, имащи право на глас: <strong>{$election[FieldManager::SUFFRAGE_FIELD]|number}</strong></span>
-        </div>
-
-        <div class="row">
-            <span>Брой действителни гласове в страната и чужбина: <strong>{$election[FieldManager::VALID_VOTES_FIELD]|number}</strong></span>
-        </div>
-
-        <div class="row">
-            <span>Брой <em>недействителни</em> гласове в страната и чужбина: <strong>{$election[FieldManager::INVALID_VOTES_FIELD]|number}</strong></span>
-        </div>
-
-        <div class="row">
-            <span>Избирателна активност: <strong>{$election['activity']|percentage}%</strong></span>
-        </div>
-
-        <div class="row">
-            <span>Долна граница за представителство: <strong>{$election[FieldManager::THRESHOLD_FIELD]}%</strong> (<em>{$election['threshold_votes']|number} гласа</em>)</span>
-        </div>
-
-    </section>
+    {include file='elements/election-summary.tpl'}
 
     {if isset($passedParties)}
     <section>
@@ -46,7 +11,7 @@
             <div class="row">Нито една партия не е преминала долната граница за представителство.</div>
         {else}
             <div class="row">
-                <span>Общ брой на партиите и коалициите (без независими кандидати): <strong>{$electionParties->count()}</strong></span>
+                <span>Общ брой на партиите и коалициите (без независими кандидати): <strong>{$election[FieldManager::TOTAL_PARTIES_COUNT]}</strong></span>
             </div>
 
             <div class="row">
@@ -55,7 +20,7 @@
 
             <table class="results">
                 <tr class="heading">
-                    <th>#</th>
+                    <th class="center">#</th>
                     <th>Цвят</th>
                     <th class="left">Партия/коалиция</th>
                     <th>Гласове</th>
@@ -63,14 +28,14 @@
                     <th>Мандати</th>
                 </tr>
                 
-                {assign var=votes value=0}
                 {assign var=mandates value=0}
                 {assign var=percentages value=0}
+                {assign var=votes value=0}
 
                 {foreach $passedParties as $item}
-                    {$votes       = $votes + $item['total_votes']}
                     {$mandates    = $mandates + $item[HareNiemeyerInterface::MANDATES_COLUMN]}
                     {$percentages = $percentages + $item['votes_percentage']}
+                    {$votes       = $votes + $item['total_votes']}
                     <tr>
                         <td class="center">{$item@iteration}</td>
                         <td class="center"><input type="hidden" class="color-picker" name="parties[{$item['party_id']}][{FieldManager::PARTY_COLOR}]" value="{$item[FieldManager::PARTY_COLOR]}" data-colors-index="{$item@index}" /></td>
@@ -100,11 +65,10 @@
 
                 <script type="text/javascript">
                 var piechart_data   = [],
-                    piechart_colors = [],
-                    barchart_data   = [['Активност', {$election['activity']|percentage}], ['Преминали партии ({$passedParties|@count})', {($votes/$election[FieldManager::SUFFRAGE_FIELD]*100)|percentage}]];
+                    piechart_colors = [];
                     
                 {foreach $passedParties as $item}
-                    piechart_data.push(['{$item[FieldManager::PARTY_TITLE]|escape}', {$item["votes_percentage"]|percentage}, '{$item[FieldManager::PARTY_ABBREVIATION]|escape}', {$item[HareNiemeyerInterface::MANDATES_COLUMN]}]);
+                    piechart_data.push(['{$item[FieldManager::PARTY_TITLE]|escape}', {$item["votes_percentage"]|percentage}, '{$item[FieldManager::PARTY_ABBREVIATION]|default:$item[FieldManager::PARTY_TITLE]|escape}', {$item[HareNiemeyerInterface::MANDATES_COLUMN]}]);
                     piechart_colors.push('{$item[FieldManager::PARTY_COLOR]}');
                 {/foreach}
                 </script>

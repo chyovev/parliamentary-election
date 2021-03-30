@@ -92,6 +92,32 @@ CREATE TABLE `elections`
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
+-- elections_constituencies_censuses
+-- ---------------------------------------------------------------------
+
+DROP TABLE IF EXISTS `elections_constituencies_censuses`;
+
+CREATE TABLE `elections_constituencies_censuses`
+(
+    `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+    `election_id` int(11) unsigned DEFAULT 0 NOT NULL,
+    `constituency_census_id` int(11) unsigned DEFAULT 0 NOT NULL,
+    `total_valid_votes` int(11) unsigned DEFAULT 0 NOT NULL,
+    PRIMARY KEY (`id`),
+    INDEX `FK_elections_constituency_censuses_elections` (`election_id`),
+    INDEX `FK_elections_constituency_censuses_constituencies_censuses` (`constituency_census_id`),
+    CONSTRAINT `FK_elections_constituency_censuses_elections`
+        FOREIGN KEY (`election_id`)
+        REFERENCES `elections` (`id`)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT `FK_elections_constituency_censuses_constituencies_censuses`
+        FOREIGN KEY (`constituency_census_id`)
+        REFERENCES `constituencies_censuses` (`id`)
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------
 -- elections_independent_candidates
 -- ---------------------------------------------------------------------
 

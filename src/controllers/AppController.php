@@ -101,6 +101,7 @@ abstract class AppController {
                  ->setVirtualColumn('activity', $this->calculateElectionActivity($totalValidVotes, $totalInvalidVotes, $activeSuffrage))
                  ->setVirtualColumn('threshold_votes', $this->calculateThresholdVotes($thresholdPercentage, $totalValidVotes));
 
+        $this->populateConstituencyValidVotes($election, $source);
         $this->populateElectionPartiesFromData($election, $source);
         $this->populateIndependentCandidatesFromData($election, $source);
 
@@ -116,6 +117,10 @@ abstract class AppController {
      * @return float percent
      */
     private function calculateElectionActivity(int $totalValidVotes, int $totalInvalidVotes, int $activeSuffrage) {
+        if ($activeSuffrage === 0) {
+            return 0;
+        }
+
         return ($totalValidVotes + $totalInvalidVotes) / $activeSuffrage * 100;
     }
 
@@ -147,6 +152,28 @@ abstract class AppController {
         }
 
         $election->setIndependentCandidates($candidates);
+        $election->setVirtualColumn(FM::INDEPENDENT_COUNT, $candidates->count());
+    }
+
+    /**
+     * Populates a collection of ElectionConstituency objects from $source
+     * @param  Election $eleciton – object which election constituencies should be assigned to
+     * @param  array    $source   – should be either $_POST or $_SESSION
+     */
+    private function populateConstituencyValidVotes(Election $election, array $source): void {
+        $data                   = $source[FM::CONSTITUENCY_VOTES] ?? [];
+        $electionConstituencies = new ObjectCollection();
+
+        foreach ($data as $item) {
+            $electionConstituency = new ElectionConstituency();
+
+            $electionConstituency->setTotalValidVotes($item[FM::VALID_VOTES_FIELD])
+                                 ->setVirtualColumn(FM::VOTES_CONST_FIELD, $item[FM::VOTES_CONST_FIELD]);
+
+            $electionConstituencies->append($electionConstituency);
+        }
+
+        $election->setElectionConstituencies($electionConstituencies);
     }
 
     /**
@@ -205,6 +232,7 @@ abstract class AppController {
         }
 
         $election->setElectionParties($electionParties);
+        $election->setVirtualColumn(FM::TOTAL_PARTIES_COUNT, $electionParties->count());
         $election->setVirtualColumn(FM::PASSED_PARTIES, $passedParties);
     }
 

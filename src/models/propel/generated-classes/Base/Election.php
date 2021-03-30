@@ -5,6 +5,8 @@ namespace Base;
 use \AssemblyType as ChildAssemblyType;
 use \AssemblyTypeQuery as ChildAssemblyTypeQuery;
 use \Election as ChildElection;
+use \ElectionConstituency as ChildElectionConstituency;
+use \ElectionConstituencyQuery as ChildElectionConstituencyQuery;
 use \ElectionParty as ChildElectionParty;
 use \ElectionPartyQuery as ChildElectionPartyQuery;
 use \ElectionQuery as ChildElectionQuery;
@@ -15,6 +17,7 @@ use \PopulationCensusQuery as ChildPopulationCensusQuery;
 use \DateTime;
 use \Exception;
 use \PDO;
+use Map\ElectionConstituencyTableMap;
 use Map\ElectionPartyTableMap;
 use Map\ElectionTableMap;
 use Map\IndependentCandidateTableMap;
@@ -168,6 +171,12 @@ abstract class Election implements ActiveRecordInterface
     protected $aPopulationCensus;
 
     /**
+     * @var        ObjectCollection|ChildElectionConstituency[] Collection to store aggregation of ChildElectionConstituency objects.
+     */
+    protected $collElectionConstituencies;
+    protected $collElectionConstituenciesPartial;
+
+    /**
      * @var        ObjectCollection|ChildIndependentCandidate[] Collection to store aggregation of ChildIndependentCandidate objects.
      */
     protected $collIndependentCandidates;
@@ -186,6 +195,12 @@ abstract class Election implements ActiveRecordInterface
      * @var boolean
      */
     protected $alreadyInSave = false;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildElectionConstituency[]
+     */
+    protected $electionConstituenciesScheduledForDeletion = null;
 
     /**
      * An array of objects scheduled for deletion.
@@ -998,6 +1013,8 @@ abstract class Election implements ActiveRecordInterface
 
             $this->aAssemblyType = null;
             $this->aPopulationCensus = null;
+            $this->collElectionConstituencies = null;
+
             $this->collIndependentCandidates = null;
 
             $this->collElectionParties = null;
@@ -1146,6 +1163,23 @@ abstract class Election implements ActiveRecordInterface
                     $affectedRows += $this->doUpdate($con);
                 }
                 $this->resetModified();
+            }
+
+            if ($this->electionConstituenciesScheduledForDeletion !== null) {
+                if (!$this->electionConstituenciesScheduledForDeletion->isEmpty()) {
+                    \ElectionConstituencyQuery::create()
+                        ->filterByPrimaryKeys($this->electionConstituenciesScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->electionConstituenciesScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collElectionConstituencies !== null) {
+                foreach ($this->collElectionConstituencies as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
             }
 
             if ($this->independentCandidatesScheduledForDeletion !== null) {
@@ -1465,6 +1499,21 @@ abstract class Election implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->aPopulationCensus->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->collElectionConstituencies) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'electionConstituencies';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'elections_constituencies_censusess';
+                        break;
+                    default:
+                        $key = 'ElectionConstituencies';
+                }
+
+                $result[$key] = $this->collElectionConstituencies->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
             if (null !== $this->collIndependentCandidates) {
 
@@ -1798,6 +1847,12 @@ abstract class Election implements ActiveRecordInterface
             // the getter/setter methods for fkey referrer objects.
             $copyObj->setNew(false);
 
+            foreach ($this->getElectionConstituencies() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addElectionConstituency($relObj->copy($deepCopy));
+                }
+            }
+
             foreach ($this->getIndependentCandidates() as $relObj) {
                 if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
                     $copyObj->addIndependentCandidate($relObj->copy($deepCopy));
@@ -1953,6 +2008,10 @@ abstract class Election implements ActiveRecordInterface
      */
     public function initRelation($relationName)
     {
+        if ('ElectionConstituency' == $relationName) {
+            $this->initElectionConstituencies();
+            return;
+        }
         if ('IndependentCandidate' == $relationName) {
             $this->initIndependentCandidates();
             return;
@@ -1961,6 +2020,256 @@ abstract class Election implements ActiveRecordInterface
             $this->initElectionParties();
             return;
         }
+    }
+
+    /**
+     * Clears out the collElectionConstituencies collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addElectionConstituencies()
+     */
+    public function clearElectionConstituencies()
+    {
+        $this->collElectionConstituencies = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collElectionConstituencies collection loaded partially.
+     */
+    public function resetPartialElectionConstituencies($v = true)
+    {
+        $this->collElectionConstituenciesPartial = $v;
+    }
+
+    /**
+     * Initializes the collElectionConstituencies collection.
+     *
+     * By default this just sets the collElectionConstituencies collection to an empty array (like clearcollElectionConstituencies());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initElectionConstituencies($overrideExisting = true)
+    {
+        if (null !== $this->collElectionConstituencies && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ElectionConstituencyTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collElectionConstituencies = new $collectionClassName;
+        $this->collElectionConstituencies->setModel('\ElectionConstituency');
+    }
+
+    /**
+     * Gets an array of ChildElectionConstituency objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildElection is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildElectionConstituency[] List of ChildElectionConstituency objects
+     * @throws PropelException
+     */
+    public function getElectionConstituencies(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collElectionConstituenciesPartial && !$this->isNew();
+        if (null === $this->collElectionConstituencies || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collElectionConstituencies) {
+                // return empty collection
+                $this->initElectionConstituencies();
+            } else {
+                $collElectionConstituencies = ChildElectionConstituencyQuery::create(null, $criteria)
+                    ->filterByElection($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collElectionConstituenciesPartial && count($collElectionConstituencies)) {
+                        $this->initElectionConstituencies(false);
+
+                        foreach ($collElectionConstituencies as $obj) {
+                            if (false == $this->collElectionConstituencies->contains($obj)) {
+                                $this->collElectionConstituencies->append($obj);
+                            }
+                        }
+
+                        $this->collElectionConstituenciesPartial = true;
+                    }
+
+                    return $collElectionConstituencies;
+                }
+
+                if ($partial && $this->collElectionConstituencies) {
+                    foreach ($this->collElectionConstituencies as $obj) {
+                        if ($obj->isNew()) {
+                            $collElectionConstituencies[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collElectionConstituencies = $collElectionConstituencies;
+                $this->collElectionConstituenciesPartial = false;
+            }
+        }
+
+        return $this->collElectionConstituencies;
+    }
+
+    /**
+     * Sets a collection of ChildElectionConstituency objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $electionConstituencies A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildElection The current object (for fluent API support)
+     */
+    public function setElectionConstituencies(Collection $electionConstituencies, ConnectionInterface $con = null)
+    {
+        /** @var ChildElectionConstituency[] $electionConstituenciesToDelete */
+        $electionConstituenciesToDelete = $this->getElectionConstituencies(new Criteria(), $con)->diff($electionConstituencies);
+
+
+        $this->electionConstituenciesScheduledForDeletion = $electionConstituenciesToDelete;
+
+        foreach ($electionConstituenciesToDelete as $electionConstituencyRemoved) {
+            $electionConstituencyRemoved->setElection(null);
+        }
+
+        $this->collElectionConstituencies = null;
+        foreach ($electionConstituencies as $electionConstituency) {
+            $this->addElectionConstituency($electionConstituency);
+        }
+
+        $this->collElectionConstituencies = $electionConstituencies;
+        $this->collElectionConstituenciesPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related ElectionConstituency objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related ElectionConstituency objects.
+     * @throws PropelException
+     */
+    public function countElectionConstituencies(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collElectionConstituenciesPartial && !$this->isNew();
+        if (null === $this->collElectionConstituencies || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collElectionConstituencies) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getElectionConstituencies());
+            }
+
+            $query = ChildElectionConstituencyQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByElection($this)
+                ->count($con);
+        }
+
+        return count($this->collElectionConstituencies);
+    }
+
+    /**
+     * Method called to associate a ChildElectionConstituency object to this object
+     * through the ChildElectionConstituency foreign key attribute.
+     *
+     * @param  ChildElectionConstituency $l ChildElectionConstituency
+     * @return $this|\Election The current object (for fluent API support)
+     */
+    public function addElectionConstituency(ChildElectionConstituency $l)
+    {
+        if ($this->collElectionConstituencies === null) {
+            $this->initElectionConstituencies();
+            $this->collElectionConstituenciesPartial = true;
+        }
+
+        if (!$this->collElectionConstituencies->contains($l)) {
+            $this->doAddElectionConstituency($l);
+
+            if ($this->electionConstituenciesScheduledForDeletion and $this->electionConstituenciesScheduledForDeletion->contains($l)) {
+                $this->electionConstituenciesScheduledForDeletion->remove($this->electionConstituenciesScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildElectionConstituency $electionConstituency The ChildElectionConstituency object to add.
+     */
+    protected function doAddElectionConstituency(ChildElectionConstituency $electionConstituency)
+    {
+        $this->collElectionConstituencies[]= $electionConstituency;
+        $electionConstituency->setElection($this);
+    }
+
+    /**
+     * @param  ChildElectionConstituency $electionConstituency The ChildElectionConstituency object to remove.
+     * @return $this|ChildElection The current object (for fluent API support)
+     */
+    public function removeElectionConstituency(ChildElectionConstituency $electionConstituency)
+    {
+        if ($this->getElectionConstituencies()->contains($electionConstituency)) {
+            $pos = $this->collElectionConstituencies->search($electionConstituency);
+            $this->collElectionConstituencies->remove($pos);
+            if (null === $this->electionConstituenciesScheduledForDeletion) {
+                $this->electionConstituenciesScheduledForDeletion = clone $this->collElectionConstituencies;
+                $this->electionConstituenciesScheduledForDeletion->clear();
+            }
+            $this->electionConstituenciesScheduledForDeletion[]= clone $electionConstituency;
+            $electionConstituency->setElection(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Election is new, it will return
+     * an empty collection; or if this Election has previously
+     * been saved, it will retrieve related ElectionConstituencies from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Election.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildElectionConstituency[] List of ChildElectionConstituency objects
+     */
+    public function getElectionConstituenciesJoinConstituencyCensus(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildElectionConstituencyQuery::create(null, $criteria);
+        $query->joinWith('ConstituencyCensus', $joinBehavior);
+
+        return $this->getElectionConstituencies($query, $con);
     }
 
     /**
@@ -2506,6 +2815,11 @@ abstract class Election implements ActiveRecordInterface
     public function clearAllReferences($deep = false)
     {
         if ($deep) {
+            if ($this->collElectionConstituencies) {
+                foreach ($this->collElectionConstituencies as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
             if ($this->collIndependentCandidates) {
                 foreach ($this->collIndependentCandidates as $o) {
                     $o->clearAllReferences($deep);
@@ -2518,6 +2832,7 @@ abstract class Election implements ActiveRecordInterface
             }
         } // if ($deep)
 
+        $this->collElectionConstituencies = null;
         $this->collIndependentCandidates = null;
         $this->collElectionParties = null;
         $this->aAssemblyType = null;

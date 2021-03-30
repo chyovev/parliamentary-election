@@ -72,6 +72,16 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElectionQuery rightJoinWithPopulationCensus() Adds a RIGHT JOIN clause and with to the query using the PopulationCensus relation
  * @method     ChildElectionQuery innerJoinWithPopulationCensus() Adds a INNER JOIN clause and with to the query using the PopulationCensus relation
  *
+ * @method     ChildElectionQuery leftJoinElectionConstituency($relationAlias = null) Adds a LEFT JOIN clause to the query using the ElectionConstituency relation
+ * @method     ChildElectionQuery rightJoinElectionConstituency($relationAlias = null) Adds a RIGHT JOIN clause to the query using the ElectionConstituency relation
+ * @method     ChildElectionQuery innerJoinElectionConstituency($relationAlias = null) Adds a INNER JOIN clause to the query using the ElectionConstituency relation
+ *
+ * @method     ChildElectionQuery joinWithElectionConstituency($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the ElectionConstituency relation
+ *
+ * @method     ChildElectionQuery leftJoinWithElectionConstituency() Adds a LEFT JOIN clause and with to the query using the ElectionConstituency relation
+ * @method     ChildElectionQuery rightJoinWithElectionConstituency() Adds a RIGHT JOIN clause and with to the query using the ElectionConstituency relation
+ * @method     ChildElectionQuery innerJoinWithElectionConstituency() Adds a INNER JOIN clause and with to the query using the ElectionConstituency relation
+ *
  * @method     ChildElectionQuery leftJoinIndependentCandidate($relationAlias = null) Adds a LEFT JOIN clause to the query using the IndependentCandidate relation
  * @method     ChildElectionQuery rightJoinIndependentCandidate($relationAlias = null) Adds a RIGHT JOIN clause to the query using the IndependentCandidate relation
  * @method     ChildElectionQuery innerJoinIndependentCandidate($relationAlias = null) Adds a INNER JOIN clause to the query using the IndependentCandidate relation
@@ -92,7 +102,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElectionQuery rightJoinWithElectionParty() Adds a RIGHT JOIN clause and with to the query using the ElectionParty relation
  * @method     ChildElectionQuery innerJoinWithElectionParty() Adds a INNER JOIN clause and with to the query using the ElectionParty relation
  *
- * @method     \AssemblyTypeQuery|\PopulationCensusQuery|\IndependentCandidateQuery|\ElectionPartyQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     \AssemblyTypeQuery|\PopulationCensusQuery|\ElectionConstituencyQuery|\IndependentCandidateQuery|\ElectionPartyQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildElection findOne(ConnectionInterface $con = null) Return the first ChildElection matching the query
  * @method     ChildElection findOneOrCreate(ConnectionInterface $con = null) Return the first ChildElection matching the query, or a new ChildElection object populated from the query conditions when no match is found
@@ -905,6 +915,79 @@ abstract class ElectionQuery extends ModelCriteria
         return $this
             ->joinPopulationCensus($relationAlias, $joinType)
             ->useQuery($relationAlias ? $relationAlias : 'PopulationCensus', '\PopulationCensusQuery');
+    }
+
+    /**
+     * Filter the query by a related \ElectionConstituency object
+     *
+     * @param \ElectionConstituency|ObjectCollection $electionConstituency the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildElectionQuery The current query, for fluid interface
+     */
+    public function filterByElectionConstituency($electionConstituency, $comparison = null)
+    {
+        if ($electionConstituency instanceof \ElectionConstituency) {
+            return $this
+                ->addUsingAlias(ElectionTableMap::COL_ID, $electionConstituency->getElectionId(), $comparison);
+        } elseif ($electionConstituency instanceof ObjectCollection) {
+            return $this
+                ->useElectionConstituencyQuery()
+                ->filterByPrimaryKeys($electionConstituency->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByElectionConstituency() only accepts arguments of type \ElectionConstituency or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the ElectionConstituency relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildElectionQuery The current query, for fluid interface
+     */
+    public function joinElectionConstituency($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('ElectionConstituency');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'ElectionConstituency');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the ElectionConstituency relation ElectionConstituency object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \ElectionConstituencyQuery A secondary query class using the current class as primary query
+     */
+    public function useElectionConstituencyQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinElectionConstituency($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'ElectionConstituency', '\ElectionConstituencyQuery');
     }
 
     /**

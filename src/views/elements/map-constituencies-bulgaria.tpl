@@ -15,7 +15,7 @@
 
         </svg>
     </div>
-    <ol class="constituencies-list">
+    <ol class="constituencies-list condensed">
         {foreach $constituencies as $item}
             <li><a href="#" class="const_{$item['id']}{if isset($candidates[$item['id']])} independent{/if}{if isset($partiesVotes[$item['id']])} completed{/if}" data-constituency-id="{$item['id']}" data-title="{$item['title']|escape}">{$item['title']|escape}</a></li>
         {/foreach}

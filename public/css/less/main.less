@@ -115,6 +115,12 @@ abbr {
 .red {
     color: red;
 }
+.green {
+    color: green;
+}
+.blue {
+    color: blue;
+}
 section {
     .row {
         line-height: 1.7em;
@@ -205,8 +211,16 @@ svg {
     }
 }
 .constituencies-list {
-    columns: 4;
-    max-width: 900px;
+    columns: 3;
+    &.condensed {
+        columns: 4;
+        max-width: 900px;
+    }
+    &:not(.condensed) {
+        li {
+            margin: 7px 0px;
+        }
+    }
     margin: 40px auto 40px auto;
     a {
         &.completed {

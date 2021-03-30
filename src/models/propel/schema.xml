@@ -66,6 +66,25 @@
         <behavior name="timestampable" />
     </table>
 
+    <table name="elections_constituencies_censuses" phpName="ElectionConstituency">
+        <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
+        <column name="election_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="constituency_census_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <column name="total_valid_votes" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
+        <foreign-key foreignTable="elections" name="FK_elections_constituency_censuses_elections" onDelete="cascade" onUpdate="cascade">
+            <reference local="election_id" foreign="id" />
+        </foreign-key>
+        <foreign-key foreignTable="constituencies_censuses" name="FK_elections_constituency_censuses_constituencies_censuses" onUpdate="cascade">
+            <reference local="constituency_census_id" foreign="id" />
+        </foreign-key>
+        <index name="FK_elections_constituency_censuses_elections">
+            <index-column name="election_id" />
+        </index>
+        <index name="FK_elections_constituency_censuses_constituencies_censuses">
+            <index-column name="constituency_census_id" />
+        </index>
+    </table>
+
     <table name="elections_independent_candidates" phpName="IndependentCandidate">
         <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
         <column name="election_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />

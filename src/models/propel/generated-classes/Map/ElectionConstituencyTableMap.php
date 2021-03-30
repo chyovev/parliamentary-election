@@ -2,8 +2,8 @@
 
 namespace Map;
 
-use \Election;
-use \ElectionQuery;
+use \ElectionConstituency;
+use \ElectionConstituencyQuery;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\InstancePoolTrait;
@@ -16,7 +16,7 @@ use Propel\Runtime\Map\TableMapTrait;
 
 
 /**
- * This class defines the structure of the 'elections' table.
+ * This class defines the structure of the 'elections_constituencies_censuses' table.
  *
  *
  *
@@ -25,7 +25,7 @@ use Propel\Runtime\Map\TableMapTrait;
  * ORDER BY clause to know whether it needs to apply SQL to make the ORDER BY case-insensitive
  * (i.e. if it's a text column type).
  */
-class ElectionTableMap extends TableMap
+class ElectionConstituencyTableMap extends TableMap
 {
     use InstancePoolTrait;
     use TableMapTrait;
@@ -33,7 +33,7 @@ class ElectionTableMap extends TableMap
     /**
      * The (dot-path) name of this class
      */
-    const CLASS_NAME = '.Map.ElectionTableMap';
+    const CLASS_NAME = '.Map.ElectionConstituencyTableMap';
 
     /**
      * The default database name for this class
@@ -43,22 +43,22 @@ class ElectionTableMap extends TableMap
     /**
      * The table name for this class
      */
-    const TABLE_NAME = 'elections';
+    const TABLE_NAME = 'elections_constituencies_censuses';
 
     /**
      * The related Propel class for this table
      */
-    const OM_CLASS = '\\Election';
+    const OM_CLASS = '\\ElectionConstituency';
 
     /**
      * A class that can be returned by this tableMap
      */
-    const CLASS_DEFAULT = 'Election';
+    const CLASS_DEFAULT = 'ElectionConstituency';
 
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 11;
+    const NUM_COLUMNS = 4;
 
     /**
      * The number of lazy-loaded columns
@@ -68,62 +68,27 @@ class ElectionTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 11;
+    const NUM_HYDRATE_COLUMNS = 4;
 
     /**
      * the column name for the id field
      */
-    const COL_ID = 'elections.id';
+    const COL_ID = 'elections_constituencies_censuses.id';
 
     /**
-     * the column name for the slug field
+     * the column name for the election_id field
      */
-    const COL_SLUG = 'elections.slug';
+    const COL_ELECTION_ID = 'elections_constituencies_censuses.election_id';
 
     /**
-     * the column name for the assembly_type_id field
+     * the column name for the constituency_census_id field
      */
-    const COL_ASSEMBLY_TYPE_ID = 'elections.assembly_type_id';
-
-    /**
-     * the column name for the population_census_id field
-     */
-    const COL_POPULATION_CENSUS_ID = 'elections.population_census_id';
-
-    /**
-     * the column name for the active_suffrage field
-     */
-    const COL_ACTIVE_SUFFRAGE = 'elections.active_suffrage';
-
-    /**
-     * the column name for the threshold_percentage field
-     */
-    const COL_THRESHOLD_PERCENTAGE = 'elections.threshold_percentage';
+    const COL_CONSTITUENCY_CENSUS_ID = 'elections_constituencies_censuses.constituency_census_id';
 
     /**
      * the column name for the total_valid_votes field
      */
-    const COL_TOTAL_VALID_VOTES = 'elections.total_valid_votes';
-
-    /**
-     * the column name for the total_invalid_votes field
-     */
-    const COL_TOTAL_INVALID_VOTES = 'elections.total_invalid_votes';
-
-    /**
-     * the column name for the official field
-     */
-    const COL_OFFICIAL = 'elections.official';
-
-    /**
-     * the column name for the created_at field
-     */
-    const COL_CREATED_AT = 'elections.created_at';
-
-    /**
-     * the column name for the updated_at field
-     */
-    const COL_UPDATED_AT = 'elections.updated_at';
+    const COL_TOTAL_VALID_VOTES = 'elections_constituencies_censuses.total_valid_votes';
 
     /**
      * The default string format for model objects of the related table
@@ -137,11 +102,11 @@ class ElectionTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'Slug', 'AssemblyTypeId', 'PopulationCensusId', 'ActiveSuffrage', 'ThresholdPercentage', 'TotalValidVotes', 'TotalInvalidVotes', 'Official', 'CreatedAt', 'UpdatedAt', ),
-        self::TYPE_CAMELNAME     => array('id', 'slug', 'assemblyTypeId', 'populationCensusId', 'activeSuffrage', 'thresholdPercentage', 'totalValidVotes', 'totalInvalidVotes', 'official', 'createdAt', 'updatedAt', ),
-        self::TYPE_COLNAME       => array(ElectionTableMap::COL_ID, ElectionTableMap::COL_SLUG, ElectionTableMap::COL_ASSEMBLY_TYPE_ID, ElectionTableMap::COL_POPULATION_CENSUS_ID, ElectionTableMap::COL_ACTIVE_SUFFRAGE, ElectionTableMap::COL_THRESHOLD_PERCENTAGE, ElectionTableMap::COL_TOTAL_VALID_VOTES, ElectionTableMap::COL_TOTAL_INVALID_VOTES, ElectionTableMap::COL_OFFICIAL, ElectionTableMap::COL_CREATED_AT, ElectionTableMap::COL_UPDATED_AT, ),
-        self::TYPE_FIELDNAME     => array('id', 'slug', 'assembly_type_id', 'population_census_id', 'active_suffrage', 'threshold_percentage', 'total_valid_votes', 'total_invalid_votes', 'official', 'created_at', 'updated_at', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, )
+        self::TYPE_PHPNAME       => array('Id', 'ElectionId', 'ConstituencyCensusId', 'TotalValidVotes', ),
+        self::TYPE_CAMELNAME     => array('id', 'electionId', 'constituencyCensusId', 'totalValidVotes', ),
+        self::TYPE_COLNAME       => array(ElectionConstituencyTableMap::COL_ID, ElectionConstituencyTableMap::COL_ELECTION_ID, ElectionConstituencyTableMap::COL_CONSTITUENCY_CENSUS_ID, ElectionConstituencyTableMap::COL_TOTAL_VALID_VOTES, ),
+        self::TYPE_FIELDNAME     => array('id', 'election_id', 'constituency_census_id', 'total_valid_votes', ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, )
     );
 
     /**
@@ -151,11 +116,11 @@ class ElectionTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'Slug' => 1, 'AssemblyTypeId' => 2, 'PopulationCensusId' => 3, 'ActiveSuffrage' => 4, 'ThresholdPercentage' => 5, 'TotalValidVotes' => 6, 'TotalInvalidVotes' => 7, 'Official' => 8, 'CreatedAt' => 9, 'UpdatedAt' => 10, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'slug' => 1, 'assemblyTypeId' => 2, 'populationCensusId' => 3, 'activeSuffrage' => 4, 'thresholdPercentage' => 5, 'totalValidVotes' => 6, 'totalInvalidVotes' => 7, 'official' => 8, 'createdAt' => 9, 'updatedAt' => 10, ),
-        self::TYPE_COLNAME       => array(ElectionTableMap::COL_ID => 0, ElectionTableMap::COL_SLUG => 1, ElectionTableMap::COL_ASSEMBLY_TYPE_ID => 2, ElectionTableMap::COL_POPULATION_CENSUS_ID => 3, ElectionTableMap::COL_ACTIVE_SUFFRAGE => 4, ElectionTableMap::COL_THRESHOLD_PERCENTAGE => 5, ElectionTableMap::COL_TOTAL_VALID_VOTES => 6, ElectionTableMap::COL_TOTAL_INVALID_VOTES => 7, ElectionTableMap::COL_OFFICIAL => 8, ElectionTableMap::COL_CREATED_AT => 9, ElectionTableMap::COL_UPDATED_AT => 10, ),
-        self::TYPE_FIELDNAME     => array('id' => 0, 'slug' => 1, 'assembly_type_id' => 2, 'population_census_id' => 3, 'active_suffrage' => 4, 'threshold_percentage' => 5, 'total_valid_votes' => 6, 'total_invalid_votes' => 7, 'official' => 8, 'created_at' => 9, 'updated_at' => 10, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, )
+        self::TYPE_PHPNAME       => array('Id' => 0, 'ElectionId' => 1, 'ConstituencyCensusId' => 2, 'TotalValidVotes' => 3, ),
+        self::TYPE_CAMELNAME     => array('id' => 0, 'electionId' => 1, 'constituencyCensusId' => 2, 'totalValidVotes' => 3, ),
+        self::TYPE_COLNAME       => array(ElectionConstituencyTableMap::COL_ID => 0, ElectionConstituencyTableMap::COL_ELECTION_ID => 1, ElectionConstituencyTableMap::COL_CONSTITUENCY_CENSUS_ID => 2, ElectionConstituencyTableMap::COL_TOTAL_VALID_VOTES => 3, ),
+        self::TYPE_FIELDNAME     => array('id' => 0, 'election_id' => 1, 'constituency_census_id' => 2, 'total_valid_votes' => 3, ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, )
     );
 
     /**
@@ -168,24 +133,17 @@ class ElectionTableMap extends TableMap
     public function initialize()
     {
         // attributes
-        $this->setName('elections');
-        $this->setPhpName('Election');
+        $this->setName('elections_constituencies_censuses');
+        $this->setPhpName('ElectionConstituency');
         $this->setIdentifierQuoting(false);
-        $this->setClassName('\\Election');
+        $this->setClassName('\\ElectionConstituency');
         $this->setPackage('');
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addColumn('slug', 'Slug', 'VARCHAR', true, 255, null);
-        $this->addForeignKey('assembly_type_id', 'AssemblyTypeId', 'INTEGER', 'assembly_types', 'id', true, null, 0);
-        $this->addForeignKey('population_census_id', 'PopulationCensusId', 'INTEGER', 'population_censuses', 'id', true, null, 0);
-        $this->addColumn('active_suffrage', 'ActiveSuffrage', 'INTEGER', true, null, 0);
-        $this->addColumn('threshold_percentage', 'ThresholdPercentage', 'INTEGER', true, null, 0);
+        $this->addForeignKey('election_id', 'ElectionId', 'INTEGER', 'elections', 'id', true, null, 0);
+        $this->addForeignKey('constituency_census_id', 'ConstituencyCensusId', 'INTEGER', 'constituencies_censuses', 'id', true, null, 0);
         $this->addColumn('total_valid_votes', 'TotalValidVotes', 'INTEGER', true, null, 0);
-        $this->addColumn('total_invalid_votes', 'TotalInvalidVotes', 'INTEGER', true, null, 0);
-        $this->addColumn('official', 'Official', 'BOOLEAN', true, 1, false);
-        $this->addColumn('created_at', 'CreatedAt', 'TIMESTAMP', false, null, null);
-        $this->addColumn('updated_at', 'UpdatedAt', 'TIMESTAMP', false, null, null);
     } // initialize()
 
     /**
@@ -193,66 +151,21 @@ class ElectionTableMap extends TableMap
      */
     public function buildRelations()
     {
-        $this->addRelation('AssemblyType', '\\AssemblyType', RelationMap::MANY_TO_ONE, array (
+        $this->addRelation('Election', '\\Election', RelationMap::MANY_TO_ONE, array (
   0 =>
   array (
-    0 => ':assembly_type_id',
+    0 => ':election_id',
+    1 => ':id',
+  ),
+), 'CASCADE', 'CASCADE', null, false);
+        $this->addRelation('ConstituencyCensus', '\\ConstituencyCensus', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':constituency_census_id',
     1 => ':id',
   ),
 ), null, 'CASCADE', null, false);
-        $this->addRelation('PopulationCensus', '\\PopulationCensus', RelationMap::MANY_TO_ONE, array (
-  0 =>
-  array (
-    0 => ':population_census_id',
-    1 => ':id',
-  ),
-), null, 'CASCADE', null, false);
-        $this->addRelation('ElectionConstituency', '\\ElectionConstituency', RelationMap::ONE_TO_MANY, array (
-  0 =>
-  array (
-    0 => ':election_id',
-    1 => ':id',
-  ),
-), 'CASCADE', 'CASCADE', 'ElectionConstituencies', false);
-        $this->addRelation('IndependentCandidate', '\\IndependentCandidate', RelationMap::ONE_TO_MANY, array (
-  0 =>
-  array (
-    0 => ':election_id',
-    1 => ':id',
-  ),
-), 'CASCADE', 'CASCADE', 'IndependentCandidates', false);
-        $this->addRelation('ElectionParty', '\\ElectionParty', RelationMap::ONE_TO_MANY, array (
-  0 =>
-  array (
-    0 => ':election_id',
-    1 => ':id',
-  ),
-), 'CASCADE', 'CASCADE', 'ElectionParties', false);
     } // buildRelations()
-
-    /**
-     *
-     * Gets the list of behaviors registered for this table
-     *
-     * @return array Associative array (name => parameters) of behaviors
-     */
-    public function getBehaviors()
-    {
-        return array(
-            'timestampable' => array('create_column' => 'created_at', 'update_column' => 'updated_at', 'disable_created_at' => 'false', 'disable_updated_at' => 'false', ),
-        );
-    } // getBehaviors()
-    /**
-     * Method to invalidate the instance pool of all tables related to elections     * by a foreign key with ON DELETE CASCADE
-     */
-    public static function clearRelatedInstancePool()
-    {
-        // Invalidate objects in related instance pools,
-        // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
-        ElectionConstituencyTableMap::clearInstancePool();
-        IndependentCandidateTableMap::clearInstancePool();
-        ElectionPartyTableMap::clearInstancePool();
-    }
 
     /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.
@@ -311,7 +224,7 @@ class ElectionTableMap extends TableMap
      */
     public static function getOMClass($withPrefix = true)
     {
-        return $withPrefix ? ElectionTableMap::CLASS_DEFAULT : ElectionTableMap::OM_CLASS;
+        return $withPrefix ? ElectionConstituencyTableMap::CLASS_DEFAULT : ElectionConstituencyTableMap::OM_CLASS;
     }
 
     /**
@@ -325,22 +238,22 @@ class ElectionTableMap extends TableMap
      *
      * @throws PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
-     * @return array           (Election object, last column rank)
+     * @return array           (ElectionConstituency object, last column rank)
      */
     public static function populateObject($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
     {
-        $key = ElectionTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
-        if (null !== ($obj = ElectionTableMap::getInstanceFromPool($key))) {
+        $key = ElectionConstituencyTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
+        if (null !== ($obj = ElectionConstituencyTableMap::getInstanceFromPool($key))) {
             // We no longer rehydrate the object, since this can cause data loss.
             // See http://www.propelorm.org/ticket/509
             // $obj->hydrate($row, $offset, true); // rehydrate
-            $col = $offset + ElectionTableMap::NUM_HYDRATE_COLUMNS;
+            $col = $offset + ElectionConstituencyTableMap::NUM_HYDRATE_COLUMNS;
         } else {
-            $cls = ElectionTableMap::OM_CLASS;
-            /** @var Election $obj */
+            $cls = ElectionConstituencyTableMap::OM_CLASS;
+            /** @var ElectionConstituency $obj */
             $obj = new $cls();
             $col = $obj->hydrate($row, $offset, false, $indexType);
-            ElectionTableMap::addInstanceToPool($obj, $key);
+            ElectionConstituencyTableMap::addInstanceToPool($obj, $key);
         }
 
         return array($obj, $col);
@@ -363,18 +276,18 @@ class ElectionTableMap extends TableMap
         $cls = static::getOMClass(false);
         // populate the object(s)
         while ($row = $dataFetcher->fetch()) {
-            $key = ElectionTableMap::getPrimaryKeyHashFromRow($row, 0, $dataFetcher->getIndexType());
-            if (null !== ($obj = ElectionTableMap::getInstanceFromPool($key))) {
+            $key = ElectionConstituencyTableMap::getPrimaryKeyHashFromRow($row, 0, $dataFetcher->getIndexType());
+            if (null !== ($obj = ElectionConstituencyTableMap::getInstanceFromPool($key))) {
                 // We no longer rehydrate the object, since this can cause data loss.
                 // See http://www.propelorm.org/ticket/509
                 // $obj->hydrate($row, 0, true); // rehydrate
                 $results[] = $obj;
             } else {
-                /** @var Election $obj */
+                /** @var ElectionConstituency $obj */
                 $obj = new $cls();
                 $obj->hydrate($row);
                 $results[] = $obj;
-                ElectionTableMap::addInstanceToPool($obj, $key);
+                ElectionConstituencyTableMap::addInstanceToPool($obj, $key);
             } // if key exists
         }
 
@@ -395,29 +308,15 @@ class ElectionTableMap extends TableMap
     public static function addSelectColumns(Criteria $criteria, $alias = null)
     {
         if (null === $alias) {
-            $criteria->addSelectColumn(ElectionTableMap::COL_ID);
-            $criteria->addSelectColumn(ElectionTableMap::COL_SLUG);
-            $criteria->addSelectColumn(ElectionTableMap::COL_ASSEMBLY_TYPE_ID);
-            $criteria->addSelectColumn(ElectionTableMap::COL_POPULATION_CENSUS_ID);
-            $criteria->addSelectColumn(ElectionTableMap::COL_ACTIVE_SUFFRAGE);
-            $criteria->addSelectColumn(ElectionTableMap::COL_THRESHOLD_PERCENTAGE);
-            $criteria->addSelectColumn(ElectionTableMap::COL_TOTAL_VALID_VOTES);
-            $criteria->addSelectColumn(ElectionTableMap::COL_TOTAL_INVALID_VOTES);
-            $criteria->addSelectColumn(ElectionTableMap::COL_OFFICIAL);
-            $criteria->addSelectColumn(ElectionTableMap::COL_CREATED_AT);
-            $criteria->addSelectColumn(ElectionTableMap::COL_UPDATED_AT);
+            $criteria->addSelectColumn(ElectionConstituencyTableMap::COL_ID);
+            $criteria->addSelectColumn(ElectionConstituencyTableMap::COL_ELECTION_ID);
+            $criteria->addSelectColumn(ElectionConstituencyTableMap::COL_CONSTITUENCY_CENSUS_ID);
+            $criteria->addSelectColumn(ElectionConstituencyTableMap::COL_TOTAL_VALID_VOTES);
         } else {
             $criteria->addSelectColumn($alias . '.id');
-            $criteria->addSelectColumn($alias . '.slug');
-            $criteria->addSelectColumn($alias . '.assembly_type_id');
-            $criteria->addSelectColumn($alias . '.population_census_id');
-            $criteria->addSelectColumn($alias . '.active_suffrage');
-            $criteria->addSelectColumn($alias . '.threshold_percentage');
+            $criteria->addSelectColumn($alias . '.election_id');
+            $criteria->addSelectColumn($alias . '.constituency_census_id');
             $criteria->addSelectColumn($alias . '.total_valid_votes');
-            $criteria->addSelectColumn($alias . '.total_invalid_votes');
-            $criteria->addSelectColumn($alias . '.official');
-            $criteria->addSelectColumn($alias . '.created_at');
-            $criteria->addSelectColumn($alias . '.updated_at');
         }
     }
 
@@ -430,7 +329,7 @@ class ElectionTableMap extends TableMap
      */
     public static function getTableMap()
     {
-        return Propel::getServiceContainer()->getDatabaseMap(ElectionTableMap::DATABASE_NAME)->getTable(ElectionTableMap::TABLE_NAME);
+        return Propel::getServiceContainer()->getDatabaseMap(ElectionConstituencyTableMap::DATABASE_NAME)->getTable(ElectionConstituencyTableMap::TABLE_NAME);
     }
 
     /**
@@ -438,16 +337,16 @@ class ElectionTableMap extends TableMap
      */
     public static function buildTableMap()
     {
-        $dbMap = Propel::getServiceContainer()->getDatabaseMap(ElectionTableMap::DATABASE_NAME);
-        if (!$dbMap->hasTable(ElectionTableMap::TABLE_NAME)) {
-            $dbMap->addTableObject(new ElectionTableMap());
+        $dbMap = Propel::getServiceContainer()->getDatabaseMap(ElectionConstituencyTableMap::DATABASE_NAME);
+        if (!$dbMap->hasTable(ElectionConstituencyTableMap::TABLE_NAME)) {
+            $dbMap->addTableObject(new ElectionConstituencyTableMap());
         }
     }
 
     /**
-     * Performs a DELETE on the database, given a Election or Criteria object OR a primary key value.
+     * Performs a DELETE on the database, given a ElectionConstituency or Criteria object OR a primary key value.
      *
-     * @param mixed               $values Criteria or Election object or primary key or array of primary keys
+     * @param mixed               $values Criteria or ElectionConstituency object or primary key or array of primary keys
      *              which is used to create the DELETE statement
      * @param  ConnectionInterface $con the connection to use
      * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
@@ -458,27 +357,27 @@ class ElectionTableMap extends TableMap
      public static function doDelete($values, ConnectionInterface $con = null)
      {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(ElectionTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(ElectionConstituencyTableMap::DATABASE_NAME);
         }
 
         if ($values instanceof Criteria) {
             // rename for clarity
             $criteria = $values;
-        } elseif ($values instanceof \Election) { // it's a model object
+        } elseif ($values instanceof \ElectionConstituency) { // it's a model object
             // create criteria based on pk values
             $criteria = $values->buildPkeyCriteria();
         } else { // it's a primary key, or an array of pks
-            $criteria = new Criteria(ElectionTableMap::DATABASE_NAME);
-            $criteria->add(ElectionTableMap::COL_ID, (array) $values, Criteria::IN);
+            $criteria = new Criteria(ElectionConstituencyTableMap::DATABASE_NAME);
+            $criteria->add(ElectionConstituencyTableMap::COL_ID, (array) $values, Criteria::IN);
         }
 
-        $query = ElectionQuery::create()->mergeWith($criteria);
+        $query = ElectionConstituencyQuery::create()->mergeWith($criteria);
 
         if ($values instanceof Criteria) {
-            ElectionTableMap::clearInstancePool();
+            ElectionConstituencyTableMap::clearInstancePool();
         } elseif (!is_object($values)) { // it's a primary key, or an array of pks
             foreach ((array) $values as $singleval) {
-                ElectionTableMap::removeInstanceFromPool($singleval);
+                ElectionConstituencyTableMap::removeInstanceFromPool($singleval);
             }
         }
 
@@ -486,20 +385,20 @@ class ElectionTableMap extends TableMap
     }
 
     /**
-     * Deletes all rows from the elections table.
+     * Deletes all rows from the elections_constituencies_censuses table.
      *
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
     public static function doDeleteAll(ConnectionInterface $con = null)
     {
-        return ElectionQuery::create()->doDeleteAll($con);
+        return ElectionConstituencyQuery::create()->doDeleteAll($con);
     }
 
     /**
-     * Performs an INSERT on the database, given a Election or Criteria object.
+     * Performs an INSERT on the database, given a ElectionConstituency or Criteria object.
      *
-     * @param mixed               $criteria Criteria or Election object containing data that is used to create the INSERT statement.
+     * @param mixed               $criteria Criteria or ElectionConstituency object containing data that is used to create the INSERT statement.
      * @param ConnectionInterface $con the ConnectionInterface connection to use
      * @return mixed           The new primary key.
      * @throws PropelException Any exceptions caught during processing will be
@@ -508,22 +407,22 @@ class ElectionTableMap extends TableMap
     public static function doInsert($criteria, ConnectionInterface $con = null)
     {
         if (null === $con) {
-            $con = Propel::getServiceContainer()->getWriteConnection(ElectionTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(ElectionConstituencyTableMap::DATABASE_NAME);
         }
 
         if ($criteria instanceof Criteria) {
             $criteria = clone $criteria; // rename for clarity
         } else {
-            $criteria = $criteria->buildCriteria(); // build Criteria from Election object
+            $criteria = $criteria->buildCriteria(); // build Criteria from ElectionConstituency object
         }
 
-        if ($criteria->containsKey(ElectionTableMap::COL_ID) && $criteria->keyContainsValue(ElectionTableMap::COL_ID) ) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key ('.ElectionTableMap::COL_ID.')');
+        if ($criteria->containsKey(ElectionConstituencyTableMap::COL_ID) && $criteria->keyContainsValue(ElectionConstituencyTableMap::COL_ID) ) {
+            throw new PropelException('Cannot insert a value for auto-increment primary key ('.ElectionConstituencyTableMap::COL_ID.')');
         }
 
 
         // Set the correct dbName
-        $query = ElectionQuery::create()->mergeWith($criteria);
+        $query = ElectionConstituencyQuery::create()->mergeWith($criteria);
 
         // use transaction because $criteria could contain info
         // for more than one table (I guess, conceivably)
@@ -532,7 +431,7 @@ class ElectionTableMap extends TableMap
         });
     }
 
-} // ElectionTableMap
+} // ElectionConstituencyTableMap
 // This is the static code needed to register the TableMap for this table with the main Propel class.
 //
-ElectionTableMap::buildTableMap();
+ElectionConstituencyTableMap::buildTableMap();

@@ -2,24 +2,19 @@
 
 namespace Base;
 
-use \Constituency as ChildConstituency;
 use \ConstituencyCensus as ChildConstituencyCensus;
 use \ConstituencyCensusQuery as ChildConstituencyCensusQuery;
-use \ConstituencyQuery as ChildConstituencyQuery;
-use \ElectionConstituency as ChildElectionConstituency;
+use \Election as ChildElection;
 use \ElectionConstituencyQuery as ChildElectionConstituencyQuery;
-use \PopulationCensus as ChildPopulationCensus;
-use \PopulationCensusQuery as ChildPopulationCensusQuery;
+use \ElectionQuery as ChildElectionQuery;
 use \Exception;
 use \PDO;
-use Map\ConstituencyCensusTableMap;
 use Map\ElectionConstituencyTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Collection\Collection;
-use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Exception\LogicException;
@@ -28,18 +23,18 @@ use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\Parser\AbstractParser;
 
 /**
- * Base class that represents a row from the 'constituencies_censuses' table.
+ * Base class that represents a row from the 'elections_constituencies_censuses' table.
  *
  *
  *
  * @package    propel.generator..Base
  */
-abstract class ConstituencyCensus implements ActiveRecordInterface
+abstract class ElectionConstituency implements ActiveRecordInterface
 {
     /**
      * TableMap class name
      */
-    const TABLE_MAP = '\\Map\\ConstituencyCensusTableMap';
+    const TABLE_MAP = '\\Map\\ElectionConstituencyTableMap';
 
 
     /**
@@ -76,44 +71,38 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
     protected $id;
 
     /**
-     * The value for the constituency_id field.
+     * The value for the election_id field.
      *
      * Note: this column has a database default value of: 0
      * @var        int
      */
-    protected $constituency_id;
+    protected $election_id;
 
     /**
-     * The value for the population_census_id field.
+     * The value for the constituency_census_id field.
      *
      * Note: this column has a database default value of: 0
      * @var        int
      */
-    protected $population_census_id;
+    protected $constituency_census_id;
 
     /**
-     * The value for the population field.
+     * The value for the total_valid_votes field.
      *
      * Note: this column has a database default value of: 0
      * @var        int
      */
-    protected $population;
+    protected $total_valid_votes;
 
     /**
-     * @var        ChildConstituency
+     * @var        ChildElection
      */
-    protected $aConstituency;
+    protected $aElection;
 
     /**
-     * @var        ChildPopulationCensus
+     * @var        ChildConstituencyCensus
      */
-    protected $aPopulationCensus;
-
-    /**
-     * @var        ObjectCollection|ChildElectionConstituency[] Collection to store aggregation of ChildElectionConstituency objects.
-     */
-    protected $collElectionConstituencies;
-    protected $collElectionConstituenciesPartial;
+    protected $aConstituencyCensus;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -124,12 +113,6 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
     protected $alreadyInSave = false;
 
     /**
-     * An array of objects scheduled for deletion.
-     * @var ObjectCollection|ChildElectionConstituency[]
-     */
-    protected $electionConstituenciesScheduledForDeletion = null;
-
-    /**
      * Applies default values to this object.
      * This method should be called from the object's constructor (or
      * equivalent initialization method).
@@ -137,13 +120,13 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      */
     public function applyDefaultValues()
     {
-        $this->constituency_id = 0;
-        $this->population_census_id = 0;
-        $this->population = 0;
+        $this->election_id = 0;
+        $this->constituency_census_id = 0;
+        $this->total_valid_votes = 0;
     }
 
     /**
-     * Initializes internal state of Base\ConstituencyCensus object.
+     * Initializes internal state of Base\ElectionConstituency object.
      * @see applyDefaults()
      */
     public function __construct()
@@ -240,9 +223,9 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
     }
 
     /**
-     * Compares this with another <code>ConstituencyCensus</code> instance.  If
-     * <code>obj</code> is an instance of <code>ConstituencyCensus</code>, delegates to
-     * <code>equals(ConstituencyCensus)</code>.  Otherwise, returns <code>false</code>.
+     * Compares this with another <code>ElectionConstituency</code> instance.  If
+     * <code>obj</code> is an instance of <code>ElectionConstituency</code>, delegates to
+     * <code>equals(ElectionConstituency)</code>.  Otherwise, returns <code>false</code>.
      *
      * @param  mixed   $obj The object to compare to.
      * @return boolean Whether equal to the object specified.
@@ -308,7 +291,7 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      * @param string $name  The virtual column name
      * @param mixed  $value The value to give to the virtual column
      *
-     * @return $this|ConstituencyCensus The current object, for fluid interface
+     * @return $this|ElectionConstituency The current object, for fluid interface
      */
     public function setVirtualColumn($name, $value)
     {
@@ -380,40 +363,40 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
     }
 
     /**
-     * Get the [constituency_id] column value.
+     * Get the [election_id] column value.
      *
      * @return int
      */
-    public function getConstituencyId()
+    public function getElectionId()
     {
-        return $this->constituency_id;
+        return $this->election_id;
     }
 
     /**
-     * Get the [population_census_id] column value.
+     * Get the [constituency_census_id] column value.
      *
      * @return int
      */
-    public function getPopulationCensusId()
+    public function getConstituencyCensusId()
     {
-        return $this->population_census_id;
+        return $this->constituency_census_id;
     }
 
     /**
-     * Get the [population] column value.
+     * Get the [total_valid_votes] column value.
      *
      * @return int
      */
-    public function getPopulation()
+    public function getTotalValidVotes()
     {
-        return $this->population;
+        return $this->total_valid_votes;
     }
 
     /**
      * Set the value of [id] column.
      *
      * @param int $v new value
-     * @return $this|\ConstituencyCensus The current object (for fluent API support)
+     * @return $this|\ElectionConstituency The current object (for fluent API support)
      */
     public function setId($v)
     {
@@ -423,79 +406,79 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
 
         if ($this->id !== $v) {
             $this->id = $v;
-            $this->modifiedColumns[ConstituencyCensusTableMap::COL_ID] = true;
+            $this->modifiedColumns[ElectionConstituencyTableMap::COL_ID] = true;
         }
 
         return $this;
     } // setId()
 
     /**
-     * Set the value of [constituency_id] column.
+     * Set the value of [election_id] column.
      *
      * @param int $v new value
-     * @return $this|\ConstituencyCensus The current object (for fluent API support)
+     * @return $this|\ElectionConstituency The current object (for fluent API support)
      */
-    public function setConstituencyId($v)
+    public function setElectionId($v)
     {
         if ($v !== null) {
             $v = (int) $v;
         }
 
-        if ($this->constituency_id !== $v) {
-            $this->constituency_id = $v;
-            $this->modifiedColumns[ConstituencyCensusTableMap::COL_CONSTITUENCY_ID] = true;
+        if ($this->election_id !== $v) {
+            $this->election_id = $v;
+            $this->modifiedColumns[ElectionConstituencyTableMap::COL_ELECTION_ID] = true;
         }
 
-        if ($this->aConstituency !== null && $this->aConstituency->getId() !== $v) {
-            $this->aConstituency = null;
+        if ($this->aElection !== null && $this->aElection->getId() !== $v) {
+            $this->aElection = null;
         }
 
         return $this;
-    } // setConstituencyId()
+    } // setElectionId()
 
     /**
-     * Set the value of [population_census_id] column.
+     * Set the value of [constituency_census_id] column.
      *
      * @param int $v new value
-     * @return $this|\ConstituencyCensus The current object (for fluent API support)
+     * @return $this|\ElectionConstituency The current object (for fluent API support)
      */
-    public function setPopulationCensusId($v)
+    public function setConstituencyCensusId($v)
     {
         if ($v !== null) {
             $v = (int) $v;
         }
 
-        if ($this->population_census_id !== $v) {
-            $this->population_census_id = $v;
-            $this->modifiedColumns[ConstituencyCensusTableMap::COL_POPULATION_CENSUS_ID] = true;
+        if ($this->constituency_census_id !== $v) {
+            $this->constituency_census_id = $v;
+            $this->modifiedColumns[ElectionConstituencyTableMap::COL_CONSTITUENCY_CENSUS_ID] = true;
         }
 
-        if ($this->aPopulationCensus !== null && $this->aPopulationCensus->getId() !== $v) {
-            $this->aPopulationCensus = null;
+        if ($this->aConstituencyCensus !== null && $this->aConstituencyCensus->getId() !== $v) {
+            $this->aConstituencyCensus = null;
         }
 
         return $this;
-    } // setPopulationCensusId()
+    } // setConstituencyCensusId()
 
     /**
-     * Set the value of [population] column.
+     * Set the value of [total_valid_votes] column.
      *
      * @param int $v new value
-     * @return $this|\ConstituencyCensus The current object (for fluent API support)
+     * @return $this|\ElectionConstituency The current object (for fluent API support)
      */
-    public function setPopulation($v)
+    public function setTotalValidVotes($v)
     {
         if ($v !== null) {
             $v = (int) $v;
         }
 
-        if ($this->population !== $v) {
-            $this->population = $v;
-            $this->modifiedColumns[ConstituencyCensusTableMap::COL_POPULATION] = true;
+        if ($this->total_valid_votes !== $v) {
+            $this->total_valid_votes = $v;
+            $this->modifiedColumns[ElectionConstituencyTableMap::COL_TOTAL_VALID_VOTES] = true;
         }
 
         return $this;
-    } // setPopulation()
+    } // setTotalValidVotes()
 
     /**
      * Indicates whether the columns in this object are only set to default values.
@@ -507,15 +490,15 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      */
     public function hasOnlyDefaultValues()
     {
-            if ($this->constituency_id !== 0) {
+            if ($this->election_id !== 0) {
                 return false;
             }
 
-            if ($this->population_census_id !== 0) {
+            if ($this->constituency_census_id !== 0) {
                 return false;
             }
 
-            if ($this->population !== 0) {
+            if ($this->total_valid_votes !== 0) {
                 return false;
             }
 
@@ -545,17 +528,17 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
     {
         try {
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : ConstituencyCensusTableMap::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : ElectionConstituencyTableMap::translateFieldName('Id', TableMap::TYPE_PHPNAME, $indexType)];
             $this->id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : ConstituencyCensusTableMap::translateFieldName('ConstituencyId', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->constituency_id = (null !== $col) ? (int) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : ElectionConstituencyTableMap::translateFieldName('ElectionId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->election_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : ConstituencyCensusTableMap::translateFieldName('PopulationCensusId', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->population_census_id = (null !== $col) ? (int) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : ElectionConstituencyTableMap::translateFieldName('ConstituencyCensusId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->constituency_census_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : ConstituencyCensusTableMap::translateFieldName('Population', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->population = (null !== $col) ? (int) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : ElectionConstituencyTableMap::translateFieldName('TotalValidVotes', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->total_valid_votes = (null !== $col) ? (int) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -564,10 +547,10 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 4; // 4 = ConstituencyCensusTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 4; // 4 = ElectionConstituencyTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
-            throw new PropelException(sprintf('Error populating %s object', '\\ConstituencyCensus'), 0, $e);
+            throw new PropelException(sprintf('Error populating %s object', '\\ElectionConstituency'), 0, $e);
         }
     }
 
@@ -586,11 +569,11 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
-        if ($this->aConstituency !== null && $this->constituency_id !== $this->aConstituency->getId()) {
-            $this->aConstituency = null;
+        if ($this->aElection !== null && $this->election_id !== $this->aElection->getId()) {
+            $this->aElection = null;
         }
-        if ($this->aPopulationCensus !== null && $this->population_census_id !== $this->aPopulationCensus->getId()) {
-            $this->aPopulationCensus = null;
+        if ($this->aConstituencyCensus !== null && $this->constituency_census_id !== $this->aConstituencyCensus->getId()) {
+            $this->aConstituencyCensus = null;
         }
     } // ensureConsistency
 
@@ -615,13 +598,13 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getReadConnection(ConstituencyCensusTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getReadConnection(ElectionConstituencyTableMap::DATABASE_NAME);
         }
 
         // We don't need to alter the object instance pool; we're just modifying this instance
         // already in the pool.
 
-        $dataFetcher = ChildConstituencyCensusQuery::create(null, $this->buildPkeyCriteria())->setFormatter(ModelCriteria::FORMAT_STATEMENT)->find($con);
+        $dataFetcher = ChildElectionConstituencyQuery::create(null, $this->buildPkeyCriteria())->setFormatter(ModelCriteria::FORMAT_STATEMENT)->find($con);
         $row = $dataFetcher->fetch();
         $dataFetcher->close();
         if (!$row) {
@@ -631,10 +614,8 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
-            $this->aConstituency = null;
-            $this->aPopulationCensus = null;
-            $this->collElectionConstituencies = null;
-
+            $this->aElection = null;
+            $this->aConstituencyCensus = null;
         } // if (deep)
     }
 
@@ -644,8 +625,8 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      * @param      ConnectionInterface $con
      * @return void
      * @throws PropelException
-     * @see ConstituencyCensus::setDeleted()
-     * @see ConstituencyCensus::isDeleted()
+     * @see ElectionConstituency::setDeleted()
+     * @see ElectionConstituency::isDeleted()
      */
     public function delete(ConnectionInterface $con = null)
     {
@@ -654,11 +635,11 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getWriteConnection(ConstituencyCensusTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(ElectionConstituencyTableMap::DATABASE_NAME);
         }
 
         $con->transaction(function () use ($con) {
-            $deleteQuery = ChildConstituencyCensusQuery::create()
+            $deleteQuery = ChildElectionConstituencyQuery::create()
                 ->filterByPrimaryKey($this->getPrimaryKey());
             $ret = $this->preDelete($con);
             if ($ret) {
@@ -693,7 +674,7 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getWriteConnection(ConstituencyCensusTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(ElectionConstituencyTableMap::DATABASE_NAME);
         }
 
         return $con->transaction(function () use ($con) {
@@ -712,7 +693,7 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
                     $this->postUpdate($con);
                 }
                 $this->postSave($con);
-                ConstituencyCensusTableMap::addInstanceToPool($this);
+                ElectionConstituencyTableMap::addInstanceToPool($this);
             } else {
                 $affectedRows = 0;
             }
@@ -743,18 +724,18 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
             // method.  This object relates to these object(s) by a
             // foreign key reference.
 
-            if ($this->aConstituency !== null) {
-                if ($this->aConstituency->isModified() || $this->aConstituency->isNew()) {
-                    $affectedRows += $this->aConstituency->save($con);
+            if ($this->aElection !== null) {
+                if ($this->aElection->isModified() || $this->aElection->isNew()) {
+                    $affectedRows += $this->aElection->save($con);
                 }
-                $this->setConstituency($this->aConstituency);
+                $this->setElection($this->aElection);
             }
 
-            if ($this->aPopulationCensus !== null) {
-                if ($this->aPopulationCensus->isModified() || $this->aPopulationCensus->isNew()) {
-                    $affectedRows += $this->aPopulationCensus->save($con);
+            if ($this->aConstituencyCensus !== null) {
+                if ($this->aConstituencyCensus->isModified() || $this->aConstituencyCensus->isNew()) {
+                    $affectedRows += $this->aConstituencyCensus->save($con);
                 }
-                $this->setPopulationCensus($this->aPopulationCensus);
+                $this->setConstituencyCensus($this->aConstituencyCensus);
             }
 
             if ($this->isNew() || $this->isModified()) {
@@ -766,23 +747,6 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
                     $affectedRows += $this->doUpdate($con);
                 }
                 $this->resetModified();
-            }
-
-            if ($this->electionConstituenciesScheduledForDeletion !== null) {
-                if (!$this->electionConstituenciesScheduledForDeletion->isEmpty()) {
-                    \ElectionConstituencyQuery::create()
-                        ->filterByPrimaryKeys($this->electionConstituenciesScheduledForDeletion->getPrimaryKeys(false))
-                        ->delete($con);
-                    $this->electionConstituenciesScheduledForDeletion = null;
-                }
-            }
-
-            if ($this->collElectionConstituencies !== null) {
-                foreach ($this->collElectionConstituencies as $referrerFK) {
-                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
-                        $affectedRows += $referrerFK->save($con);
-                    }
-                }
             }
 
             $this->alreadyInSave = false;
@@ -805,27 +769,27 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
         $modifiedColumns = array();
         $index = 0;
 
-        $this->modifiedColumns[ConstituencyCensusTableMap::COL_ID] = true;
+        $this->modifiedColumns[ElectionConstituencyTableMap::COL_ID] = true;
         if (null !== $this->id) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key (' . ConstituencyCensusTableMap::COL_ID . ')');
+            throw new PropelException('Cannot insert a value for auto-increment primary key (' . ElectionConstituencyTableMap::COL_ID . ')');
         }
 
          // check the columns in natural order for more readable SQL queries
-        if ($this->isColumnModified(ConstituencyCensusTableMap::COL_ID)) {
+        if ($this->isColumnModified(ElectionConstituencyTableMap::COL_ID)) {
             $modifiedColumns[':p' . $index++]  = 'id';
         }
-        if ($this->isColumnModified(ConstituencyCensusTableMap::COL_CONSTITUENCY_ID)) {
-            $modifiedColumns[':p' . $index++]  = 'constituency_id';
+        if ($this->isColumnModified(ElectionConstituencyTableMap::COL_ELECTION_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'election_id';
         }
-        if ($this->isColumnModified(ConstituencyCensusTableMap::COL_POPULATION_CENSUS_ID)) {
-            $modifiedColumns[':p' . $index++]  = 'population_census_id';
+        if ($this->isColumnModified(ElectionConstituencyTableMap::COL_CONSTITUENCY_CENSUS_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'constituency_census_id';
         }
-        if ($this->isColumnModified(ConstituencyCensusTableMap::COL_POPULATION)) {
-            $modifiedColumns[':p' . $index++]  = 'population';
+        if ($this->isColumnModified(ElectionConstituencyTableMap::COL_TOTAL_VALID_VOTES)) {
+            $modifiedColumns[':p' . $index++]  = 'total_valid_votes';
         }
 
         $sql = sprintf(
-            'INSERT INTO constituencies_censuses (%s) VALUES (%s)',
+            'INSERT INTO elections_constituencies_censuses (%s) VALUES (%s)',
             implode(', ', $modifiedColumns),
             implode(', ', array_keys($modifiedColumns))
         );
@@ -837,14 +801,14 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
                     case 'id':
                         $stmt->bindValue($identifier, $this->id, PDO::PARAM_INT);
                         break;
-                    case 'constituency_id':
-                        $stmt->bindValue($identifier, $this->constituency_id, PDO::PARAM_INT);
+                    case 'election_id':
+                        $stmt->bindValue($identifier, $this->election_id, PDO::PARAM_INT);
                         break;
-                    case 'population_census_id':
-                        $stmt->bindValue($identifier, $this->population_census_id, PDO::PARAM_INT);
+                    case 'constituency_census_id':
+                        $stmt->bindValue($identifier, $this->constituency_census_id, PDO::PARAM_INT);
                         break;
-                    case 'population':
-                        $stmt->bindValue($identifier, $this->population, PDO::PARAM_INT);
+                    case 'total_valid_votes':
+                        $stmt->bindValue($identifier, $this->total_valid_votes, PDO::PARAM_INT);
                         break;
                 }
             }
@@ -892,7 +856,7 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      */
     public function getByName($name, $type = TableMap::TYPE_PHPNAME)
     {
-        $pos = ConstituencyCensusTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
+        $pos = ElectionConstituencyTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
         $field = $this->getByPosition($pos);
 
         return $field;
@@ -912,13 +876,13 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
                 return $this->getId();
                 break;
             case 1:
-                return $this->getConstituencyId();
+                return $this->getElectionId();
                 break;
             case 2:
-                return $this->getPopulationCensusId();
+                return $this->getConstituencyCensusId();
                 break;
             case 3:
-                return $this->getPopulation();
+                return $this->getTotalValidVotes();
                 break;
             default:
                 return null;
@@ -944,16 +908,16 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
     public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
 
-        if (isset($alreadyDumpedObjects['ConstituencyCensus'][$this->hashCode()])) {
+        if (isset($alreadyDumpedObjects['ElectionConstituency'][$this->hashCode()])) {
             return '*RECURSION*';
         }
-        $alreadyDumpedObjects['ConstituencyCensus'][$this->hashCode()] = true;
-        $keys = ConstituencyCensusTableMap::getFieldNames($keyType);
+        $alreadyDumpedObjects['ElectionConstituency'][$this->hashCode()] = true;
+        $keys = ElectionConstituencyTableMap::getFieldNames($keyType);
         $result = array(
             $keys[0] => $this->getId(),
-            $keys[1] => $this->getConstituencyId(),
-            $keys[2] => $this->getPopulationCensusId(),
-            $keys[3] => $this->getPopulation(),
+            $keys[1] => $this->getElectionId(),
+            $keys[2] => $this->getConstituencyCensusId(),
+            $keys[3] => $this->getTotalValidVotes(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -961,50 +925,35 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
         }
 
         if ($includeForeignObjects) {
-            if (null !== $this->aConstituency) {
+            if (null !== $this->aElection) {
 
                 switch ($keyType) {
                     case TableMap::TYPE_CAMELNAME:
-                        $key = 'constituency';
+                        $key = 'election';
                         break;
                     case TableMap::TYPE_FIELDNAME:
-                        $key = 'constituencies';
+                        $key = 'elections';
                         break;
                     default:
-                        $key = 'Constituency';
+                        $key = 'Election';
                 }
 
-                $result[$key] = $this->aConstituency->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+                $result[$key] = $this->aElection->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
             }
-            if (null !== $this->aPopulationCensus) {
+            if (null !== $this->aConstituencyCensus) {
 
                 switch ($keyType) {
                     case TableMap::TYPE_CAMELNAME:
-                        $key = 'populationCensus';
+                        $key = 'constituencyCensus';
                         break;
                     case TableMap::TYPE_FIELDNAME:
-                        $key = 'population_censuses';
+                        $key = 'constituencies_censuses';
                         break;
                     default:
-                        $key = 'PopulationCensus';
+                        $key = 'ConstituencyCensus';
                 }
 
-                $result[$key] = $this->aPopulationCensus->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
-            }
-            if (null !== $this->collElectionConstituencies) {
-
-                switch ($keyType) {
-                    case TableMap::TYPE_CAMELNAME:
-                        $key = 'electionConstituencies';
-                        break;
-                    case TableMap::TYPE_FIELDNAME:
-                        $key = 'elections_constituencies_censusess';
-                        break;
-                    default:
-                        $key = 'ElectionConstituencies';
-                }
-
-                $result[$key] = $this->collElectionConstituencies->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+                $result[$key] = $this->aConstituencyCensus->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
             }
         }
 
@@ -1020,11 +969,11 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      *                one of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM.
      *                Defaults to TableMap::TYPE_PHPNAME.
-     * @return $this|\ConstituencyCensus
+     * @return $this|\ElectionConstituency
      */
     public function setByName($name, $value, $type = TableMap::TYPE_PHPNAME)
     {
-        $pos = ConstituencyCensusTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
+        $pos = ElectionConstituencyTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
 
         return $this->setByPosition($pos, $value);
     }
@@ -1035,7 +984,7 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      *
      * @param  int $pos position in xml schema
      * @param  mixed $value field value
-     * @return $this|\ConstituencyCensus
+     * @return $this|\ElectionConstituency
      */
     public function setByPosition($pos, $value)
     {
@@ -1044,13 +993,13 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
                 $this->setId($value);
                 break;
             case 1:
-                $this->setConstituencyId($value);
+                $this->setElectionId($value);
                 break;
             case 2:
-                $this->setPopulationCensusId($value);
+                $this->setConstituencyCensusId($value);
                 break;
             case 3:
-                $this->setPopulation($value);
+                $this->setTotalValidVotes($value);
                 break;
         } // switch()
 
@@ -1076,19 +1025,19 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      */
     public function fromArray($arr, $keyType = TableMap::TYPE_PHPNAME)
     {
-        $keys = ConstituencyCensusTableMap::getFieldNames($keyType);
+        $keys = ElectionConstituencyTableMap::getFieldNames($keyType);
 
         if (array_key_exists($keys[0], $arr)) {
             $this->setId($arr[$keys[0]]);
         }
         if (array_key_exists($keys[1], $arr)) {
-            $this->setConstituencyId($arr[$keys[1]]);
+            $this->setElectionId($arr[$keys[1]]);
         }
         if (array_key_exists($keys[2], $arr)) {
-            $this->setPopulationCensusId($arr[$keys[2]]);
+            $this->setConstituencyCensusId($arr[$keys[2]]);
         }
         if (array_key_exists($keys[3], $arr)) {
-            $this->setPopulation($arr[$keys[3]]);
+            $this->setTotalValidVotes($arr[$keys[3]]);
         }
     }
 
@@ -1109,7 +1058,7 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      * @param string $data The source data to import from
      * @param string $keyType The type of keys the array uses.
      *
-     * @return $this|\ConstituencyCensus The current object, for fluid interface
+     * @return $this|\ElectionConstituency The current object, for fluid interface
      */
     public function importFrom($parser, $data, $keyType = TableMap::TYPE_PHPNAME)
     {
@@ -1129,19 +1078,19 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      */
     public function buildCriteria()
     {
-        $criteria = new Criteria(ConstituencyCensusTableMap::DATABASE_NAME);
+        $criteria = new Criteria(ElectionConstituencyTableMap::DATABASE_NAME);
 
-        if ($this->isColumnModified(ConstituencyCensusTableMap::COL_ID)) {
-            $criteria->add(ConstituencyCensusTableMap::COL_ID, $this->id);
+        if ($this->isColumnModified(ElectionConstituencyTableMap::COL_ID)) {
+            $criteria->add(ElectionConstituencyTableMap::COL_ID, $this->id);
         }
-        if ($this->isColumnModified(ConstituencyCensusTableMap::COL_CONSTITUENCY_ID)) {
-            $criteria->add(ConstituencyCensusTableMap::COL_CONSTITUENCY_ID, $this->constituency_id);
+        if ($this->isColumnModified(ElectionConstituencyTableMap::COL_ELECTION_ID)) {
+            $criteria->add(ElectionConstituencyTableMap::COL_ELECTION_ID, $this->election_id);
         }
-        if ($this->isColumnModified(ConstituencyCensusTableMap::COL_POPULATION_CENSUS_ID)) {
-            $criteria->add(ConstituencyCensusTableMap::COL_POPULATION_CENSUS_ID, $this->population_census_id);
+        if ($this->isColumnModified(ElectionConstituencyTableMap::COL_CONSTITUENCY_CENSUS_ID)) {
+            $criteria->add(ElectionConstituencyTableMap::COL_CONSTITUENCY_CENSUS_ID, $this->constituency_census_id);
         }
-        if ($this->isColumnModified(ConstituencyCensusTableMap::COL_POPULATION)) {
-            $criteria->add(ConstituencyCensusTableMap::COL_POPULATION, $this->population);
+        if ($this->isColumnModified(ElectionConstituencyTableMap::COL_TOTAL_VALID_VOTES)) {
+            $criteria->add(ElectionConstituencyTableMap::COL_TOTAL_VALID_VOTES, $this->total_valid_votes);
         }
 
         return $criteria;
@@ -1159,8 +1108,8 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      */
     public function buildPkeyCriteria()
     {
-        $criteria = ChildConstituencyCensusQuery::create();
-        $criteria->add(ConstituencyCensusTableMap::COL_ID, $this->id);
+        $criteria = ChildElectionConstituencyQuery::create();
+        $criteria->add(ElectionConstituencyTableMap::COL_ID, $this->id);
 
         return $criteria;
     }
@@ -1222,30 +1171,16 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      * If desired, this method can also make copies of all associated (fkey referrers)
      * objects.
      *
-     * @param      object $copyObj An object of \ConstituencyCensus (or compatible) type.
+     * @param      object $copyObj An object of \ElectionConstituency (or compatible) type.
      * @param      boolean $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
      * @param      boolean $makeNew Whether to reset autoincrement PKs and make the object new.
      * @throws PropelException
      */
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
-        $copyObj->setConstituencyId($this->getConstituencyId());
-        $copyObj->setPopulationCensusId($this->getPopulationCensusId());
-        $copyObj->setPopulation($this->getPopulation());
-
-        if ($deepCopy) {
-            // important: temporarily setNew(false) because this affects the behavior of
-            // the getter/setter methods for fkey referrer objects.
-            $copyObj->setNew(false);
-
-            foreach ($this->getElectionConstituencies() as $relObj) {
-                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
-                    $copyObj->addElectionConstituency($relObj->copy($deepCopy));
-                }
-            }
-
-        } // if ($deepCopy)
-
+        $copyObj->setElectionId($this->getElectionId());
+        $copyObj->setConstituencyCensusId($this->getConstituencyCensusId());
+        $copyObj->setTotalValidVotes($this->getTotalValidVotes());
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -1261,7 +1196,7 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      * objects.
      *
      * @param  boolean $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
-     * @return \ConstituencyCensus Clone of current object.
+     * @return \ElectionConstituency Clone of current object.
      * @throws PropelException
      */
     public function copy($deepCopy = false)
@@ -1275,26 +1210,26 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
     }
 
     /**
-     * Declares an association between this object and a ChildConstituency object.
+     * Declares an association between this object and a ChildElection object.
      *
-     * @param  ChildConstituency $v
-     * @return $this|\ConstituencyCensus The current object (for fluent API support)
+     * @param  ChildElection $v
+     * @return $this|\ElectionConstituency The current object (for fluent API support)
      * @throws PropelException
      */
-    public function setConstituency(ChildConstituency $v = null)
+    public function setElection(ChildElection $v = null)
     {
         if ($v === null) {
-            $this->setConstituencyId(0);
+            $this->setElectionId(0);
         } else {
-            $this->setConstituencyId($v->getId());
+            $this->setElectionId($v->getId());
         }
 
-        $this->aConstituency = $v;
+        $this->aElection = $v;
 
         // Add binding for other direction of this n:n relationship.
-        // If this object has already been added to the ChildConstituency object, it will not be re-added.
+        // If this object has already been added to the ChildElection object, it will not be re-added.
         if ($v !== null) {
-            $v->addConstituencyCensus($this);
+            $v->addElectionConstituency($this);
         }
 
 
@@ -1303,49 +1238,49 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
 
 
     /**
-     * Get the associated ChildConstituency object
+     * Get the associated ChildElection object
      *
      * @param  ConnectionInterface $con Optional Connection object.
-     * @return ChildConstituency The associated ChildConstituency object.
+     * @return ChildElection The associated ChildElection object.
      * @throws PropelException
      */
-    public function getConstituency(ConnectionInterface $con = null)
+    public function getElection(ConnectionInterface $con = null)
     {
-        if ($this->aConstituency === null && ($this->constituency_id != 0)) {
-            $this->aConstituency = ChildConstituencyQuery::create()->findPk($this->constituency_id, $con);
+        if ($this->aElection === null && ($this->election_id != 0)) {
+            $this->aElection = ChildElectionQuery::create()->findPk($this->election_id, $con);
             /* The following can be used additionally to
                 guarantee the related object contains a reference
                 to this object.  This level of coupling may, however, be
                 undesirable since it could result in an only partially populated collection
                 in the referenced object.
-                $this->aConstituency->addConstituencyCensuses($this);
+                $this->aElection->addElectionConstituencies($this);
              */
         }
 
-        return $this->aConstituency;
+        return $this->aElection;
     }
 
     /**
-     * Declares an association between this object and a ChildPopulationCensus object.
+     * Declares an association between this object and a ChildConstituencyCensus object.
      *
-     * @param  ChildPopulationCensus $v
-     * @return $this|\ConstituencyCensus The current object (for fluent API support)
+     * @param  ChildConstituencyCensus $v
+     * @return $this|\ElectionConstituency The current object (for fluent API support)
      * @throws PropelException
      */
-    public function setPopulationCensus(ChildPopulationCensus $v = null)
+    public function setConstituencyCensus(ChildConstituencyCensus $v = null)
     {
         if ($v === null) {
-            $this->setPopulationCensusId(0);
+            $this->setConstituencyCensusId(0);
         } else {
-            $this->setPopulationCensusId($v->getId());
+            $this->setConstituencyCensusId($v->getId());
         }
 
-        $this->aPopulationCensus = $v;
+        $this->aConstituencyCensus = $v;
 
         // Add binding for other direction of this n:n relationship.
-        // If this object has already been added to the ChildPopulationCensus object, it will not be re-added.
+        // If this object has already been added to the ChildConstituencyCensus object, it will not be re-added.
         if ($v !== null) {
-            $v->addConstituencyCensus($this);
+            $v->addElectionConstituency($this);
         }
 
 
@@ -1354,293 +1289,26 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
 
 
     /**
-     * Get the associated ChildPopulationCensus object
+     * Get the associated ChildConstituencyCensus object
      *
      * @param  ConnectionInterface $con Optional Connection object.
-     * @return ChildPopulationCensus The associated ChildPopulationCensus object.
+     * @return ChildConstituencyCensus The associated ChildConstituencyCensus object.
      * @throws PropelException
      */
-    public function getPopulationCensus(ConnectionInterface $con = null)
+    public function getConstituencyCensus(ConnectionInterface $con = null)
     {
-        if ($this->aPopulationCensus === null && ($this->population_census_id != 0)) {
-            $this->aPopulationCensus = ChildPopulationCensusQuery::create()->findPk($this->population_census_id, $con);
+        if ($this->aConstituencyCensus === null && ($this->constituency_census_id != 0)) {
+            $this->aConstituencyCensus = ChildConstituencyCensusQuery::create()->findPk($this->constituency_census_id, $con);
             /* The following can be used additionally to
                 guarantee the related object contains a reference
                 to this object.  This level of coupling may, however, be
                 undesirable since it could result in an only partially populated collection
                 in the referenced object.
-                $this->aPopulationCensus->addConstituencyCensuses($this);
+                $this->aConstituencyCensus->addElectionConstituencies($this);
              */
         }
 
-        return $this->aPopulationCensus;
-    }
-
-
-    /**
-     * Initializes a collection based on the name of a relation.
-     * Avoids crafting an 'init[$relationName]s' method name
-     * that wouldn't work when StandardEnglishPluralizer is used.
-     *
-     * @param      string $relationName The name of the relation to initialize
-     * @return void
-     */
-    public function initRelation($relationName)
-    {
-        if ('ElectionConstituency' == $relationName) {
-            $this->initElectionConstituencies();
-            return;
-        }
-    }
-
-    /**
-     * Clears out the collElectionConstituencies collection
-     *
-     * This does not modify the database; however, it will remove any associated objects, causing
-     * them to be refetched by subsequent calls to accessor method.
-     *
-     * @return void
-     * @see        addElectionConstituencies()
-     */
-    public function clearElectionConstituencies()
-    {
-        $this->collElectionConstituencies = null; // important to set this to NULL since that means it is uninitialized
-    }
-
-    /**
-     * Reset is the collElectionConstituencies collection loaded partially.
-     */
-    public function resetPartialElectionConstituencies($v = true)
-    {
-        $this->collElectionConstituenciesPartial = $v;
-    }
-
-    /**
-     * Initializes the collElectionConstituencies collection.
-     *
-     * By default this just sets the collElectionConstituencies collection to an empty array (like clearcollElectionConstituencies());
-     * however, you may wish to override this method in your stub class to provide setting appropriate
-     * to your application -- for example, setting the initial array to the values stored in database.
-     *
-     * @param      boolean $overrideExisting If set to true, the method call initializes
-     *                                        the collection even if it is not empty
-     *
-     * @return void
-     */
-    public function initElectionConstituencies($overrideExisting = true)
-    {
-        if (null !== $this->collElectionConstituencies && !$overrideExisting) {
-            return;
-        }
-
-        $collectionClassName = ElectionConstituencyTableMap::getTableMap()->getCollectionClassName();
-
-        $this->collElectionConstituencies = new $collectionClassName;
-        $this->collElectionConstituencies->setModel('\ElectionConstituency');
-    }
-
-    /**
-     * Gets an array of ChildElectionConstituency objects which contain a foreign key that references this object.
-     *
-     * If the $criteria is not null, it is used to always fetch the results from the database.
-     * Otherwise the results are fetched from the database the first time, then cached.
-     * Next time the same method is called without $criteria, the cached collection is returned.
-     * If this ChildConstituencyCensus is new, it will return
-     * an empty collection or the current collection; the criteria is ignored on a new object.
-     *
-     * @param      Criteria $criteria optional Criteria object to narrow the query
-     * @param      ConnectionInterface $con optional connection object
-     * @return ObjectCollection|ChildElectionConstituency[] List of ChildElectionConstituency objects
-     * @throws PropelException
-     */
-    public function getElectionConstituencies(Criteria $criteria = null, ConnectionInterface $con = null)
-    {
-        $partial = $this->collElectionConstituenciesPartial && !$this->isNew();
-        if (null === $this->collElectionConstituencies || null !== $criteria  || $partial) {
-            if ($this->isNew() && null === $this->collElectionConstituencies) {
-                // return empty collection
-                $this->initElectionConstituencies();
-            } else {
-                $collElectionConstituencies = ChildElectionConstituencyQuery::create(null, $criteria)
-                    ->filterByConstituencyCensus($this)
-                    ->find($con);
-
-                if (null !== $criteria) {
-                    if (false !== $this->collElectionConstituenciesPartial && count($collElectionConstituencies)) {
-                        $this->initElectionConstituencies(false);
-
-                        foreach ($collElectionConstituencies as $obj) {
-                            if (false == $this->collElectionConstituencies->contains($obj)) {
-                                $this->collElectionConstituencies->append($obj);
-                            }
-                        }
-
-                        $this->collElectionConstituenciesPartial = true;
-                    }
-
-                    return $collElectionConstituencies;
-                }
-
-                if ($partial && $this->collElectionConstituencies) {
-                    foreach ($this->collElectionConstituencies as $obj) {
-                        if ($obj->isNew()) {
-                            $collElectionConstituencies[] = $obj;
-                        }
-                    }
-                }
-
-                $this->collElectionConstituencies = $collElectionConstituencies;
-                $this->collElectionConstituenciesPartial = false;
-            }
-        }
-
-        return $this->collElectionConstituencies;
-    }
-
-    /**
-     * Sets a collection of ChildElectionConstituency objects related by a one-to-many relationship
-     * to the current object.
-     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
-     * and new objects from the given Propel collection.
-     *
-     * @param      Collection $electionConstituencies A Propel collection.
-     * @param      ConnectionInterface $con Optional connection object
-     * @return $this|ChildConstituencyCensus The current object (for fluent API support)
-     */
-    public function setElectionConstituencies(Collection $electionConstituencies, ConnectionInterface $con = null)
-    {
-        /** @var ChildElectionConstituency[] $electionConstituenciesToDelete */
-        $electionConstituenciesToDelete = $this->getElectionConstituencies(new Criteria(), $con)->diff($electionConstituencies);
-
-
-        $this->electionConstituenciesScheduledForDeletion = $electionConstituenciesToDelete;
-
-        foreach ($electionConstituenciesToDelete as $electionConstituencyRemoved) {
-            $electionConstituencyRemoved->setConstituencyCensus(null);
-        }
-
-        $this->collElectionConstituencies = null;
-        foreach ($electionConstituencies as $electionConstituency) {
-            $this->addElectionConstituency($electionConstituency);
-        }
-
-        $this->collElectionConstituencies = $electionConstituencies;
-        $this->collElectionConstituenciesPartial = false;
-
-        return $this;
-    }
-
-    /**
-     * Returns the number of related ElectionConstituency objects.
-     *
-     * @param      Criteria $criteria
-     * @param      boolean $distinct
-     * @param      ConnectionInterface $con
-     * @return int             Count of related ElectionConstituency objects.
-     * @throws PropelException
-     */
-    public function countElectionConstituencies(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
-    {
-        $partial = $this->collElectionConstituenciesPartial && !$this->isNew();
-        if (null === $this->collElectionConstituencies || null !== $criteria || $partial) {
-            if ($this->isNew() && null === $this->collElectionConstituencies) {
-                return 0;
-            }
-
-            if ($partial && !$criteria) {
-                return count($this->getElectionConstituencies());
-            }
-
-            $query = ChildElectionConstituencyQuery::create(null, $criteria);
-            if ($distinct) {
-                $query->distinct();
-            }
-
-            return $query
-                ->filterByConstituencyCensus($this)
-                ->count($con);
-        }
-
-        return count($this->collElectionConstituencies);
-    }
-
-    /**
-     * Method called to associate a ChildElectionConstituency object to this object
-     * through the ChildElectionConstituency foreign key attribute.
-     *
-     * @param  ChildElectionConstituency $l ChildElectionConstituency
-     * @return $this|\ConstituencyCensus The current object (for fluent API support)
-     */
-    public function addElectionConstituency(ChildElectionConstituency $l)
-    {
-        if ($this->collElectionConstituencies === null) {
-            $this->initElectionConstituencies();
-            $this->collElectionConstituenciesPartial = true;
-        }
-
-        if (!$this->collElectionConstituencies->contains($l)) {
-            $this->doAddElectionConstituency($l);
-
-            if ($this->electionConstituenciesScheduledForDeletion and $this->electionConstituenciesScheduledForDeletion->contains($l)) {
-                $this->electionConstituenciesScheduledForDeletion->remove($this->electionConstituenciesScheduledForDeletion->search($l));
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param ChildElectionConstituency $electionConstituency The ChildElectionConstituency object to add.
-     */
-    protected function doAddElectionConstituency(ChildElectionConstituency $electionConstituency)
-    {
-        $this->collElectionConstituencies[]= $electionConstituency;
-        $electionConstituency->setConstituencyCensus($this);
-    }
-
-    /**
-     * @param  ChildElectionConstituency $electionConstituency The ChildElectionConstituency object to remove.
-     * @return $this|ChildConstituencyCensus The current object (for fluent API support)
-     */
-    public function removeElectionConstituency(ChildElectionConstituency $electionConstituency)
-    {
-        if ($this->getElectionConstituencies()->contains($electionConstituency)) {
-            $pos = $this->collElectionConstituencies->search($electionConstituency);
-            $this->collElectionConstituencies->remove($pos);
-            if (null === $this->electionConstituenciesScheduledForDeletion) {
-                $this->electionConstituenciesScheduledForDeletion = clone $this->collElectionConstituencies;
-                $this->electionConstituenciesScheduledForDeletion->clear();
-            }
-            $this->electionConstituenciesScheduledForDeletion[]= clone $electionConstituency;
-            $electionConstituency->setConstituencyCensus(null);
-        }
-
-        return $this;
-    }
-
-
-    /**
-     * If this collection has already been initialized with
-     * an identical criteria, it returns the collection.
-     * Otherwise if this ConstituencyCensus is new, it will return
-     * an empty collection; or if this ConstituencyCensus has previously
-     * been saved, it will retrieve related ElectionConstituencies from storage.
-     *
-     * This method is protected by default in order to keep the public
-     * api reasonable.  You can provide public methods for those you
-     * actually need in ConstituencyCensus.
-     *
-     * @param      Criteria $criteria optional Criteria object to narrow the query
-     * @param      ConnectionInterface $con optional connection object
-     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
-     * @return ObjectCollection|ChildElectionConstituency[] List of ChildElectionConstituency objects
-     */
-    public function getElectionConstituenciesJoinElection(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
-    {
-        $query = ChildElectionConstituencyQuery::create(null, $criteria);
-        $query->joinWith('Election', $joinBehavior);
-
-        return $this->getElectionConstituencies($query, $con);
+        return $this->aConstituencyCensus;
     }
 
     /**
@@ -1650,16 +1318,16 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      */
     public function clear()
     {
-        if (null !== $this->aConstituency) {
-            $this->aConstituency->removeConstituencyCensus($this);
+        if (null !== $this->aElection) {
+            $this->aElection->removeElectionConstituency($this);
         }
-        if (null !== $this->aPopulationCensus) {
-            $this->aPopulationCensus->removeConstituencyCensus($this);
+        if (null !== $this->aConstituencyCensus) {
+            $this->aConstituencyCensus->removeElectionConstituency($this);
         }
         $this->id = null;
-        $this->constituency_id = null;
-        $this->population_census_id = null;
-        $this->population = null;
+        $this->election_id = null;
+        $this->constituency_census_id = null;
+        $this->total_valid_votes = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->applyDefaultValues();
@@ -1679,16 +1347,10 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
     public function clearAllReferences($deep = false)
     {
         if ($deep) {
-            if ($this->collElectionConstituencies) {
-                foreach ($this->collElectionConstituencies as $o) {
-                    $o->clearAllReferences($deep);
-                }
-            }
         } // if ($deep)
 
-        $this->collElectionConstituencies = null;
-        $this->aConstituency = null;
-        $this->aPopulationCensus = null;
+        $this->aElection = null;
+        $this->aConstituencyCensus = null;
     }
 
     /**
@@ -1698,7 +1360,7 @@ abstract class ConstituencyCensus implements ActiveRecordInterface
      */
     public function __toString()
     {
-        return (string) $this->exportTo(ConstituencyCensusTableMap::DEFAULT_STRING_FORMAT);
+        return (string) $this->exportTo(ElectionConstituencyTableMap::DEFAULT_STRING_FORMAT);
     }
 
     /**

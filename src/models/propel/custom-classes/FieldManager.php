@@ -9,6 +9,11 @@ abstract class FieldManager {
           VALID_VOTES_FIELD   = 'total_valid_votes',
           INVALID_VOTES_FIELD = 'total_invalid_votes',
           PASSED_PARTIES      = 'passed_parties',
+          TOTAL_PARTIES_COUNT = 'election_parties_count',
+          INDEPENDENT_COUNT   = 'independent_candidates_count',
+          CONST_TOTAL_VOTES   = 'total_votes',
+          CONST_PASS_QUOTA    = 'quota',
+          CONSTITUENCY_VOTES  = 'constituency_votes',
 
           PARTIES_FIELD       = 'parties',
           PARTY_TITLE         = 'party_title',
@@ -23,6 +28,7 @@ abstract class FieldManager {
           CAND_NAME_FIELD     = 'name',
           CAND_VOTES_FIELD    = 'votes',
           CAND_CONST_FIELD    = 'constituency_id',
+          ELECTED_CANDIDATE   = 'is_elected',
 
           VOTES_FIELD         = 'parties_votes',
           VOTES_PARTY_FIELD   = 'election_party_id',

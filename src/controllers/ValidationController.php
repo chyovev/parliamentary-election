@@ -1,6 +1,7 @@
 <?php
 
 use Propel\Runtime\Collection\ObjectCollection;
+use Propel\Runtime\Map\TableMap;
 use FieldManager as FM;
 
 class ValidationController extends AppController {
@@ -116,6 +117,7 @@ class ValidationController extends AppController {
         $this->validateVotesInformation($election);
         $this->validateThreshold($election);
         $this->validateElectionParties($election, 2);
+        $this->validateElectionConstituencies($election);
 
         if ($this->validationErrors) {
             $this->throwValidationErrors();
@@ -234,6 +236,43 @@ class ValidationController extends AppController {
     }
 
     /**
+     * Validates election's associated constituencies (votes, IDs)
+     * and adds validation errors on failure
+     * 
+     * @param Election $election    – Object from which passed election parties get extracted
+     * @param int      $minParties
+     */
+    private function validateElectionConstituencies(Election $election): void {
+        $populationCensusId     = $election->getPopulationCensusId();
+        $constituencyCensuses   = ConstituencyCensusQuery::getPopulationAndTitleByCensusId($populationCensusId)->toKeyIndex('constituencyId');
+        $electionConstituencies = $election->getElectionConstituencies();
+        $constituencyErrors     = false;
+
+        foreach ($electionConstituencies as $item) {
+            $constituencyId = $item->getVirtualColumn(FM::VOTES_CONST_FIELD);
+            $fieldId        = sprintf('%s-%s', FieldManager::CONSTITUENCY_VOTES, $constituencyId);
+            $this->checkIfConstituencyExists($constituencyCensuses, $constituencyId);
+
+            $votes      = $item->getTotalValidVotes();
+            $population = $constituencyCensuses[$constituencyId]->getPopulation();
+            $title      = $constituencyCensuses[$constituencyId]->getTitle();
+
+            if ($votes <= 0) {
+                $this->addValidationError($fieldId, 'Моля, въведете валиден брой гласове за района.');
+                $constituencyErrors = true;
+            }
+            elseif ($votes > $population) {
+                $this->addValidationError($fieldId, sprintf('Броят гласове надвишава броя на населението за района: %s.', $population));
+                $this->addValidationError(FM::GLOBAL_CONSTITUENCY_MESSAGE, sprintf('Броят гласове в МИР %s надвишава броя на населението за района: %s.', $title, $population));
+            }
+        }
+
+        if ($constituencyErrors) {
+            $this->addValidationError(FM::GLOBAL_CONSTITUENCY_MESSAGE, 'Моля, отстранете нередностите по посочените избирателни райони.');
+        }
+    }
+
+    /**
      * Validates election's associated parties' votes
      * and adds validation errors on failure
      * 
@@ -262,19 +301,22 @@ class ValidationController extends AppController {
      * @param string   $constituencyId – type is string, as it gets extracted from the URL
      */
     private function validationStep2(Election $election, string $constituencyId = NULL): void {
-        $constituencies        = ConstituencyQuery::create()->find()->toKeyIndex();
-        $groupedByConstituency = $this->groupPartiesVotesAndCandidatesByConstituency($election, $constituencies);
+        $populationCensusId     = $election->getPopulationCensusId();
+        $constituencyCensuses   = ConstituencyCensusQuery::getPopulationAndTitleByCensusId($populationCensusId)->toKeyIndex('constituencyId');
+        $groupedByConstituency  = $this->groupPartiesVotesAndCandidatesByConstituency($election, $constituencyCensuses);
+        $electionConstituencies = $election->getElectionConstituencies()->toArray(FM::VOTES_CONST_FIELD, false, TableMap::TYPE_FIELDNAME);
 
         // if there's a constituency id specified,
         // overwrite all groups using only its data
         if ($constituencyId) {
-            $this->checkIfConstituencyExists($constituencies, $constituencyId);
+            $this->checkIfConstituencyExists($constituencyCensuses, $constituencyId);
             $groupedByConstituency = [(int) $constituencyId => $groupedByConstituency[$constituencyId] ?? []];
         }
 
         // otherwise check all constituencies
         foreach ($groupedByConstituency as $constId => $group) {
-            $this->validateSingleConstituencyVotes($group, $constId);
+            $totalConstituencyPopulation = $constituencyCensuses[$constId]->getPopulation();
+            $this->validateSingleConstituencyVotes($group, $constId, $totalConstituencyPopulation);
         }
 
         // if there were any validation errors, throw na exception
@@ -283,7 +325,7 @@ class ValidationController extends AppController {
             // if all constituencies were checked (no constituency_id parameter was psased),
             // add another validation which prints a global message
             if ( ! $constituencyId) {
-                $this->addValidationError(FM::GLOBAL_CONSTITUENCY_MESSAGE, 'Моля, изчистете нередностите по посочените избирателни райони.');
+                $this->addValidationError(FM::GLOBAL_CONSTITUENCY_MESSAGE, 'Моля, отстранете нередностите по посочените избирателни райони.');
             }
 
             $this->throwValidationErrors();
@@ -338,12 +380,14 @@ class ValidationController extends AppController {
      * 
      * @param  array $group          – array with all votes grouped respectively by 'candidates' and 'parties'
      * @param  int   $constituencyId – which constituency's votes are being validated
+     * @param  int   $constPopulation – population fo the constituency for the selected population census
      */
-    private function validateSingleConstituencyVotes(array $group = [], int $constituencyId): void {
+    private function validateSingleConstituencyVotes(array $group = [], int $constituencyId, int $constPopulation): void {
         $constitutionErrorMessageId = sprintf('const_%s', $constituencyId);
         $candidatesVotesSum         = 0;
         $partiesVotesSum            = 0;
         $allFieldsErrorIds          = []; // if multiple constituencies fields fail, add the constituency id to this array
+        $markAllFields              = false; // whether to set invalid field class to all fields
 
         // validate independent candidates (if any)
         if (isset($group['candidates'])) {
@@ -385,26 +429,34 @@ class ValidationController extends AppController {
             }
         }
 
+        $totalVotes = $candidatesVotesSum + $partiesVotesSum;
+
+        if ($totalVotes > $constPopulation) {
+            $markAllFields = sprintf('Общият брой гласове (%s) надвишава броя на населението в района: %s', $totalVotes, $constPopulation);
+        }
+
         // if all votes sum is equal to 0 OR if there were
         // no candidates and parties at all in the constituency, add validation error
-        if  ($candidatesVotesSum + $partiesVotesSum === 0
-           || ( ! isset($group['candidates']) &&  ! isset($group['parties']))
-        ){
+        if ($totalVotes === 0 || ( ! isset($group['candidates']) &&  ! isset($group['parties']))) {
+            $markAllFields = 'Моля, въведете гласове в района.';
+        }
+
+        if ($markAllFields) {
             foreach ($allFieldsErrorIds as $inputId) {
                 $this->addValidationError($inputId, '');
             }
-            $this->addValidationError($constitutionErrorMessageId, 'Моля, въведете гласове в района.');
+            $this->addValidationError($constitutionErrorMessageId, $markAllFields);
         }
     }
 
     /**
      * Checks if constituency exists and throws an error if it doesn't
      * 
-     * @param  array $constituencies – all constituencies with their IDs as key
+     * @param  mixed $constituencies – all constituencies with their IDs as key
      * @param  int   $constituencyId
      * @throws IncorrectInputDataException
      */
-    private function checkIfConstituencyExists(array $constituencies, $constituencyId): void {
+    private function checkIfConstituencyExists($constituencies, $constituencyId): void {
         $const = $constituencies[ $constituencyId ] ?? NULL;
 
         if ( ! $const) {
@@ -442,9 +494,11 @@ class ValidationController extends AppController {
     protected function setSessionElection(Election $election): void {
         $electionParties       = $election->getElectionParties();
         $independentCandidates = $election->getIndependentCandidates();
+        $electionConstituencies= $election->getElectionConstituencies();
         $parties               = [];
         $candidates            = [];
         $partiesVotes          = [];
+        $constituencyTotalVotes= [];
 
         foreach ($electionParties as $item) {
             $parties[] = [
@@ -469,6 +523,13 @@ class ValidationController extends AppController {
             ];
         }
 
+        foreach ($electionConstituencies as $item) {
+            $constituencyTotalVotes[] = [
+                FM::VOTES_CONST_FIELD => $item->getVirtualColumn(FM::VOTES_CONST_FIELD),
+                FM::VALID_VOTES_FIELD => $item->getTotalValidVotes(),
+            ];
+        }
+
         $_SESSION = [
             FM::ASSEMBLY_FIELD      => $election->getAssemblyTypeId(),
             FM::CENSUS_FIELD        => $election->getPopulationCensusId(),
@@ -479,6 +540,7 @@ class ValidationController extends AppController {
             FM::PARTIES_FIELD       => $parties,
             FM::CANDIDATES_FIELD    => $candidates,
             FM::VOTES_FIELD         => $partiesVotes,
+            FM::CONSTITUENCY_VOTES  => $constituencyTotalVotes,
         ];
     }
 

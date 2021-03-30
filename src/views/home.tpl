@@ -77,6 +77,19 @@
         </div>
     </section>
     <section>
+        <h2>Брой действителни гласове във всеки <abbr title="Многомандатен избирателен район">МИР</abbr></h2>
+        <ol class="constituencies-list">
+            {foreach $constituencies as $item}
+                <li>
+                    <strong>{$item['title']|escape}</strong>:
+                    <input type="hidden" name="{FieldManager::CONSTITUENCY_VOTES}[{$item@index}][{FieldManager::VOTES_CONST_FIELD}]" value="{$item['id']}" />
+                    <input type="text" size="4" class="{FieldManager::CONSTITUENCY_VOTES}-{$item['id']}" name="{FieldManager::CONSTITUENCY_VOTES}[{$item@index}][{FieldManager::VALID_VOTES_FIELD}]" value="{$electionConstituencies[$item['id']][FieldManager::VALID_VOTES_FIELD]|default:0}" /> гласа
+                </li>
+            {/foreach}
+        </ol>
+        <div class="error-message center {FieldManager::GLOBAL_CONSTITUENCY_MESSAGE}_message"></div>
+    </section>
+    <section>
         <div class="center"><button type="submit">Резултати</button></div>
     </section>
 </form>

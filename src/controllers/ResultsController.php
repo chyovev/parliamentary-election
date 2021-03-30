@@ -16,25 +16,22 @@ class ResultsController extends AppController {
             Router::redirect(['controller' => 'home', 'action' => 'index'], 302);
         }
 
-        $assembly        = $election->getAssemblyType();
-        $census          = $election->getPopulationCensusWithPopulation();
-        $electionParties = $election->getElectionParties();
-        $passedParties   = $this->getPassedPartiesAsArray($election);
+        $passedParties = $election->getVirtualColumn(FM::PASSED_PARTIES);
+        $totalMandates = $election->getAssemblyType()->getTotalMandates();
+        $this->distributeMandatesHareNiemeyer($passedParties, $totalMandates);
 
         // if there are any passed parties, set constituencies' data to draw a map
-        if ($passedParties) {
+        if ($passedParties->count()) {
             $this->setMapConstituencies();
         }
 
+        $this->setElectionSummaryData($election);
+
         $viewVars = [
-            'title'           => 'Стъпка 2: Предварителни резултати',
-            'election'        => $election->toArray(TableMap::TYPE_FIELDNAME),
-            'assembly'        => $assembly->toArray(TableMap::TYPE_FIELDNAME),
-            'census'          => $census->toArray(TableMap::TYPE_FIELDNAME),
-            'electionParties' => $electionParties,
-            'passedParties'   => $passedParties,
+            'title'           => 'Стъпка 2/3: Предварителни резултати',
+            'passedParties'   => $passedParties->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
             'candidates'      => $this->groupIndependentCandidatesByConstituencies($election),
-            'partiesVotes'    => $this->groupVotesByConstituencies($electionParties), 
+            'partiesVotes'    => $this->groupVotesByConstituencies($election->getVirtualColumn(FM::PASSED_PARTIES)),
         ];
 
         $this->displayFullPage('results.tpl', $viewVars);
@@ -50,24 +47,25 @@ class ResultsController extends AppController {
 
 
     ///////////////////////////////////////////////////////////////////////////
-    private function getPassedPartiesAsArray(Election $election): array {
-        $passedParties = $election->getVirtualColumn(FM::PASSED_PARTIES);
-        $totalMandates = $election->getAssemblyType()->getTotalMandates();
+    private function setElectionSummaryData(Election $election): void {
+        $assembly = $election->getAssemblyType();
+        $census   = $election->getPopulationCensusWithPopulation();
 
+        $this->setVars([
+            'election' => $election->toArray(TableMap::TYPE_FIELDNAME),
+            'assembly' => $assembly->toArray(TableMap::TYPE_FIELDNAME),
+            'census'   => $census->toArray(TableMap::TYPE_FIELDNAME),
+        ]);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    private function distributeMandatesHareNiemeyer(ObjectCollection $passedParties, int $totalMandates): void {
         // roughly calculate how many mandates all passing parties would receive
         // if there are no independent candidates elected
         if ($passedParties->count()) {
             $hareNiemeyer = new HareNiemeyer();
             $hareNiemeyer->distributeMandates($passedParties, $totalMandates);
         }
-
-        $result = [];
-
-        foreach ($passedParties as $item) {
-            $result[] = $item->toArray(TableMap::TYPE_FIELDNAME);
-        }
-
-        return $result;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -95,8 +93,6 @@ class ResultsController extends AppController {
             $constId            = $item->getConstituencyId();
             $result[$constId][] = $item->toArray(TableMap::TYPE_FIELDNAME);
         }
-
-        $this->setVar('independentCount', $candidates->count());
 
         return $result;
     }

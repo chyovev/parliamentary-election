@@ -165,6 +165,13 @@ class ConstituencyCensusTableMap extends TableMap
     1 => ':id',
   ),
 ), null, 'CASCADE', null, false);
+        $this->addRelation('ElectionConstituency', '\\ElectionConstituency', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':constituency_census_id',
+    1 => ':id',
+  ),
+), null, 'CASCADE', 'ElectionConstituencies', false);
     } // buildRelations()
 
     /**

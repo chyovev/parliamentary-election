@@ -1,6 +1,7 @@
 <?php
 
 use Base\ConstituencyCensusQuery as BaseConstituencyCensusQuery;
+use Propel\Runtime\Collection\ObjectCollection;
 
 /**
  * Skeleton subclass for performing query and update operations on the 'constituencies_censuses' table.
@@ -14,4 +15,14 @@ use Base\ConstituencyCensusQuery as BaseConstituencyCensusQuery;
 class ConstituencyCensusQuery extends BaseConstituencyCensusQuery
 {
 
+    /**
+     * 
+     */
+    public static function getPopulationAndTitleByCensusId(int $populationCensusId): ?ObjectCollection {
+        return self::create()
+            ->useConstituencyQuery()
+                ->addAsColumn('title', 'title')
+            ->endUse()
+            ->findByPopulationCensusId($populationCensusId);
+    }
 }

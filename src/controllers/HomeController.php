@@ -2,6 +2,7 @@
 
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Map\TableMap;
+use FieldManager as FM;
 
 class HomeController extends AppController {
 
@@ -12,14 +13,16 @@ class HomeController extends AppController {
         $assemblies       = AssemblyTypeQuery::create()->find();
         $censuses         = PopulationCensusQuery::create()->getAllTypesWithPopulation();
         $this->allParties = PartyQuery::create()->addAscendingOrderByColumn('title')->find();
+        $constituencies   = ConstituencyQuery::create()->find();
 
         $this->loadElectionFromSession();
 
         $viewVars = [
-            'title'      => 'Стъпка 1: Обща информация',
+            'title'      => 'Стъпка 1/3: Обща информация',
             'assemblies' => $assemblies->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
             'censuses'   => $censuses->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
             'allParties' => $this->allParties->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
+            'constituencies' => $constituencies->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
         ];
 
         $this->displayFullPage('home.tpl', $viewVars);
@@ -33,11 +36,13 @@ class HomeController extends AppController {
             return;
         }
 
-        $selectedParties = $this->extractSelectedParties($election);
+        $selectedParties        = $this->extractSelectedParties($election);
+        $electionConstituencies = $election->getElectionConstituencies();
 
         $this->setVars([
-            'election'        => $election->toArray(TableMap::TYPE_FIELDNAME),
-            'selectedParties' => $selectedParties,
+            'election'               => $election->toArray(TableMap::TYPE_FIELDNAME),
+            'selectedParties'        => $selectedParties,
+            'electionConstituencies' => $electionConstituencies->toArray(FM::VOTES_CONST_FIELD, false, TableMap::TYPE_FIELDNAME),
         ]);
     }
 
