@@ -159,8 +159,13 @@ table.results, table.results tr, table.results th, table.results td {
     font-size: 14px;
 }
 table.results {
-    width: 100%;
     margin: 20px 0px;
+    &.fullwidth {
+        width: 100%;
+    }
+    &.centered {
+        margin: 20px auto;
+    }
     tr {
         &:nth-of-type(even) {
             background-color: #EEEFF0
@@ -171,10 +176,13 @@ table.results {
         &:not(.heading):hover {
             background-color: @lightblue;
         }
+        &.excluded {
+            background-color: #ffffce;
+        }
         th {
             background-color: @blue;
             color: white;
-            padding: 10px 5px;
+            padding: 10px;
         }
         td {
             padding: 5px;
@@ -183,7 +191,7 @@ table.results {
 }
 .chart-wrapper {
     margin: 50px 0px;
-    #piechart, > p {
+    #piechart.condensed, > p {
         width: 49%;
         display: inline-block;
         vertical-align: top;

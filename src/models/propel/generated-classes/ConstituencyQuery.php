@@ -1,6 +1,7 @@
 <?php
 
 use Base\ConstituencyQuery as BaseConstituencyQuery;
+use Propel\Runtime\Collection\ObjectCollection;
 
 /**
  * Skeleton subclass for performing query and update operations on the 'constituencies' table.
@@ -13,5 +14,20 @@ use Base\ConstituencyQuery as BaseConstituencyQuery;
  */
 class ConstituencyQuery extends BaseConstituencyQuery
 {
+
+    /**
+     * Get all constituencies with their respective populations according to selected census
+     *
+     * @param  $populationCensusId
+     * @return ObjectCollection
+     */
+    public static function getConstituenciesWithPopulation(int $populationCensusId): ?ObjectCollection {
+        return self::create()
+            ->useConstituencyCensusQuery()
+                ->filterByPopulationCensusId($populationCensusId)
+                ->addAsColumn('population', 'population')
+            ->endUse()
+            ->find();
+    }
 
 }

@@ -10,7 +10,7 @@
 
     <div id="activity-chart"></div>
     <script type="text/javascript">
-        var barchart_data   = [['Активност', {$election['activity']|percentage}]{if isset($votes)}, ['Преминали партии ({$passedParties|@count})', {($votes/$election[FieldManager::SUFFRAGE_FIELD]*100)|percentage}]{/if}];
+        var barchart_data   = [['Активност', {$election['activity']|percentage}]{if isset($votes)}, ['Преминали партии ({$passedParties|@count})', {($votes/$election['active_suffrage']*100)|percentage}]{/if}];
     </script>
 
     <h2>Обща информация</h2>
@@ -23,15 +23,15 @@
     </div>
 
     <div class="row">
-        <span>Брой души, имащи право на глас: <strong>{$election[FieldManager::SUFFRAGE_FIELD]|number}</strong></span>
+        <span>Брой души, имащи право на глас: <strong>{$election['active_suffrage']|number}</strong></span>
     </div>
 
     <div class="row">
-        <span>Брой действителни гласове в страната и чужбина: <strong>{$election[FieldManager::VALID_VOTES_FIELD]|number}</strong></span>
+        <span>Брой действителни гласове в страната и чужбина: <strong>{$election['total_valid_votes']|number}</strong></span>
     </div>
 
     <div class="row">
-        <span>Брой <em>недействителни</em> гласове в страната и чужбина: <strong>{$election[FieldManager::INVALID_VOTES_FIELD]|number}</strong></span>
+        <span>Брой <em>недействителни</em> гласове в страната и чужбина: <strong>{$election['total_invalid_votes']|number}</strong></span>
     </div>
 
     <div class="row">
@@ -39,7 +39,7 @@
     </div>
 
     <div class="row">
-        <span>Долна граница за представителство: <strong>{$election[FieldManager::THRESHOLD_FIELD]}%</strong> (<em>{$election['threshold_votes']|number} гласа</em>)</span>
+        <span>Долна граница за представителство: <strong>{$election['threshold_percentage']}%</strong> (<em>{$election['threshold_votes']|number} гласа</em>)</span>
     </div>
 
 </section>

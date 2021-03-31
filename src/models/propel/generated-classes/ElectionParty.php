@@ -25,6 +25,22 @@ class ElectionParty extends BaseElectionParty implements HareNiemeyerInterface
                     '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#a9a9a9'];
 
     /**
+     * when an ElectionParty object gets created, mark it as having received 0 local mandates
+     * (this is used for local distribution of mandates)
+     */
+    public function __construct() {
+        $this->setVirtualColumn(HareNiemeyerInterface::LOCAL_MANDATES_COLUMN, 0);
+        parent::__construct();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function incrementLocalMandatesBy(int $number) {
+        $current = $this->getVirtualColumn(HareNiemeyerInterface::LOCAL_MANDATES_COLUMN);
+        
+        $this->setVirtualColumn(HareNiemeyerInterface::LOCAL_MANDATES_COLUMN, $current + $number);
+    }
+
+    /**
      * a shortcut which ensures Hare-Niemeyer compatibility
      * @return int
      */

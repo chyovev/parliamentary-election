@@ -2,7 +2,6 @@
 
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Map\TableMap;
-use FieldManager as FM;
 
 class HomeController extends AppController {
 
@@ -13,16 +12,14 @@ class HomeController extends AppController {
         $assemblies       = AssemblyTypeQuery::create()->find();
         $censuses         = PopulationCensusQuery::create()->getAllTypesWithPopulation();
         $this->allParties = PartyQuery::create()->addAscendingOrderByColumn('title')->find();
-        $constituencies   = ConstituencyQuery::create()->find();
 
         $this->loadElectionFromSession();
 
         $viewVars = [
-            'title'      => 'Стъпка 1/3: Обща информация',
+            'title'      => 'Стъпка 1: Обща информация',
             'assemblies' => $assemblies->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
             'censuses'   => $censuses->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
             'allParties' => $this->allParties->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
-            'constituencies' => $constituencies->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
         ];
 
         $this->displayFullPage('home.tpl', $viewVars);
@@ -30,38 +27,44 @@ class HomeController extends AppController {
 
     ///////////////////////////////////////////////////////////////////////////
     private function loadElectionFromSession(): void {
-        $election = $this->populateElection('session');
+        $election       = $this->populateElection('session');
+        $constituencies = $election
+                        ? $election->getConstituenciesWithPopulation()
+                        : ConstituencyQuery::create()->find();
+
+        $this->setVar('constituencies', $constituencies->toArray(NULL, false, TableMap::TYPE_FIELDNAME));
 
         if ( ! $election) {
-            return;
+            return; 
         }
 
-        $selectedParties        = $this->extractSelectedParties($election);
-        $electionConstituencies = $election->getElectionConstituencies();
+        $selectedParties = $this->extractSelectedParties($election);
 
         $this->setVars([
-            'election'               => $election->toArray(TableMap::TYPE_FIELDNAME),
-            'selectedParties'        => $selectedParties,
-            'electionConstituencies' => $electionConstituencies->toArray(FM::VOTES_CONST_FIELD, false, TableMap::TYPE_FIELDNAME),
+            'election'        => $election->toArray(TableMap::TYPE_FIELDNAME),
+            'selectedParties' => $selectedParties->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
         ]);
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    private function extractSelectedParties(Election $election): array {
+    private function extractSelectedParties(Election $election): ObjectCollection {
         $allPartiesWithIdAsKey     = $this->allParties->toKeyIndex();
 
         // holds party id and votes, but the actual party is also needed
         $selectedPartiesReferences = $election->getElectionParties()->toKeyIndex('partyId');
 
-        $selectedParties = [];
+        $selectedParties = new ObjectCollection();;
 
         foreach ($selectedPartiesReferences as $partyId => $item) {
-            $party = $allPartiesWithIdAsKey[$partyId]->toArray(TableMap::TYPE_FIELDNAME);
+            $party = $allPartiesWithIdAsKey[$partyId];
 
-            $party['total_votes'] = $item->getTotalVotes();
-            $party['party_color'] = $item->getPartyColor();
+            $totalVotes = $item->getTotalVotes();
+            $partyColor = $item->getPartyColor();
 
-            $selectedParties[$partyId] = $party;
+            $party->setVirtualColumn('total_votes', $totalVotes);
+            $party->setVirtualColumn('party_color', $partyColor);
+
+            $selectedParties->append($party);
         }
 
         return $selectedParties;

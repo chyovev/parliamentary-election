@@ -17,6 +17,8 @@ use Propel\Runtime\Map\TableMap;
 class Election extends BaseElection
 {
 
+    private $constituencies;
+
     /**
      * Gets the population census associated with the election,
      * executing a JOIN to the constituencies censuses table to SUM their populations
@@ -34,6 +36,56 @@ class Election extends BaseElection
         }
 
         return $this->aPopulationCensus;
+    }
+
+    /**
+     * Get all constituencies with their respective populations according to selected census
+     *
+     * @return ObjectCollection
+     */
+    public function getConstituenciesWithPopulation(): ?ObjectCollection {
+        if ($this->constituencies === null) {
+            $populationCensusId = $this->getPopulationCensusId();
+
+            $this->constituencies = ConstituencyQuery::create()->useConstituencyCensusQuery()
+                                            ->filterByPopulationCensusId($populationCensusId)
+                                            ->addAsColumn('population', 'population')
+                                        ->endUse()
+                                        ->find();
+        }
+
+        $constituencies = $this->constituencies;
+        $this->addTotalVotes($constituencies);
+        // TODO: add constituencies single votes
+
+        return $this->constituencies;
+    }
+
+    /**
+     * For all constituencies add virtual field
+     * total_valid_votes = number specified in step 1
+     *
+     * @param ObjectCollection $constituencies
+     */
+    private function addTotalVotes(ObjectCollection $constituencies): void {
+        $constituenciesArray = $constituencies->toKeyIndex();
+        $totalVotes          = $this->getElectionConstituencies();
+
+        foreach ($totalVotes as $item) {
+            $constituencyId = $item->getVirtualColumn('constituency_id');
+            $votes          = $item->getTotalValidVotes();
+
+            $constituenciesArray[$constituencyId]->setVirtualColumn('total_valid_votes', $votes);
+        }
+    }
+
+    /**
+     * shortcut to virtual column passed_parties
+     *
+     * @return ObjectCollection $passedParties
+     */
+    public function getPassedParties(): ObjectCollection {
+        return $this->getVirtualColumn('passed_parties');
     }
 
 }

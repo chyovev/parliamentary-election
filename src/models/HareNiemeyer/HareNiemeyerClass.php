@@ -59,7 +59,7 @@ class HareNiemeyer {
             // (it should not receive yet another mandate on following iterations)
             if ($this->distributedMandates + count($partiesToReceiveAMandate) <= $mandatesToDistribute) {
                 foreach ($partiesToReceiveAMandate as $index) {
-                    $this->giveAdditionalMandateToParty($parties[$index]);
+                    $this->giveAdditionalMandateToParty($parties[$index], $index);
                    
                     unset($partiesRemainders[$index]);
                 }
@@ -114,7 +114,11 @@ class HareNiemeyer {
             $quotient  = floor($division);
             $remainder = round($division - $quotient, self::PRECISION);
 
-            $item->setHareNiemeyerMandates($quotient);
+            $item->setHareNiemeyerMandates($quotient)
+                 ->setTotalHareNiemeyerMandates($quotient)
+                 ->setHareNiemeyerRemainder($remainder)
+                 ->markPartyAsHavingReceivedAMandate(false);
+
             $partiesRemainders[ $index ] = $remainder;
             $this->distributedMandates   += $quotient;
         }
@@ -183,13 +187,18 @@ class HareNiemeyer {
      * and mark the party as having received a mandate based on its remainder
      *
      * @param  object $party: instance of HareNiemeyerInterface
+     * @param  int    $index: order of party in the collection
      */
-    private function giveAdditionalMandateToParty(HareNiemeyerInterface $party): void {
+    private function giveAdditionalMandateToParty(HareNiemeyerInterface $party, int $index): void {
         $partyMandates = $party->getHareNiemeyerMandates();
 
-        $party->setHareNiemeyerMandates($partyMandates + 1);
+        $party->setHareNiemeyerMandates($partyMandates + 1)
+              ->setTotalHareNiemeyerMandates($partyMandates + 1)
+              ->markPartyAsHavingReceivedAMandate(true);
 
         $this->distributedMandates += 1;
+
+        $this->partiesReceivingMandates[ $index ] = 1;
     }
 
     /**

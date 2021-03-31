@@ -21,9 +21,9 @@
         {/foreach}
     </ol>
 
-    <div class="error-message center {FieldManager::GLOBAL_CONSTITUENCY_MESSAGE}_message"></div>
+    <div class="error-message center constituencies_fields_message"></div>
 
-    <div class="none" id="{FieldManager::GLOBAL_CONSTITUENCY_MESSAGE}">
+    <div class="none" id="constituencies_fields">
         {assign var=iterator value=0}
         {foreach $constituencies as $const}
             <div id="constituency-{$const['id']}-data">
@@ -32,7 +32,7 @@
                 {foreach $passedParties as $party}
                     <div class="row">
                         <strong>{$party['party_title']}:</strong>
-                        <input type="text" size="5" name="{FieldManager::VOTES_FIELD}[{$party['party_id']}][{$const['id']}]" class="party-field-{$const['id']}-{$party['party_id']}" value="{$partiesVotes[$const['id']][$party['party_id']]|escape|default:0}" /> гласа
+                        <input type="text" size="5" name="parties_votes[{$party['party_id']}][{$const['id']}]" class="party-field-{$const['id']}-{$party['party_id']}" value="{$partiesVotes[$const['id']][$party['party_id']]|escape|default:0}" /> гласа
                     </div>
                 {/foreach}
 

@@ -1,7 +1,6 @@
 <?php
 
 use Propel\Runtime\Collection\ObjectCollection;
-use FieldManager as FM;
 
 abstract class AppController {
 
@@ -81,12 +80,12 @@ abstract class AppController {
      * @return Election
      */
     private function populateElectionFromData(array $source = []): Election {
-        $assemblyTypeId        = $source[FM::ASSEMBLY_FIELD]      ?? NULL;
-        $populationCensusId    = $source[FM::CENSUS_FIELD]        ?? NULL;
-        $activeSuffrage        = $source[FM::SUFFRAGE_FIELD]      ?? NULL;
-        $thresholdPercentage   = $source[FM::THRESHOLD_FIELD]     ?? NULL;
-        $totalValidVotes       = $source[FM::VALID_VOTES_FIELD]   ?? NULL;
-        $totalInvalidVotes     = $source[FM::INVALID_VOTES_FIELD] ?? NULL;
+        $assemblyTypeId      = $source['assembly_type_id']     ?? NULL;
+        $populationCensusId  = $source['population_census_id'] ?? NULL;
+        $activeSuffrage      = $source['active_suffrage']      ?? NULL;
+        $thresholdPercentage = $source['threshold_percentage'] ?? NULL;
+        $totalValidVotes     = $source['total_valid_votes']    ?? NULL;
+        $totalInvalidVotes   = $source['total_invalid_votes']  ?? NULL;
 
         $election = new Election();
 
@@ -98,8 +97,8 @@ abstract class AppController {
                  ->setTotalInvalidVotes($totalInvalidVotes);
 
         $election
-                 ->setVirtualColumn('activity', $this->calculateElectionActivity($totalValidVotes, $totalInvalidVotes, $activeSuffrage))
-                 ->setVirtualColumn('threshold_votes', $this->calculateThresholdVotes($thresholdPercentage, $totalValidVotes));
+                 ->setVirtualColumn('activity', $this->calculateElectionActivity((int) $totalValidVotes, (int) $totalInvalidVotes, (int) $activeSuffrage))
+                 ->setVirtualColumn('threshold_votes', $this->calculateThresholdVotes((int) $thresholdPercentage, (int) $totalValidVotes));
 
         $this->populateConstituencyValidVotes($election, $source);
         $this->populateElectionPartiesFromData($election, $source);
@@ -139,20 +138,20 @@ abstract class AppController {
      * @param  array    $source   – should be either $_POST or $_SESSION
      */
     protected function populateIndependentCandidatesFromData(Election $election, array $source): void {
-        $data       = $source[FM::CANDIDATES_FIELD] ?? [];
+        $data       = $source['independent_candidates'] ?? [];
         $candidates = new ObjectCollection();
 
         foreach ($data as $item) {
             $candidate = new IndependentCandidate();
-            $candidate->setName($item[FM::CAND_NAME_FIELD])
-                      ->setVotes($item[FM::CAND_VOTES_FIELD])
-                      ->setConstituencyId($item[FM::CAND_CONST_FIELD]);
+            $candidate->setName($item['name'])
+                      ->setVotes($item['votes'])
+                      ->setConstituencyId($item['constituency_id']);
             
             $candidates->append($candidate);
         }
 
         $election->setIndependentCandidates($candidates);
-        $election->setVirtualColumn(FM::INDEPENDENT_COUNT, $candidates->count());
+        $election->setVirtualColumn('independent_candidates_count', $candidates->count());
     }
 
     /**
@@ -161,14 +160,14 @@ abstract class AppController {
      * @param  array    $source   – should be either $_POST or $_SESSION
      */
     private function populateConstituencyValidVotes(Election $election, array $source): void {
-        $data                   = $source[FM::CONSTITUENCY_VOTES] ?? [];
+        $data                   = $source['constituency_votes'] ?? [];
         $electionConstituencies = new ObjectCollection();
 
         foreach ($data as $item) {
             $electionConstituency = new ElectionConstituency();
 
-            $electionConstituency->setTotalValidVotes($item[FM::VALID_VOTES_FIELD])
-                                 ->setVirtualColumn(FM::VOTES_CONST_FIELD, $item[FM::VOTES_CONST_FIELD]);
+            $electionConstituency->setTotalValidVotes($item['total_valid_votes'])
+                                 ->setVirtualColumn('constituency_id', $item['constituency_id']);
 
             $electionConstituencies->append($electionConstituency);
         }
@@ -189,7 +188,7 @@ abstract class AppController {
         $totalVotes          = $election->getTotalValidVotes();
         $thresholdPercentage = $election->getThresholdPercentage();
 
-        $data = $source[FM::PARTIES_FIELD] ?? [];
+        $data = $source['parties'] ?? [];
         $i    = 0; // used solely for the random color
 
         // TODO: get previosly stored election parties and remove elements which are not in $source
@@ -199,17 +198,17 @@ abstract class AppController {
         $passedParties   = new ObjectCollection();
 
         foreach ($data as $item) {
-            $partyVotes      = $item[FM::PARTY_TOTAL_VOTES];
+            $partyVotes      = $item['total_votes'];
             $partyPercentage = $this->calculatePartyPercentage($partyVotes, $totalVotes);
 
             $electionParty = new ElectionParty();
 
-            $electionParty->setPartyId($item[FM::PARTY_ID])
+            $electionParty->setPartyId($item['party_id'])
                           ->setTotalVotes($partyVotes)
-                          ->setOrd($item[FM::PARTY_ORD]);
+                          ->setOrd($item['ord']);
 
-            if (isset($item[FM::PARTY_COLOR])) {
-                $electionParty->setPartyColor($item[FM::PARTY_COLOR]);
+            if (isset($item['party_color'])) {
+                $electionParty->setPartyColor($item['party_color']);
             }
             else {
                 $electionParty->setPartyColorAutomatically($i);
@@ -220,9 +219,9 @@ abstract class AppController {
                 // load additional party information (title, abbreviation, percentage) for passed parties
                 $party = $electionParty->getParty();
                 $electionParty
-                              ->setVirtualColumn(FM::VOTES_PERCENTAGE, $partyPercentage)
-                              ->setVirtualColumn(FM::PARTY_TITLE, $party->getTitle())
-                              ->setVirtualColumn(FM::PARTY_ABBREVIATION, $party->getAbbreviation());
+                              ->setVirtualColumn('votes_percentage', $partyPercentage)
+                              ->setVirtualColumn('party_title', $party->getTitle())
+                              ->setVirtualColumn('party_abbreviation', $party->getAbbreviation());
 
                 $this->populateElectionPartyVotesFromData($electionParty, $source);
                 $passedParties->append($electionParty);
@@ -232,8 +231,8 @@ abstract class AppController {
         }
 
         $election->setElectionParties($electionParties);
-        $election->setVirtualColumn(FM::TOTAL_PARTIES_COUNT, $electionParties->count());
-        $election->setVirtualColumn(FM::PASSED_PARTIES, $passedParties);
+        $election->setVirtualColumn('election_parties_count', $electionParties->count());
+        $election->setVirtualColumn('passed_parties', $passedParties);
     }
 
     /**
@@ -244,7 +243,7 @@ abstract class AppController {
      * @param  array $source        – should be either $_POST or $_SESSION
      */
     protected function populateElectionPartyVotesFromData(ElectionParty $party, array $source): void {
-        $data    = $source[FM::VOTES_FIELD] ?? [];
+        $data    = $source['parties_votes'] ?? [];
         $partyId = $party->getPartyId();
 
         $partyVotes = new ObjectCollection();

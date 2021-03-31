@@ -1,9 +1,5 @@
 <?php
 
-use Propel\Runtime\Collection\ObjectCollection;
-use Propel\Runtime\Map\TableMap;
-use FieldManager as FM;
-
 class ValidationController extends AppController {
 
     private $validationErrors = [];
@@ -39,7 +35,7 @@ class ValidationController extends AppController {
             $election = $this->getElectionFromSession();
             $this->populateIndependentCandidatesFromData($election, $_POST);
 
-            $passedParties = $election->getVirtualColumn(FM::PASSED_PARTIES);
+            $passedParties = $election->getVirtualColumn('passed_parties');
             foreach ($passedParties as $party) {
                 $this->populateElectionPartyVotesFromData($party, $_POST);
             }
@@ -77,7 +73,7 @@ class ValidationController extends AppController {
     private function getElectionFromSession(): Election {
         $election = $this->populateElection('session');
         if ( ! $election) {
-            throw new IncorrectInputDataException([FM::GLOBAL_CONSTITUENCY_MESSAGE, 'Сесията ви е изтекла. Моля, презаредете страницата.']);
+            throw new IncorrectInputDataException(['constituencies_fields', 'Сесията ви е изтекла. Моля, презаредете страницата.']);
         }
 
         return $election;
@@ -90,12 +86,12 @@ class ValidationController extends AppController {
      * @param Election $election – Object from which passed parties get extracted
      */
     private function updatePartiesColors(Election $election): void {
-        $passedParties = $election->getVirtualColumn(FM::PASSED_PARTIES);
-        $data          = $_POST[FM::PARTIES_FIELD] ?? [];
+        $passedParties = $election->getVirtualColumn('passed_parties');
+        $data          = $_POST['parties'] ?? [];
 
         foreach ($passedParties as $item) {
             $partyId = $item->getPartyId();
-            $color   = $data[$partyId][FM::PARTY_COLOR] ?? NULL; 
+            $color   = $data[$partyId]['party_color'] ?? NULL; 
 
             if ($color) {
                 $item->setPartyColor($color);
@@ -132,7 +128,7 @@ class ValidationController extends AppController {
      */
     private function validateAssembly(Election $election): void {
         if ( ! $election->getAssemblyType()) {
-            $this->addValidationError(FM::ASSEMBLY_FIELD, 'Моля, изберете тип на парламентарни избори.');
+            $this->addValidationError('assembly_type_id', 'Моля, изберете тип на парламентарни избори.');
         }
     }
 
@@ -144,7 +140,7 @@ class ValidationController extends AppController {
      */
     private function validatePopulationCensus(Election $election): void {
         if ( ! $election->getPopulationCensusWithPopulation()) {
-            $this->addValidationError(FM::CENSUS_FIELD, 'Моля, изберете население по данни на НСИ.');
+            $this->addValidationError('population_census_id', 'Моля, изберете население по данни на НСИ.');
         }
     }
 
@@ -161,21 +157,21 @@ class ValidationController extends AppController {
         $census            = $election->getPopulationCensusWithPopulation();
 
         if ($activeSuffrage <= 0) {
-            $this->addValidationError(FM::SUFFRAGE_FIELD, 'Моля, въведете брой души, имащи право на глас.');
+            $this->addValidationError('active_suffrage', 'Моля, въведете брой души, имащи право на глас.');
         }
 
         if ($totalValidVotes <= 0) {
-            $this->addValidationError(FM::VALID_VOTES_FIELD, 'Моля, въведете брой действителни гласове.');
+            $this->addValidationError('total_valid_votes', 'Моля, въведете брой действителни гласове.');
         }
 
         // if the active suffrage is greater than the population
         if ($census && $activeSuffrage > $census->getPopulation()) {
-            $this->addValidationError(FM::SUFFRAGE_FIELD, 'Не може броят на имащите право на глас да надвишава броя на населението.');
+            $this->addValidationError('active_suffrage', 'Не може броят на имащите право на глас да надвишава броя на населението.');
         }
 
         // if there are more votes than people entitled to vote, abort
         if ($totalValidVotes + $totalInvalidVotes > $activeSuffrage) {
-            $this->addValidationError(FM::VALID_VOTES_FIELD, 'Не може общият брой гласове да надвишава броя на имащите право на глас.');
+            $this->addValidationError('total_valid_votes', 'Не може общият брой гласове да надвишава броя на имащите право на глас.');
         }
 
     }
@@ -190,7 +186,7 @@ class ValidationController extends AppController {
         $threshold = $election->getThresholdPercentage();
 
         if ($threshold < 1 || $threshold > 99) {
-            $this->addValidationError(FM::THRESHOLD_FIELD, 'Долната граница за представителство трябва да е в диапазона [1,99]');
+            $this->addValidationError('threshold_percentage', 'Долната граница за представителство трябва да е в диапазона [1,99]');
         }
     }
 
@@ -225,10 +221,10 @@ class ValidationController extends AppController {
         }
 
         if ($partiesErrors) {
-            $this->addValidationError(FM::PARTIES_FIELD, implode('<br />', $partiesErrors));
+            $this->addValidationError('parties', implode('<br />', $partiesErrors));
         }
         elseif ($electionParties->count() < $minParties) {
-            $this->addValidationError(FM::PARTIES_FIELD, 'Моля, изберете поне две партии.');
+            $this->addValidationError('parties', 'Моля, изберете поне две партии.');
         }
         else {
             $this->validateElectionPartiesVotes($election);
@@ -243,32 +239,42 @@ class ValidationController extends AppController {
      * @param int      $minParties
      */
     private function validateElectionConstituencies(Election $election): void {
-        $populationCensusId     = $election->getPopulationCensusId();
-        $constituencyCensuses   = ConstituencyCensusQuery::getPopulationAndTitleByCensusId($populationCensusId)->toKeyIndex('constituencyId');
-        $electionConstituencies = $election->getElectionConstituencies();
-        $constituencyErrors     = false;
+        $constituencies     = $election->getConstituenciesWithPopulation();
+        $constituencyErrors = false;
+        $emptyVotesError    = 0;
+        $votesSum           = 0;
 
-        foreach ($electionConstituencies as $item) {
-            $constituencyId = $item->getVirtualColumn(FM::VOTES_CONST_FIELD);
-            $fieldId        = sprintf('%s-%s', FieldManager::CONSTITUENCY_VOTES, $constituencyId);
-            $this->checkIfConstituencyExists($constituencyCensuses, $constituencyId);
+        foreach ($constituencies as $item) {
+            $votes          = $item->getVirtualColumn('total_valid_votes');
+            $population     = $item->getPopulation();
+            $title          = $item->getTitle();
 
-            $votes      = $item->getTotalValidVotes();
-            $population = $constituencyCensuses[$constituencyId]->getPopulation();
-            $title      = $constituencyCensuses[$constituencyId]->getTitle();
+            $fieldId        = sprintf('constituency_votes-%s', $item->getId());
 
+            // require min votes
             if ($votes <= 0) {
                 $this->addValidationError($fieldId, 'Моля, въведете валиден брой гласове за района.');
-                $constituencyErrors = true;
+                $emptyVotesError = true;
             }
+
+            // but don't allow too many votes
             elseif ($votes > $population) {
                 $this->addValidationError($fieldId, sprintf('Броят гласове надвишава броя на населението за района: %s.', $population));
-                $this->addValidationError(FM::GLOBAL_CONSTITUENCY_MESSAGE, sprintf('Броят гласове в МИР %s надвишава броя на населението за района: %s.', $title, $population));
+                $this->addValidationError('constituencies_fields', sprintf('Броят гласове в МИР %s надвишава броя на населението за района: %s.', $title, $population));
             }
+
+            $votesSum += $votes;
         }
 
-        if ($constituencyErrors) {
-            $this->addValidationError(FM::GLOBAL_CONSTITUENCY_MESSAGE, 'Моля, отстранете нередностите по посочените избирателни райони.');
+        // check if all votes exceed the people entitled to vote
+        if ($votesSum > $election->getActiveSuffrage()) {
+            $this->addValidationError('constituencies_fields', 'Броят гласове във всички МИР надвишава броя души, имащи право на глас.');
+        }
+
+        // if the validation failed due to too few votes,
+        // show a global message
+        if ($emptyVotesError) {
+            $this->addValidationError('constituencies_fields', 'Моля, отстранете нередностите по посочените избирателни райони.');
         }
     }
 
@@ -285,10 +291,10 @@ class ValidationController extends AppController {
         $totalValidVotes = $election->getTotalValidVotes();
 
         if ($partiesVotesSum === 0) {
-            $this->addValidationError(FM::PARTIES_FIELD, 'Поне една партия трябва да има повече от 0 гласа.');
+            $this->addValidationError('parties', 'Поне една партия трябва да има повече от 0 гласа.');
         }
         elseif ($partiesVotesSum < 0 || $partiesVotesSum > $totalValidVotes) {
-            $this->addValidationError(FM::PARTIES_FIELD, 'Общият брой гласове на партиите надвишава броя на действителните гласове.');
+            $this->addValidationError('parties', 'Общият брой гласове на партиите надвишава броя на действителните гласове.');
         }
 
     }
@@ -301,21 +307,19 @@ class ValidationController extends AppController {
      * @param string   $constituencyId – type is string, as it gets extracted from the URL
      */
     private function validationStep2(Election $election, string $constituencyId = NULL): void {
-        $populationCensusId     = $election->getPopulationCensusId();
-        $constituencyCensuses   = ConstituencyCensusQuery::getPopulationAndTitleByCensusId($populationCensusId)->toKeyIndex('constituencyId');
-        $groupedByConstituency  = $this->groupPartiesVotesAndCandidatesByConstituency($election, $constituencyCensuses);
-        $electionConstituencies = $election->getElectionConstituencies()->toArray(FM::VOTES_CONST_FIELD, false, TableMap::TYPE_FIELDNAME);
+        $constituencies        = $election->getConstituenciesWithPopulation()->toKeyIndex();
+        $groupedByConstituency = $this->groupPartiesVotesAndCandidatesByConstituency($election, $constituencies);
 
         // if there's a constituency id specified,
         // overwrite all groups using only its data
         if ($constituencyId) {
-            $this->checkIfConstituencyExists($constituencyCensuses, $constituencyId);
+            $this->checkIfConstituencyExists($constituencies, $constituencyId);
             $groupedByConstituency = [(int) $constituencyId => $groupedByConstituency[$constituencyId] ?? []];
         }
 
         // otherwise check all constituencies
         foreach ($groupedByConstituency as $constId => $group) {
-            $totalConstituencyPopulation = $constituencyCensuses[$constId]->getPopulation();
+            $totalConstituencyPopulation = $constituencies[$constId]->getPopulation();
             $this->validateSingleConstituencyVotes($group, $constId, $totalConstituencyPopulation);
         }
 
@@ -325,12 +329,11 @@ class ValidationController extends AppController {
             // if all constituencies were checked (no constituency_id parameter was psased),
             // add another validation which prints a global message
             if ( ! $constituencyId) {
-                $this->addValidationError(FM::GLOBAL_CONSTITUENCY_MESSAGE, 'Моля, отстранете нередностите по посочените избирателни райони.');
+                $this->addValidationError('constituencies_fields', 'Моля, отстранете нередностите по посочените избирателни райони.');
             }
 
             $this->throwValidationErrors();
         }
-
     }
 
     /**
@@ -460,7 +463,7 @@ class ValidationController extends AppController {
         $const = $constituencies[ $constituencyId ] ?? NULL;
 
         if ( ! $const) {
-            throw new IncorrectInputDataException([FM::GLOBAL_CONSTITUENCY_MESSAGE, sprintf('Несъществуващ многомандатен избирателен район: %s', $constituencyId)]);
+            throw new IncorrectInputDataException(['constituencies_fields', sprintf('Несъществуващ многомандатен избирателен район: %s', $constituencyId)]);
         }        
     }
 
@@ -502,10 +505,10 @@ class ValidationController extends AppController {
 
         foreach ($electionParties as $item) {
             $parties[] = [
-                FM::PARTY_ID          => $item->getPartyId(),
-                FM::PARTY_TOTAL_VOTES => $item->getTotalVotes(),
-                FM::PARTY_ORD         => $item->getOrd(),
-                FM::PARTY_COLOR       => $item->getPartyColor(),
+                'party_id'    => $item->getPartyId(),
+                'total_votes' => $item->getTotalVotes(),
+                'ord'         => $item->getOrd(),
+                'party_color' => $item->getPartyColor(),
             ];
 
             $partiesConstituenciesVotes = $item->getElectionPartyVotes();
@@ -517,30 +520,30 @@ class ValidationController extends AppController {
 
         foreach ($independentCandidates as $item) {
             $candidates[] = [
-                FM::CAND_NAME_FIELD  => $item->getName(),
-                FM::CAND_VOTES_FIELD => $item->getVotes(),
-                FM::CAND_CONST_FIELD => $item->getConstituencyId(),
+                'name'            => $item->getName(),
+                'votes'           => $item->getVotes(),
+                'constituency_id' => $item->getConstituencyId(),
             ];
         }
 
         foreach ($electionConstituencies as $item) {
             $constituencyTotalVotes[] = [
-                FM::VOTES_CONST_FIELD => $item->getVirtualColumn(FM::VOTES_CONST_FIELD),
-                FM::VALID_VOTES_FIELD => $item->getTotalValidVotes(),
+                'constituency_id'   => $item->getVirtualColumn('constituency_id'),
+                'total_valid_votes' => $item->getTotalValidVotes(),
             ];
         }
 
         $_SESSION = [
-            FM::ASSEMBLY_FIELD      => $election->getAssemblyTypeId(),
-            FM::CENSUS_FIELD        => $election->getPopulationCensusId(),
-            FM::SUFFRAGE_FIELD      => $election->getActiveSuffrage(),
-            FM::THRESHOLD_FIELD     => $election->getThresholdPercentage(),
-            FM::VALID_VOTES_FIELD   => $election->getTotalValidVotes(),
-            FM::INVALID_VOTES_FIELD => $election->getTotalInvalidVotes(),
-            FM::PARTIES_FIELD       => $parties,
-            FM::CANDIDATES_FIELD    => $candidates,
-            FM::VOTES_FIELD         => $partiesVotes,
-            FM::CONSTITUENCY_VOTES  => $constituencyTotalVotes,
+            'assembly_type_id'       => $election->getAssemblyTypeId(),
+            'population_census_id'   => $election->getPopulationCensusId(),
+            'active_suffrage'        => $election->getActiveSuffrage(),
+            'threshold_percentage'   => $election->getThresholdPercentage(),
+            'total_valid_votes'      => $election->getTotalValidVotes(),
+            'total_invalid_votes'    => $election->getTotalInvalidVotes(),
+            'parties'                => $parties,
+            'independent_candidates' => $candidates,
+            'parties_votes'          => $partiesVotes,
+            'constituency_votes'     => $constituencyTotalVotes,
         ];
     }
 
