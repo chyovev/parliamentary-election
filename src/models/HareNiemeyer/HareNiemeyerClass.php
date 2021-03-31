@@ -138,14 +138,14 @@ class HareNiemeyer {
     private function getPartiesToReceiveAMandate(array $partiesRemainders): array {
 
         // sort remainders in descending order
-        asort($partiesRemainders);
+        arsort($partiesRemainders);
 
         // cycle through all remainders, set the first one as max
         // and mark the first party as a potential mandate-receiver
         foreach ($partiesRemainders as $index => $remainder) {
 
             // the first element has no prev element
-            if (prev($partiesRemainders) === false) {
+            if (prev($partiesRemainders) === false && !isset($maxRemainder)) {
                 $pendingParties = [ $index ];
                 $maxRemainder   = $remainder;
                 continue;

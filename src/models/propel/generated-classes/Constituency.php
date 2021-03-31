@@ -22,6 +22,6 @@ class Constituency extends BaseConstituency implements HareNiemeyerInterface
      * @return int
      */
     public function getVotes(): int {
-        return $this->getVirtualColumn('total_valid_votes');
+        return $this->getPopulation();
     }
 }

@@ -13,14 +13,19 @@ trait HareNiemeyerTrait {
 
     ///////////////////////////////////////////////////////////////////////////
     public function setHareNiemeyerRemainder(float $remainder): self {
-        $remainder = number_format($remainder, 14, '.', '');
+        $remainder = $remainder;
         $this->setVirtualColumn(HareNiemeyerInterface::REMAINDER_COLUMN, $remainder);
 
         return $this;
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    public function markPartyAsHavingReceivedAMandate(bool $status): self {
+    public function hasPartyReceivedAdditionalMandate(): bool {
+        return $this->getVirtualColumn(HareNiemeyerInterface::RECEIVED_MANDATE_COLUMN);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function markPartyAsHavingReceivedAdditionalMandate(bool $status): self {
         $this->setVirtualColumn(HareNiemeyerInterface::RECEIVED_MANDATE_COLUMN, $status);
 
         return $this;
