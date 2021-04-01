@@ -108,7 +108,6 @@
     <table name="elections_parties" phpName="ElectionParty">
         <column name="id" type="integer" sqlType="int(11) unsigned" primaryKey="true" autoIncrement="true" required="true" />
         <column name="election_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
-        <column name="list_number" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
         <column name="party_id" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />
         <column name="party_color" type="CHAR" size="7" />
         <column name="total_votes" type="integer" sqlType="int(11) unsigned" required="true" defaultValue="0" />

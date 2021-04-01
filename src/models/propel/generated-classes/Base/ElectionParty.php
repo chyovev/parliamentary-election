@@ -84,14 +84,6 @@ abstract class ElectionParty implements ActiveRecordInterface
     protected $election_id;
 
     /**
-     * The value for the list_number field.
-     *
-     * Note: this column has a database default value of: 0
-     * @var        int
-     */
-    protected $list_number;
-
-    /**
      * The value for the party_id field.
      *
      * Note: this column has a database default value of: 0
@@ -161,7 +153,6 @@ abstract class ElectionParty implements ActiveRecordInterface
     public function applyDefaultValues()
     {
         $this->election_id = 0;
-        $this->list_number = 0;
         $this->party_id = 0;
         $this->total_votes = 0;
         $this->ord = 0;
@@ -415,16 +406,6 @@ abstract class ElectionParty implements ActiveRecordInterface
     }
 
     /**
-     * Get the [list_number] column value.
-     *
-     * @return int
-     */
-    public function getListNumber()
-    {
-        return $this->list_number;
-    }
-
-    /**
      * Get the [party_id] column value.
      *
      * @return int
@@ -507,26 +488,6 @@ abstract class ElectionParty implements ActiveRecordInterface
 
         return $this;
     } // setElectionId()
-
-    /**
-     * Set the value of [list_number] column.
-     *
-     * @param int $v new value
-     * @return $this|\ElectionParty The current object (for fluent API support)
-     */
-    public function setListNumber($v)
-    {
-        if ($v !== null) {
-            $v = (int) $v;
-        }
-
-        if ($this->list_number !== $v) {
-            $this->list_number = $v;
-            $this->modifiedColumns[ElectionPartyTableMap::COL_LIST_NUMBER] = true;
-        }
-
-        return $this;
-    } // setListNumber()
 
     /**
      * Set the value of [party_id] column.
@@ -626,10 +587,6 @@ abstract class ElectionParty implements ActiveRecordInterface
                 return false;
             }
 
-            if ($this->list_number !== 0) {
-                return false;
-            }
-
             if ($this->party_id !== 0) {
                 return false;
             }
@@ -674,19 +631,16 @@ abstract class ElectionParty implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : ElectionPartyTableMap::translateFieldName('ElectionId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->election_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : ElectionPartyTableMap::translateFieldName('ListNumber', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->list_number = (null !== $col) ? (int) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : ElectionPartyTableMap::translateFieldName('PartyId', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : ElectionPartyTableMap::translateFieldName('PartyId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->party_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ElectionPartyTableMap::translateFieldName('PartyColor', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : ElectionPartyTableMap::translateFieldName('PartyColor', TableMap::TYPE_PHPNAME, $indexType)];
             $this->party_color = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ElectionPartyTableMap::translateFieldName('TotalVotes', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ElectionPartyTableMap::translateFieldName('TotalVotes', TableMap::TYPE_PHPNAME, $indexType)];
             $this->total_votes = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : ElectionPartyTableMap::translateFieldName('Ord', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ElectionPartyTableMap::translateFieldName('Ord', TableMap::TYPE_PHPNAME, $indexType)];
             $this->ord = (null !== $col) ? (int) $col : null;
             $this->resetModified();
 
@@ -696,7 +650,7 @@ abstract class ElectionParty implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 7; // 7 = ElectionPartyTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 6; // 6 = ElectionPartyTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\ElectionParty'), 0, $e);
@@ -949,9 +903,6 @@ abstract class ElectionParty implements ActiveRecordInterface
         if ($this->isColumnModified(ElectionPartyTableMap::COL_ELECTION_ID)) {
             $modifiedColumns[':p' . $index++]  = 'election_id';
         }
-        if ($this->isColumnModified(ElectionPartyTableMap::COL_LIST_NUMBER)) {
-            $modifiedColumns[':p' . $index++]  = 'list_number';
-        }
         if ($this->isColumnModified(ElectionPartyTableMap::COL_PARTY_ID)) {
             $modifiedColumns[':p' . $index++]  = 'party_id';
         }
@@ -980,9 +931,6 @@ abstract class ElectionParty implements ActiveRecordInterface
                         break;
                     case 'election_id':
                         $stmt->bindValue($identifier, $this->election_id, PDO::PARAM_INT);
-                        break;
-                    case 'list_number':
-                        $stmt->bindValue($identifier, $this->list_number, PDO::PARAM_INT);
                         break;
                     case 'party_id':
                         $stmt->bindValue($identifier, $this->party_id, PDO::PARAM_INT);
@@ -1065,18 +1013,15 @@ abstract class ElectionParty implements ActiveRecordInterface
                 return $this->getElectionId();
                 break;
             case 2:
-                return $this->getListNumber();
-                break;
-            case 3:
                 return $this->getPartyId();
                 break;
-            case 4:
+            case 3:
                 return $this->getPartyColor();
                 break;
-            case 5:
+            case 4:
                 return $this->getTotalVotes();
                 break;
-            case 6:
+            case 5:
                 return $this->getOrd();
                 break;
             default:
@@ -1111,11 +1056,10 @@ abstract class ElectionParty implements ActiveRecordInterface
         $result = array(
             $keys[0] => $this->getId(),
             $keys[1] => $this->getElectionId(),
-            $keys[2] => $this->getListNumber(),
-            $keys[3] => $this->getPartyId(),
-            $keys[4] => $this->getPartyColor(),
-            $keys[5] => $this->getTotalVotes(),
-            $keys[6] => $this->getOrd(),
+            $keys[2] => $this->getPartyId(),
+            $keys[3] => $this->getPartyColor(),
+            $keys[4] => $this->getTotalVotes(),
+            $keys[5] => $this->getOrd(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1209,18 +1153,15 @@ abstract class ElectionParty implements ActiveRecordInterface
                 $this->setElectionId($value);
                 break;
             case 2:
-                $this->setListNumber($value);
-                break;
-            case 3:
                 $this->setPartyId($value);
                 break;
-            case 4:
+            case 3:
                 $this->setPartyColor($value);
                 break;
-            case 5:
+            case 4:
                 $this->setTotalVotes($value);
                 break;
-            case 6:
+            case 5:
                 $this->setOrd($value);
                 break;
         } // switch()
@@ -1256,19 +1197,16 @@ abstract class ElectionParty implements ActiveRecordInterface
             $this->setElectionId($arr[$keys[1]]);
         }
         if (array_key_exists($keys[2], $arr)) {
-            $this->setListNumber($arr[$keys[2]]);
+            $this->setPartyId($arr[$keys[2]]);
         }
         if (array_key_exists($keys[3], $arr)) {
-            $this->setPartyId($arr[$keys[3]]);
+            $this->setPartyColor($arr[$keys[3]]);
         }
         if (array_key_exists($keys[4], $arr)) {
-            $this->setPartyColor($arr[$keys[4]]);
+            $this->setTotalVotes($arr[$keys[4]]);
         }
         if (array_key_exists($keys[5], $arr)) {
-            $this->setTotalVotes($arr[$keys[5]]);
-        }
-        if (array_key_exists($keys[6], $arr)) {
-            $this->setOrd($arr[$keys[6]]);
+            $this->setOrd($arr[$keys[5]]);
         }
     }
 
@@ -1316,9 +1254,6 @@ abstract class ElectionParty implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ElectionPartyTableMap::COL_ELECTION_ID)) {
             $criteria->add(ElectionPartyTableMap::COL_ELECTION_ID, $this->election_id);
-        }
-        if ($this->isColumnModified(ElectionPartyTableMap::COL_LIST_NUMBER)) {
-            $criteria->add(ElectionPartyTableMap::COL_LIST_NUMBER, $this->list_number);
         }
         if ($this->isColumnModified(ElectionPartyTableMap::COL_PARTY_ID)) {
             $criteria->add(ElectionPartyTableMap::COL_PARTY_ID, $this->party_id);
@@ -1419,7 +1354,6 @@ abstract class ElectionParty implements ActiveRecordInterface
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
         $copyObj->setElectionId($this->getElectionId());
-        $copyObj->setListNumber($this->getListNumber());
         $copyObj->setPartyId($this->getPartyId());
         $copyObj->setPartyColor($this->getPartyColor());
         $copyObj->setTotalVotes($this->getTotalVotes());
@@ -1850,7 +1784,6 @@ abstract class ElectionParty implements ActiveRecordInterface
         }
         $this->id = null;
         $this->election_id = null;
-        $this->list_number = null;
         $this->party_id = null;
         $this->party_color = null;
         $this->total_votes = null;

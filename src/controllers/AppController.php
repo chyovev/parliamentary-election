@@ -51,6 +51,31 @@ abstract class AppController {
         exit;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    protected function loadElection() {
+        $slug     = Router::getRequestParam('year');
+        $election = $this->populateElection('session');
+
+        if ($election) {
+            return $election;
+        }
+
+        // if no election could be loaded from session and there is a slug,
+        // try to load from database (throw exception on fail)
+        // on success, save data to session and then load it from there
+        if ($slug) {
+            $election = ElectionQuery::create()->findOneBySlug($slug);
+
+            if ( ! $election) {
+                throw new Exception('No such year: ' . $slug);
+            }
+
+            $this->setSessionElection($election);
+
+            return $this->populateElection('session');
+        }
+    }
+
     /**
      * Tries to populate a Propel Election object from a specified source
      * 
@@ -160,14 +185,25 @@ abstract class AppController {
      * @param  array    $source   – should be either $_POST or $_SESSION
      */
     private function populateConstituencyValidVotes(Election $election, array $source): void {
+        // election constituencies need to be associated
+        // with the constituency census they belong to
+        $constituencies = $election->getConstituenciesWithPopulation();
+        if ($constituencies->count()) {
+            $constituenciesArray = $constituencies->toArray('id');
+        }
+
         $data                   = $source['constituency_votes'] ?? [];
         $electionConstituencies = new ObjectCollection();
 
-        foreach ($data as $item) {
+        foreach ($data as $constituencyId => $item) {
             $electionConstituency = new ElectionConstituency();
 
-            $electionConstituency->setTotalValidVotes($item['total_valid_votes'])
-                                 ->setVirtualColumn('constituency_id', $item['constituency_id']);
+            $electionConstituency->setTotalValidVotes($item['total_valid_votes']);
+
+            // if the constituency censuses were loaded, set ID
+            if ($constituencies->count()) {
+                $electionConstituency->setConstituencyCensusId($constituenciesArray[$constituencyId]['constituency_census_id']);
+            }
 
             $electionConstituencies->append($electionConstituency);
         }
@@ -276,6 +312,71 @@ abstract class AppController {
         }
 
         return $partyVotes / $totalVotes * 100;
+    }
+
+    /**
+     * Transform all Election information into an associative array
+     * and store it in a $_SESSION variable;
+     * then use this array to regenerate those objects when reading from $_SESSSION
+     * (PHP doesn't like it when whole objects get stored in sessions)
+     *
+     * @param Election $election – object from which information gets extracted
+     */
+    protected function setSessionElection(Election $election): void {
+        $electionParties       = $election->getElectionParties();
+        $independentCandidates = $election->getIndependentCandidates();
+        $electionConstituencies= $election->getElectionConstituencies();
+        $constituencies        = $election->getConstituenciesWithPopulation();
+        $constituenciesArray   = $constituencies->toArray('constituency_census_id');
+        $parties               = [];
+        $candidates            = [];
+        $partiesVotes          = [];
+        $constituencyTotalVotes= [];
+
+        foreach ($electionParties as $item) {
+            $parties[] = [
+                'party_id'    => $item->getPartyId(),
+                'total_votes' => $item->getTotalVotes(),
+                'ord'         => $item->getOrd(),
+                'party_color' => $item->getPartyColor(),
+            ];
+
+            $partiesConstituenciesVotes = $item->getElectionPartyVotes();
+
+            foreach ($partiesConstituenciesVotes as $subitem) {
+                $partiesVotes[ $item->getPartyId() ][ $subitem->getConstituencyId() ] = $subitem->getVotes();
+            }
+        }
+
+        foreach ($independentCandidates as $item) {
+            $candidates[] = [
+                'name'            => $item->getName(),
+                'votes'           => $item->getVotes(),
+                'constituency_id' => $item->getConstituencyId(),
+            ];
+        }
+
+        foreach ($electionConstituencies as $item) {
+            $censusId       = $item->getConstituencyCensusId();
+            $constituencyId = $constituenciesArray[$censusId]['Id'];
+
+            $constituencyTotalVotes[$constituencyId] = [
+                'total_valid_votes' => $item->getTotalValidVotes(),
+            ];
+        }
+
+        $_SESSION = [
+            'assembly_type_id'       => $election->getAssemblyTypeId(),
+            'population_census_id'   => $election->getPopulationCensusId(),
+            'active_suffrage'        => $election->getActiveSuffrage(),
+            'threshold_percentage'   => $election->getThresholdPercentage(),
+            'total_valid_votes'      => $election->getTotalValidVotes(),
+            'total_invalid_votes'    => $election->getTotalInvalidVotes(),
+            'parties'                => $parties,
+            'independent_candidates' => $candidates,
+            'parties_votes'          => $partiesVotes,
+            'constituency_votes'     => $constituencyTotalVotes,
+        ];
     }
 
 }

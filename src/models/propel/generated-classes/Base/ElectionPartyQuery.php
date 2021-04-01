@@ -22,7 +22,6 @@ use Propel\Runtime\Exception\PropelException;
  *
  * @method     ChildElectionPartyQuery orderById($order = Criteria::ASC) Order by the id column
  * @method     ChildElectionPartyQuery orderByElectionId($order = Criteria::ASC) Order by the election_id column
- * @method     ChildElectionPartyQuery orderByListNumber($order = Criteria::ASC) Order by the list_number column
  * @method     ChildElectionPartyQuery orderByPartyId($order = Criteria::ASC) Order by the party_id column
  * @method     ChildElectionPartyQuery orderByPartyColor($order = Criteria::ASC) Order by the party_color column
  * @method     ChildElectionPartyQuery orderByTotalVotes($order = Criteria::ASC) Order by the total_votes column
@@ -30,7 +29,6 @@ use Propel\Runtime\Exception\PropelException;
  *
  * @method     ChildElectionPartyQuery groupById() Group by the id column
  * @method     ChildElectionPartyQuery groupByElectionId() Group by the election_id column
- * @method     ChildElectionPartyQuery groupByListNumber() Group by the list_number column
  * @method     ChildElectionPartyQuery groupByPartyId() Group by the party_id column
  * @method     ChildElectionPartyQuery groupByPartyColor() Group by the party_color column
  * @method     ChildElectionPartyQuery groupByTotalVotes() Group by the total_votes column
@@ -81,7 +79,6 @@ use Propel\Runtime\Exception\PropelException;
  *
  * @method     ChildElectionParty findOneById(int $id) Return the first ChildElectionParty filtered by the id column
  * @method     ChildElectionParty findOneByElectionId(int $election_id) Return the first ChildElectionParty filtered by the election_id column
- * @method     ChildElectionParty findOneByListNumber(int $list_number) Return the first ChildElectionParty filtered by the list_number column
  * @method     ChildElectionParty findOneByPartyId(int $party_id) Return the first ChildElectionParty filtered by the party_id column
  * @method     ChildElectionParty findOneByPartyColor(string $party_color) Return the first ChildElectionParty filtered by the party_color column
  * @method     ChildElectionParty findOneByTotalVotes(int $total_votes) Return the first ChildElectionParty filtered by the total_votes column
@@ -92,7 +89,6 @@ use Propel\Runtime\Exception\PropelException;
  *
  * @method     ChildElectionParty requireOneById(int $id) Return the first ChildElectionParty filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElectionParty requireOneByElectionId(int $election_id) Return the first ChildElectionParty filtered by the election_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildElectionParty requireOneByListNumber(int $list_number) Return the first ChildElectionParty filtered by the list_number column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElectionParty requireOneByPartyId(int $party_id) Return the first ChildElectionParty filtered by the party_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElectionParty requireOneByPartyColor(string $party_color) Return the first ChildElectionParty filtered by the party_color column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElectionParty requireOneByTotalVotes(int $total_votes) Return the first ChildElectionParty filtered by the total_votes column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -101,7 +97,6 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElectionParty[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildElectionParty objects based on current ModelCriteria
  * @method     ChildElectionParty[]|ObjectCollection findById(int $id) Return ChildElectionParty objects filtered by the id column
  * @method     ChildElectionParty[]|ObjectCollection findByElectionId(int $election_id) Return ChildElectionParty objects filtered by the election_id column
- * @method     ChildElectionParty[]|ObjectCollection findByListNumber(int $list_number) Return ChildElectionParty objects filtered by the list_number column
  * @method     ChildElectionParty[]|ObjectCollection findByPartyId(int $party_id) Return ChildElectionParty objects filtered by the party_id column
  * @method     ChildElectionParty[]|ObjectCollection findByPartyColor(string $party_color) Return ChildElectionParty objects filtered by the party_color column
  * @method     ChildElectionParty[]|ObjectCollection findByTotalVotes(int $total_votes) Return ChildElectionParty objects filtered by the total_votes column
@@ -204,7 +199,7 @@ abstract class ElectionPartyQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, election_id, list_number, party_id, party_color, total_votes, ord FROM elections_parties WHERE id = :p0';
+        $sql = 'SELECT id, election_id, party_id, party_color, total_votes, ord FROM elections_parties WHERE id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -376,47 +371,6 @@ abstract class ElectionPartyQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(ElectionPartyTableMap::COL_ELECTION_ID, $electionId, $comparison);
-    }
-
-    /**
-     * Filter the query on the list_number column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterByListNumber(1234); // WHERE list_number = 1234
-     * $query->filterByListNumber(array(12, 34)); // WHERE list_number IN (12, 34)
-     * $query->filterByListNumber(array('min' => 12)); // WHERE list_number > 12
-     * </code>
-     *
-     * @param     mixed $listNumber The value to use as filter.
-     *              Use scalar values for equality.
-     *              Use array values for in_array() equivalent.
-     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return $this|ChildElectionPartyQuery The current query, for fluid interface
-     */
-    public function filterByListNumber($listNumber = null, $comparison = null)
-    {
-        if (is_array($listNumber)) {
-            $useMinMax = false;
-            if (isset($listNumber['min'])) {
-                $this->addUsingAlias(ElectionPartyTableMap::COL_LIST_NUMBER, $listNumber['min'], Criteria::GREATER_EQUAL);
-                $useMinMax = true;
-            }
-            if (isset($listNumber['max'])) {
-                $this->addUsingAlias(ElectionPartyTableMap::COL_LIST_NUMBER, $listNumber['max'], Criteria::LESS_EQUAL);
-                $useMinMax = true;
-            }
-            if ($useMinMax) {
-                return $this;
-            }
-            if (null === $comparison) {
-                $comparison = Criteria::IN;
-            }
-        }
-
-        return $this->addUsingAlias(ElectionPartyTableMap::COL_LIST_NUMBER, $listNumber, $comparison);
     }
 
     /**

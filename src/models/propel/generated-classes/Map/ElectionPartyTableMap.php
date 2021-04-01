@@ -58,7 +58,7 @@ class ElectionPartyTableMap extends TableMap
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 7;
+    const NUM_COLUMNS = 6;
 
     /**
      * The number of lazy-loaded columns
@@ -68,7 +68,7 @@ class ElectionPartyTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 7;
+    const NUM_HYDRATE_COLUMNS = 6;
 
     /**
      * the column name for the id field
@@ -79,11 +79,6 @@ class ElectionPartyTableMap extends TableMap
      * the column name for the election_id field
      */
     const COL_ELECTION_ID = 'elections_parties.election_id';
-
-    /**
-     * the column name for the list_number field
-     */
-    const COL_LIST_NUMBER = 'elections_parties.list_number';
 
     /**
      * the column name for the party_id field
@@ -117,11 +112,11 @@ class ElectionPartyTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('Id', 'ElectionId', 'ListNumber', 'PartyId', 'PartyColor', 'TotalVotes', 'Ord', ),
-        self::TYPE_CAMELNAME     => array('id', 'electionId', 'listNumber', 'partyId', 'partyColor', 'totalVotes', 'ord', ),
-        self::TYPE_COLNAME       => array(ElectionPartyTableMap::COL_ID, ElectionPartyTableMap::COL_ELECTION_ID, ElectionPartyTableMap::COL_LIST_NUMBER, ElectionPartyTableMap::COL_PARTY_ID, ElectionPartyTableMap::COL_PARTY_COLOR, ElectionPartyTableMap::COL_TOTAL_VOTES, ElectionPartyTableMap::COL_ORD, ),
-        self::TYPE_FIELDNAME     => array('id', 'election_id', 'list_number', 'party_id', 'party_color', 'total_votes', 'ord', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, )
+        self::TYPE_PHPNAME       => array('Id', 'ElectionId', 'PartyId', 'PartyColor', 'TotalVotes', 'Ord', ),
+        self::TYPE_CAMELNAME     => array('id', 'electionId', 'partyId', 'partyColor', 'totalVotes', 'ord', ),
+        self::TYPE_COLNAME       => array(ElectionPartyTableMap::COL_ID, ElectionPartyTableMap::COL_ELECTION_ID, ElectionPartyTableMap::COL_PARTY_ID, ElectionPartyTableMap::COL_PARTY_COLOR, ElectionPartyTableMap::COL_TOTAL_VOTES, ElectionPartyTableMap::COL_ORD, ),
+        self::TYPE_FIELDNAME     => array('id', 'election_id', 'party_id', 'party_color', 'total_votes', 'ord', ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, )
     );
 
     /**
@@ -131,11 +126,11 @@ class ElectionPartyTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('Id' => 0, 'ElectionId' => 1, 'ListNumber' => 2, 'PartyId' => 3, 'PartyColor' => 4, 'TotalVotes' => 5, 'Ord' => 6, ),
-        self::TYPE_CAMELNAME     => array('id' => 0, 'electionId' => 1, 'listNumber' => 2, 'partyId' => 3, 'partyColor' => 4, 'totalVotes' => 5, 'ord' => 6, ),
-        self::TYPE_COLNAME       => array(ElectionPartyTableMap::COL_ID => 0, ElectionPartyTableMap::COL_ELECTION_ID => 1, ElectionPartyTableMap::COL_LIST_NUMBER => 2, ElectionPartyTableMap::COL_PARTY_ID => 3, ElectionPartyTableMap::COL_PARTY_COLOR => 4, ElectionPartyTableMap::COL_TOTAL_VOTES => 5, ElectionPartyTableMap::COL_ORD => 6, ),
-        self::TYPE_FIELDNAME     => array('id' => 0, 'election_id' => 1, 'list_number' => 2, 'party_id' => 3, 'party_color' => 4, 'total_votes' => 5, 'ord' => 6, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, )
+        self::TYPE_PHPNAME       => array('Id' => 0, 'ElectionId' => 1, 'PartyId' => 2, 'PartyColor' => 3, 'TotalVotes' => 4, 'Ord' => 5, ),
+        self::TYPE_CAMELNAME     => array('id' => 0, 'electionId' => 1, 'partyId' => 2, 'partyColor' => 3, 'totalVotes' => 4, 'ord' => 5, ),
+        self::TYPE_COLNAME       => array(ElectionPartyTableMap::COL_ID => 0, ElectionPartyTableMap::COL_ELECTION_ID => 1, ElectionPartyTableMap::COL_PARTY_ID => 2, ElectionPartyTableMap::COL_PARTY_COLOR => 3, ElectionPartyTableMap::COL_TOTAL_VOTES => 4, ElectionPartyTableMap::COL_ORD => 5, ),
+        self::TYPE_FIELDNAME     => array('id' => 0, 'election_id' => 1, 'party_id' => 2, 'party_color' => 3, 'total_votes' => 4, 'ord' => 5, ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, )
     );
 
     /**
@@ -157,7 +152,6 @@ class ElectionPartyTableMap extends TableMap
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
         $this->addForeignKey('election_id', 'ElectionId', 'INTEGER', 'elections', 'id', true, null, 0);
-        $this->addColumn('list_number', 'ListNumber', 'INTEGER', true, null, 0);
         $this->addForeignKey('party_id', 'PartyId', 'INTEGER', 'parties', 'id', true, null, 0);
         $this->addColumn('party_color', 'PartyColor', 'CHAR', false, 7, null);
         $this->addColumn('total_votes', 'TotalVotes', 'INTEGER', true, null, 0);
@@ -344,7 +338,6 @@ class ElectionPartyTableMap extends TableMap
         if (null === $alias) {
             $criteria->addSelectColumn(ElectionPartyTableMap::COL_ID);
             $criteria->addSelectColumn(ElectionPartyTableMap::COL_ELECTION_ID);
-            $criteria->addSelectColumn(ElectionPartyTableMap::COL_LIST_NUMBER);
             $criteria->addSelectColumn(ElectionPartyTableMap::COL_PARTY_ID);
             $criteria->addSelectColumn(ElectionPartyTableMap::COL_PARTY_COLOR);
             $criteria->addSelectColumn(ElectionPartyTableMap::COL_TOTAL_VOTES);
@@ -352,7 +345,6 @@ class ElectionPartyTableMap extends TableMap
         } else {
             $criteria->addSelectColumn($alias . '.id');
             $criteria->addSelectColumn($alias . '.election_id');
-            $criteria->addSelectColumn($alias . '.list_number');
             $criteria->addSelectColumn($alias . '.party_id');
             $criteria->addSelectColumn($alias . '.party_color');
             $criteria->addSelectColumn($alias . '.total_votes');

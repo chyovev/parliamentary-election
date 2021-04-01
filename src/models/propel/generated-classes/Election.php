@@ -3,6 +3,7 @@
 use Base\Election as BaseElection;
 use \PopulationCensusQuery as ChildPopulationCensusQuery;
 use Propel\Runtime\Collection\ObjectCollection;
+use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Map\TableMap;
 
 /**
@@ -50,13 +51,18 @@ class Election extends BaseElection
             $this->constituencies = ConstituencyQuery::create()->useConstituencyCensusQuery()
                                             ->filterByPopulationCensusId($populationCensusId)
                                             ->addAsColumn('population', 'population')
+                                            ->addAsColumn('constituency_census_id', 'ConstituencyCensus.id')
                                         ->endUse()
                                         ->find();
         }
 
+
         $constituencies = $this->constituencies;
-        $this->addTotalVotes($constituencies);
-        // TODO: add constituencies single votes
+
+
+        if ($constituencies->count()) {
+            $this->addTotalVotes($constituencies);
+        }
 
         return $this->constituencies;
     }
@@ -64,18 +70,22 @@ class Election extends BaseElection
     /**
      * For all constituencies add virtual field
      * total_valid_votes = number specified in step 1
+     * Still, votes are not directly associated with the constituencies,
+     * so first all constituencies need to be loaded
+     * to use their constituency_census_id association
      *
      * @param ObjectCollection $constituencies
      */
     private function addTotalVotes(ObjectCollection $constituencies): void {
-        $constituenciesArray = $constituencies->toKeyIndex();
+        $constituenciesArray = $constituencies->toKeyIndex('constituency_census_id');
         $totalVotes          = $this->getElectionConstituencies();
 
         foreach ($totalVotes as $item) {
-            $constituencyId = $item->getVirtualColumn('constituency_id');
+            $censusId       = $item->getConstituencyCensusId();
             $votes          = $item->getTotalValidVotes();
 
-            $constituenciesArray[$constituencyId]->setVirtualColumn('total_valid_votes', $votes);
+
+            $constituenciesArray[$censusId]->setVirtualColumn('total_valid_votes', $votes);
         }
     }
 
@@ -86,6 +96,22 @@ class Election extends BaseElection
      */
     public function getPassedParties(): ObjectCollection {
         return $this->getVirtualColumn('passed_parties');
+    }
+
+    /**
+     * generate slug
+     */
+    public function preSave(ConnectionInterface $con = null) {
+        // official results cannot be overridden
+        if ($this->isOfficial()) {
+            return false;
+        }
+
+        if ( ! $this->getSlug()) {
+            $this->setSlug(uniqid());
+        }
+
+        return true;
     }
 
 }

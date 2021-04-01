@@ -239,7 +239,7 @@ abstract class Router {
     ///////////////////////////////////////////////////////////////////////////////
     public static function getRequestParam(string $param): ?string {
         $requestParams = self::$requestParams;
-        return $requestParams[$param] ?? NULL;
+        return $requestParams[$param] ?? $_GET[$param] ?? NULL;
     }
 
     ///////////////////////////////////////////////////////////////////////////////

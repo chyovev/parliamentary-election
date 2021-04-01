@@ -12,22 +12,24 @@ class HomeController extends AppController {
         $assemblies       = AssemblyTypeQuery::create()->find();
         $censuses         = PopulationCensusQuery::create()->getAllTypesWithPopulation();
         $this->allParties = PartyQuery::create()->addAscendingOrderByColumn('title')->find();
+        $officialResults  = ElectionQuery::create()->select(['slug'])->findByOfficial(1);
 
-        $this->loadElectionFromSession();
+        $this->loadElectionProperties();
 
         $viewVars = [
             'title'      => 'Стъпка 1: Обща информация',
             'assemblies' => $assemblies->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
             'censuses'   => $censuses->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
             'allParties' => $this->allParties->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
+            'official'   => $officialResults,
         ];
 
         $this->displayFullPage('home.tpl', $viewVars);
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    private function loadElectionFromSession(): void {
-        $election       = $this->populateElection('session');
+    private function loadElectionProperties(): void {
+        $election       = $this->loadElection();
         $constituencies = $election
                         ? $election->getConstituenciesWithPopulation()
                         : ConstituencyQuery::create()->find();
@@ -42,7 +44,7 @@ class HomeController extends AppController {
 
         $this->setVars([
             'election'        => $election->toArray(TableMap::TYPE_FIELDNAME),
-            'selectedParties' => $selectedParties->toArray(NULL, false, TableMap::TYPE_FIELDNAME),
+            'selectedParties' => $selectedParties->toArray('id', false, TableMap::TYPE_FIELDNAME),
         ]);
     }
 

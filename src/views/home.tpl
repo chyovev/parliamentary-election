@@ -1,4 +1,14 @@
 <form class="ajax-form" method="post" action="{url controller='validation' action='election'}" data-success-action="App.goToPage('{url controller='results' action='preliminary'}')">
+    {if isset($official)}
+    <section>
+        <div class="row">Показване на резултати от парламентарни избори:</div>
+        <ul>
+            {foreach $official as $slug}
+                <li><a href="{url controller='results' action='preliminary' year=$slug}">{$slug}</a></li>
+            {/foreach}
+        </ul>
+    </section>
+    {/if}
     <section>
         <h2>Обща информация</h2>
         <div class="row">
@@ -82,8 +92,7 @@
             {foreach $constituencies as $item}
                 <li>
                     <strong>{$item['title']|escape}</strong>:
-                    <input type="hidden" name="constituency_votes[{$item@index}][constituency_id]" value="{$item['id']}" />
-                    <input type="text" size="2" class="constituency_votes-{$item['id']}" name="constituency_votes[{$item@index}][total_valid_votes]" value="{$item['total_valid_votes']|default:0}" /> гласа
+                    <input type="text" size="2" class="constituency_votes-{$item['id']}" name="constituency_votes[{$item['id']}][total_valid_votes]" value="{$item['total_valid_votes']|default:0}" /> гласа
                 </li>
             {/foreach}
         </ol>

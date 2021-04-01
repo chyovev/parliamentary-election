@@ -15,7 +15,7 @@ class ResultsController extends AppController {
 
     ///////////////////////////////////////////////////////////////////////////
     public function preliminary() {
-        $election = $this->populateElection('session');
+        $election = $this->loadElection();
 
         // if no election could be loaded from the session,
         // redirect to homepage
@@ -42,7 +42,7 @@ class ResultsController extends AppController {
 
     ///////////////////////////////////////////////////////////////////////////
     public function definitive() {
-        $election = $this->populateElection('session');
+        $election = $this->loadElection();
 
         // if no election could be loaded from the session,
         // redirect to homepage
