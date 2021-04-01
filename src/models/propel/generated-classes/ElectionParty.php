@@ -34,10 +34,31 @@ class ElectionParty extends BaseElectionParty implements HareNiemeyerInterface
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    public function incrementLocalMandatesBy(int $number) {
-        $current = $this->getVirtualColumn(HareNiemeyerInterface::LOCAL_MANDATES_COLUMN);
-        
-        $this->setVirtualColumn(HareNiemeyerInterface::LOCAL_MANDATES_COLUMN, $current + $number);
+    public function getLocalMandates(): int {
+        return $this->getVirtualColumn(HareNiemeyerInterface::LOCAL_MANDATES_COLUMN);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setLocalMandates(int $mandates): self {
+        $this->setVirtualColumn(HareNiemeyerInterface::LOCAL_MANDATES_COLUMN, $mandates);
+
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function incrementLocalMandatesBy(int $number): self {
+        $current = $this->getLocalMandates();
+        $this->setLocalMandates($current + $number);
+
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function decrementLocalMandatesBy(int $number): self {
+        $current = $this->getLocalMandates();
+        $this->setLocalMandates($current - $number);
+
+        return $this;
     }
 
     /**

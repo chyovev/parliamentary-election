@@ -117,7 +117,7 @@ class HareNiemeyer {
             $item->setHareNiemeyerMandates($quotient)
                  ->setTotalHareNiemeyerMandates($quotient)
                  ->setHareNiemeyerRemainder($remainder)
-                 ->markPartyAsHavingReceivedAMandate(false);
+                 ->markPartyAsHavingReceivedAdditionalMandate(false);
 
             $partiesRemainders[ $index ] = $remainder;
             $this->distributedMandates   += $quotient;
@@ -194,7 +194,7 @@ class HareNiemeyer {
 
         $party->setHareNiemeyerMandates($partyMandates + 1)
               ->setTotalHareNiemeyerMandates($partyMandates + 1)
-              ->markPartyAsHavingReceivedAMandate(true);
+              ->markPartyAsHavingReceivedAdditionalMandate(true);
 
         $this->distributedMandates += 1;
 

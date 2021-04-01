@@ -62,6 +62,9 @@ interface HareNiemeyerInterface {
     public function setHareNiemeyerRemainder(float $remainder);
 
     ///////////////////////////////////////////////////////////////////////////
-    public function markPartyAsHavingReceivedAMandate(bool $status);
+    public function hasPartyReceivedAdditionalMandate(): bool;
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function markPartyAsHavingReceivedAdditionalMandate(bool $status);
     
 }

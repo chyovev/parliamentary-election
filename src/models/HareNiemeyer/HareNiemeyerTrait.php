@@ -59,4 +59,9 @@ trait HareNiemeyerTrait {
         return $this;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    public function getLocalHareNiemeyerMandates(): int {
+        return $this->getVirtualColumn(HareNiemeyerInterface::LOCAL_MANDATES_COLUMN);
+    }
+
 }
