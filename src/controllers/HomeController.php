@@ -15,6 +15,7 @@ class HomeController extends AppController {
         $officialResults  = ElectionQuery::create()->select(['slug'])->findByOfficial(1);
 
         $this->loadElectionProperties();
+        $this->setProgressSteps(1);
 
         $viewVars = [
             'title'      => 'Стъпка 1: Обща информация',

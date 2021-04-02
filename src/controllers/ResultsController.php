@@ -24,6 +24,7 @@ class ResultsController extends AppController {
         }
 
         $this->setElectionSummaryData($election);
+        $this->setProgressSteps(2);
 
         $passedParties       = $this->getPassedPartiesWithPreliminaryMandates($election);
         $groupedCandidates   = $this->groupIndependentCandidatesByConstituency($election);
@@ -56,6 +57,7 @@ class ResultsController extends AppController {
         }
 
         $this->setElectionSummaryData($election);
+        $this->setProgressSteps(3);
 
         $constituencies = $this->getConstituenciesWithMandates($election);
         $totalMandates  = $election->getAssemblyType()->getTotalMandates();

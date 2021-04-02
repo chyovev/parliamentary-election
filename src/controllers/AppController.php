@@ -343,6 +343,9 @@ abstract class AppController {
             $constituencyTotalVotes[$constituencyId] = $item->getTotalValidVotes();
         }
 
+        // used for navigation between the pages
+        $reachedStep = $partiesVotes ? 3 : 2;
+
         $_SESSION = [
             'assembly_type_id'       => $election->getAssemblyTypeId(),
             'population_census_id'   => $election->getPopulationCensusId(),
@@ -354,7 +357,44 @@ abstract class AppController {
             'independent_candidates' => $candidates,
             'parties_votes'          => $partiesVotes,
             'constituency_votes'     => $constituencyTotalVotes,
+            'reached_step'           => $reachedStep,
         ];
+    }
+
+    /**
+     * find out how many steps the user can navigate between
+     * @return int
+     */
+    protected function getReachedStep(): int {
+        return $_SESSION['reached_step'] ?? 1;
+    }
+
+    /**
+     * set current and last steps used for navigation
+     */
+    protected function setProgressSteps(int $currentStep): void {
+        $reachedStep = $this->getReachedStep();
+
+        if ($currentStep === 1) {
+            $prevStepUrl = false;
+            $nextStepUrl = ($currentStep < $reachedStep) ? Router::url(['controller' => 'results', 'action' => 'preliminary']) : false;
+        }
+        elseif ($currentStep === 2) {
+            $prevStepUrl = Router::url(['controller' => 'home', 'action' => 'index']);
+            $nextStepUrl = ($currentStep < $reachedStep) ? Router::url(['controller' => 'results', 'action' => 'definitive']) : false;
+        }
+        elseif ($currentStep === 3) {
+            $prevStepUrl = Router::url(['controller' => 'results', 'action' => 'preliminary']);
+            $nextStepUrl = false;
+        }
+
+        $this->setVars([
+            'currentStep' => $currentStep,
+            'reachedStep' => $reachedStep,
+            'prevStepUrl' => $prevStepUrl,
+            'nextStepUrl' => $nextStepUrl,
+        ]);
+
     }
 
     /**

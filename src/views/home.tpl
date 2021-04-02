@@ -1,16 +1,16 @@
 <form class="ajax-form" method="post" action="{url controller='validation' action='election'}" data-success-action="App.goToPage('{url controller='results' action='preliminary'}')">
     {if isset($official)}
     <section>
-        <div class="row">Показване на резултати от парламентарни избори:</div>
+        <h3>Показване на резултати от парламентарни избори:</h3>
         <ul>
             {foreach $official as $slug}
-                <li><a href="{url controller='results' action='preliminary' year=$slug}">{$slug}</a></li>
+                <li><a class="bold" href="{url controller='results' action='definitive' year=$slug}">{$slug}</a></li>
             {/foreach}
         </ul>
     </section>
     {/if}
     <section>
-        <h2>Обща информация</h2>
+        <h2>Обща информация <a href="#" class="reset-form">Нулирай полетата</a></h2>
         <div class="row">
             <span>Парламентарни избори за:</span>
             <select name="assembly_type_id" class="assembly_type_id">
@@ -58,7 +58,7 @@
 
     <section>
         <h2>Партии, участващи в изборите (<span id="parties-count">{$selectedParties|@count|default:0}</span>)</h2>
-        <div class="row">Желателно е подредбата на партиите да съответства на номерата им,<br /> тъй като номерата играят роля при преразпределянето на мандати.<br /><br /></div>
+        <div class="row">Желателно е подредбата на партиите да съответства на номерата им,<br /> тъй като това играе роля при преразпределянето на мандати.<br /><br /></div>
 
         <script type="text/template" id="party-template">
             {include file='elements/party-list-template.tpl'}

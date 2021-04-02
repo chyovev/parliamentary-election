@@ -31,6 +31,7 @@ var App = {
         $(document).on('submit', '.ajax-form', App.submitFormData);
         $(document).on('click', '.add-independent', App.addIndependentCandidate);
         $(document).on('click', '.remove-independent', App.removeIndependentCandidate);
+        $(document).on('click', '.reset-form', App.resetForm);
         $(document).on('click', 'a[href^="#"]', App.scrollToElement); // keep last in bind function
     },
 
@@ -463,6 +464,17 @@ var App = {
         });
 
         $counter.html(parseInt($counter.html()) - 1);
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    resetForm: function(e) {
+        e.preventDefault();
+
+        $('input[type="text"]:not(.search-input)').val(0);
+        $('.ms-list.parties').html('');
+        $('#parties-count').html('0');
+        $('.threshold_percentage').val(4);
+        $('.assembly_type_id').val($('.assembly_type_id option:first').val());
     },
 
     ///////////////////////////////////////////////////////////////////////////
