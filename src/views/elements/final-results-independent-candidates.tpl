@@ -1,4 +1,4 @@
-{if isset($candidates)}
+{if isset($candidates) && $candidates}
 <section id="independent">
     <h2>Независими кандидати</h2>
      <table class="results fullwidth">

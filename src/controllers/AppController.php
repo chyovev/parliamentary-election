@@ -53,27 +53,21 @@ abstract class AppController {
 
     ///////////////////////////////////////////////////////////////////////////
     protected function loadElection() {
-        $slug     = Router::getRequestParam('year');
-        $election = $this->populateElection('session');
+        $slug = Router::getRequestParam('slug');
 
-        if ($election) {
-            return $election;
-        }
-
-        // if no election could be loaded from session and there is a slug,
-        // try to load from database (throw exception on fail)
-        // on success, save data to session and then load it from there
+        // if there is a slug, always fetch data from the DB
+        // and store it as a session
         if ($slug) {
             $election = ElectionQuery::create()->findOneBySlug($slug);
 
             if ( ! $election) {
-                throw new Exception('No such year: ' . $slug);
+                throw new Exception('No such saved election: ' . $slug);
             }
 
             $this->setSessionElection($election);
-
-            return $this->populateElectionFromData('session');
         }
+
+        return $this->populateElection('session');
     }
 
     /**
@@ -167,6 +161,70 @@ abstract class AppController {
     protected function populateIndependentCandidatesFromData(Election $election, string $type): void {
         $source     = $this->selectDataSource($type);
         $data       = $source['independent_candidates'] ?? [];
+
+        $candidates = ($type === 'post')
+                    ? $this->mergePostAndSessionIndependentCandidates($election, $data)
+                    : $this->getIndependentCandidatesFromSession($data);
+
+
+        $election->setIndependentCandidates($candidates);
+        $election->setVirtualColumn('independent_candidates_count', $candidates->count());
+    }
+
+    /**
+     * New candidates should be added alongside old candidates stored in session.
+     * To do this, both old and new candidates get grouped by constituency.
+     * Then, the new candidates' group gets cycled through and added to the old group,
+     * Finally, the old group gets reverted back to an ObjectCollection.
+     *
+     * @param  Election         $election   – object which holds the candidates
+     * @param  array            $data       – post data holding new candidates 
+     * @return ObjectCollection $candidates – merged new and old candidates
+     */
+    private function mergePostAndSessionIndependentCandidates(Election $election, array $data): ObjectCollection {
+        $oldCandidates = $election->getIndependentCandidates();
+        $oldGroup      = [];
+        $newGroup      = [];
+        $candidates    = new ObjectCollection();
+
+        // group old candidates
+        foreach ($oldCandidates as $item) {
+            $oldGroup[$item->getConstituencyId()][] = $item->toArray('fieldName');
+        }
+
+        // group new candidates
+        foreach ($data as $item) {
+            $newGroup[$item['constituency_id']][] = [
+                'name'            => $item['name'],
+                'votes'           => $item['votes'],
+                'constituency_id' => $item['constituency_id'],
+            ];
+        }
+
+        // merging old and new groups
+        $mergedGroup = $newGroup + $oldGroup;
+
+        // loop group, create objects and append them to the collection
+        foreach ($mergedGroup as $constituencyId => $group) {
+            foreach ($group as $item) {
+                $candidate = new IndependentCandidate();
+                $candidate->fromArray($item, 'fieldName');
+                $candidates->append($candidate);
+            }
+        }
+
+        return $candidates;
+    }
+
+    /**
+     * As opposite to merging data from post and session,
+     * when candidates get loaded from session, there are no previous
+     * candidates which need to be preserved, so overwrite away.
+     *
+     * @param  array            $data – data about the candidates
+     * @return ObjectCollection $candidates
+     */
+    private function getIndependentCandidatesFromSession(array $data): ObjectCollection {
         $candidates = new ObjectCollection();
 
         foreach ($data as $item) {
@@ -178,8 +236,7 @@ abstract class AppController {
             $candidates->append($candidate);
         }
 
-        $election->setIndependentCandidates($candidates);
-        $election->setVirtualColumn('independent_candidates_count', $candidates->count());
+        return $candidates;
     }
 
     /**
@@ -231,15 +288,18 @@ abstract class AppController {
         $data = $source['parties'] ?? [];
         $i    = 0; // used solely for the random color
 
-        // TODO: get previosly stored election parties and remove elements which are not in $source
-        // instead of overwriting from scratch
+        // load passed parties from session and overwrite only new information
+        // instead of a full wipe-out
+        if ($type === 'post') {
+            $passedParties = $election->getPassedParties()->toKeyIndex('partyId');
+        }
         
         $electionParties   = new ObjectCollection();
         
         foreach ($data as $item) {
             $partyId       = $item['party_id'];
             $partyVotes    = $item['total_votes'];
-            $electionParty = new ElectionParty();
+            $electionParty = $passedParties[$partyId] ?? new ElectionParty();
 
             $electionParty->setPartyId($item['party_id'])
                           ->setTotalVotes($partyVotes)
@@ -274,9 +334,11 @@ abstract class AppController {
         $passedParties = $election->getPassedParties();
         $data          = $source['parties_votes'] ?? [];
 
+        // for post requests load votes from session and work on top of them,
+        // instead of wiping them completely
         foreach ($passedParties as $party) {
             $partyId    = $party->getPartyId();
-            $partyVotes = new ObjectCollection();
+            $partyVotes = ($type === 'post') ? $party->getElectionPartyVotes() : new ObjectCollection();
 
             if (isset($data[$partyId])) {
                 foreach ($data[$partyId] as $constId => $votes) {
@@ -373,18 +435,19 @@ abstract class AppController {
      * set current and last steps used for navigation
      */
     protected function setProgressSteps(int $currentStep): void {
+        $slug        = Router::getRequestParam('slug');
         $reachedStep = $this->getReachedStep();
 
         if ($currentStep === 1) {
             $prevStepUrl = false;
-            $nextStepUrl = ($currentStep < $reachedStep) ? Router::url(['controller' => 'results', 'action' => 'preliminary']) : false;
+            $nextStepUrl = ($currentStep < $reachedStep) ? Router::url(['controller' => 'results', 'action' => 'preliminary', 'slug' => $slug]) : false;
         }
         elseif ($currentStep === 2) {
-            $prevStepUrl = Router::url(['controller' => 'home', 'action' => 'index']);
-            $nextStepUrl = ($currentStep < $reachedStep) ? Router::url(['controller' => 'results', 'action' => 'definitive']) : false;
+            $prevStepUrl = Router::url(['controller' => 'home', 'action' => 'index', 'slug' => $slug]);
+            $nextStepUrl = ($currentStep < $reachedStep) ? Router::url(['controller' => 'results', 'action' => 'definitive', 'slug' => $slug]) : false;
         }
         elseif ($currentStep === 3) {
-            $prevStepUrl = Router::url(['controller' => 'results', 'action' => 'preliminary']);
+            $prevStepUrl = Router::url(['controller' => 'results', 'action' => 'preliminary', 'slug' => $slug]);
             $nextStepUrl = false;
         }
 

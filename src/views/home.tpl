@@ -4,7 +4,7 @@
         <h3>Показване на резултати от парламентарни избори:</h3>
         <ul>
             {foreach $official as $slug}
-                <li><a class="bold" href="{url controller='results' action='definitive' year=$slug}">{$slug}</a></li>
+                <li><a class="bold" href="{url controller='home' action='index' slug=$slug}">{$slug}</a></li>
             {/foreach}
         </ul>
     </section>

@@ -36,6 +36,10 @@ class ValidationController extends AppController {
             $this->populateIndependentCandidatesFromData($election, 'post');
             $this->populateElectionPartiesVotesFromData($election, 'post');
 
+            if ($constituencyId) {
+                $this->deleteIndependentCandidatesIfNecessary($election, $constituencyId);
+            }
+
             $this->updatePartiesColors($election);
 
             $this->validationStep2($election, $constituencyId);
@@ -73,6 +77,31 @@ class ValidationController extends AppController {
         }
 
         return $election;
+    }
+
+    /**
+     * New about-to-be-saved independent candidates are actually
+     * merged with previous independent candidates (also from other constituencies)
+     * in order not to wipe them out, but if all candidates get deleted
+     * from a constituency, previously stored candidates there should also disappear.
+     *
+     * @param Election $election       – object from which to fetch the candidates
+     * @param int      $constituencyId – process only candidates from this constituency
+     */
+    private function deleteIndependentCandidatesIfNecessary(Election $election, int $constituencyId): void {
+        $data       = $_POST['independent_candidates'] ?? [];
+
+        if ( ! $data) {
+            $candidates = $election->getIndependentCandidates();
+
+            foreach ($candidates as $index => $item) {
+                if ($item->getConstituencyId() === $constituencyId) {
+                    $candidates->removeObject($item);
+                }
+            }
+
+            $election->setIndependentCandidates($candidates);
+        }
     }
 
     /**

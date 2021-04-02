@@ -9,7 +9,7 @@
  * -------------------------------------------------------------
  */
 
-function smarty_modifier_number($number, $decimals = 0, $decimal_separator = '.')
+function smarty_modifier_number($number, $decimals = 0, $decimal_separator = ',')
 {
     return number_format($number, $decimals, $decimal_separator, ' ');
 }

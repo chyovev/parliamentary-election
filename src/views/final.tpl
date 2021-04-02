@@ -2,7 +2,11 @@
 
 <section>
     <h2>Резултати</h2>
-    <div class="row">Разпределение на мандати между <a href="#independent" class="bold">независими кандидати</a></div>
+    
+    {if $candidates}
+        <div class="row">Разпределение на мандати между <a href="#independent" class="bold">независими кандидати</a></div>
+    {/if}
+
     <div class="row"><a href="#step1" class="bold">Стъпка 1</a>: разпределение на мандати на национално ниво</div>
 
     {if !$lottingParties|@count}

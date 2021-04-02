@@ -146,6 +146,7 @@ var App = {
         }
 
         $element.spectrum({
+            preferredFormat:       'hex',
             showAlpha:             false,
             allowEmpty:            false,
             showButtons:           false,
@@ -156,7 +157,7 @@ var App = {
             hideAfterPaletteSelect: true,
             type:        'color',
             palette: [
-                ["#f00","#f90","#ff0","#0f0","#0ff","#00f","#90f","#f0f"],
+                ["#ff0000","#ff9900","#ffff00","#00ff00","#00ffff","#0000ff","#9900ff","#ff00ff"],
                 ["#f4cccc","#fce5cd","#fff2cc","#d9ead3","#d0e0e3","#cfe2f3","#d9d2e9","#ead1dc"],
                 ["#ea9999","#f9cb9c","#ffe599","#b6d7a8","#a2c4c9","#9fc5e8","#b4a7d6","#d5a6bd"],
                 ["#e06666","#f6b26b","#ffd966","#93c47d","#76a5af","#6fa8dc","#8e7cc3","#c27ba0"],
@@ -472,9 +473,12 @@ var App = {
 
         $('input[type="text"]:not(.search-input)').val(0);
         $('.ms-list.parties').html('');
+        $('.ms-elem-selectable').removeClass('ms-selected');
         $('#parties-count').html('0');
         $('.threshold_percentage').val(4);
         $('.assembly_type_id').val($('.assembly_type_id option:first').val());
+
+        App.updateQuickSearchCache();
     },
 
     ///////////////////////////////////////////////////////////////////////////

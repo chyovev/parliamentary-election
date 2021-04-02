@@ -11,6 +11,11 @@ abstract class Router {
         '/validation/election'           => ['controller' => 'validation', 'action' => 'election'],
         '/validation/constituencies'     => ['controller' => 'validation', 'action' => 'constituencies'],
         '/validation/constituencies/:id' => ['controller' => 'validation', 'action' => 'constituencies'],
+
+        // when fetching from DB
+        '/:slug/results'                 => ['controller' => 'results',    'action' => 'preliminary'],
+        '/:slug/results/final'           => ['controller' => 'results',    'action' => 'definitive'],
+        '/:slug/'                        => ['controller' => 'home',       'action' => 'index'],
     ];
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -60,6 +65,24 @@ abstract class Router {
     ///////////////////////////////////////////////////////////////////////////////
     private function findRouteMatchForParams(array $params): string {
         $essential = self::getEssentialParams($params);
+
+        $otherProvided = array_diff($params, $essential);
+
+        // if other params are provided, try to find a route
+        // where they are all specified
+        if ($otherProvided) {
+            foreach (self::$routes as $route => $routeParams) {
+                preg_match_all('/:([^\/]+)/', $route, $match);
+
+                if ($match[1]) {
+                    $allRouteParams    = array_merge($match[1], array_keys($routeParams));
+                    $allProvidedParams = array_keys($params);
+                    if (array_diff($allRouteParams, $allProvidedParams) === [] && $essential === $routeParams) {
+                        return $route;
+                    }
+                }
+            }
+        }
 
         return array_search($essential, self::$routes);
     }

@@ -9,7 +9,7 @@
  * -------------------------------------------------------------
  */
 
-function smarty_modifier_percentage($number, $decimals = 2, $decimal_separator = '.', $stripTrailingZeroes = true)
+function smarty_modifier_percentage($number, $decimals = 2, $decimal_separator = ',', $stripTrailingZeroes = true)
 {
     $number = number_format($number, $decimals, $decimal_separator, ' ');
 
