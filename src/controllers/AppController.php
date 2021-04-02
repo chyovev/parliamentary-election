@@ -72,7 +72,7 @@ abstract class AppController {
 
             $this->setSessionElection($election);
 
-            return $this->populateElection('session');
+            return $this->populateElectionFromData('session');
         }
     }
 
@@ -83,28 +83,25 @@ abstract class AppController {
      * @return Election|null
      */
     protected function populateElection(string $type): ?Election {
-        $types = [
-            'session' => $_SESSION,
-            'post'    => $_POST,
-        ];
-        $source = $types[$type];
+        $source = $this->selectDataSource($type);
 
         // if there is nothing to load from session, return NULL
         if ($type === 'session' && ! $source) {
             return NULL;
         }
 
-        $election = $this->populateElectionFromData($source);
+        $election = $this->populateElectionFromData($type);
 
         return $election;
     }
 
     /**
      * Populates an Election object using data from $source
-     * @param  array $source – should be either $_POST or $_SESSION
+     * @param  string $type – should be compatible with $dataPools class property
      * @return Election
      */
-    private function populateElectionFromData(array $source = []): Election {
+    private function populateElectionFromData(string $type): Election {
+        $source              = $this->selectDataSource($type);
         $assemblyTypeId      = $source['assembly_type_id']     ?? NULL;
         $populationCensusId  = $source['population_census_id'] ?? NULL;
         $activeSuffrage      = $source['active_suffrage']      ?? NULL;
@@ -112,7 +109,11 @@ abstract class AppController {
         $totalValidVotes     = $source['total_valid_votes']    ?? NULL;
         $totalInvalidVotes   = $source['total_invalid_votes']  ?? NULL;
 
-        $election = new Election();
+        // on post request, instead of creating a new object,
+        // override the one stored in session (if any)
+        $election = ($type === 'post')
+                  ? $this->populateElection('session') ?? new Election()
+                  : new Election();
 
         $election->setAssemblyTypeId($assemblyTypeId)
                  ->setPopulationCensusId($populationCensusId)
@@ -126,8 +127,9 @@ abstract class AppController {
                  ->setVirtualColumn('threshold_votes', $this->calculateThresholdVotes((int) $thresholdPercentage, (int) $totalValidVotes));
 
         $this->populateConstituencyValidVotes($election, $source);
-        $this->populateElectionPartiesFromData($election, $source);
-        $this->populateIndependentCandidatesFromData($election, $source);
+        $this->populateElectionPartiesFromData($election, $type);
+        $this->populateElectionPartiesVotesFromData($election, $type);
+        $this->populateIndependentCandidatesFromData($election, $type);
 
         return $election;
     }
@@ -160,9 +162,10 @@ abstract class AppController {
     /**
      * Populates a collection of IndependentCandidate objects from $source
      * @param  Election $eleciton – object which independent candidates should be assigned to
-     * @param  array    $source   – should be either $_POST or $_SESSION
+     * @param  string   $type     – should be compatible with $dataPools class property
      */
-    protected function populateIndependentCandidatesFromData(Election $election, array $source): void {
+    protected function populateIndependentCandidatesFromData(Election $election, string $type): void {
+        $source     = $this->selectDataSource($type);
         $data       = $source['independent_candidates'] ?? [];
         $candidates = new ObjectCollection();
 
@@ -195,10 +198,10 @@ abstract class AppController {
         $data                   = $source['constituency_votes'] ?? [];
         $electionConstituencies = new ObjectCollection();
 
-        foreach ($data as $constituencyId => $item) {
+        foreach ($data as $constituencyId => $votes) {
             $electionConstituency = new ElectionConstituency();
 
-            $electionConstituency->setTotalValidVotes($item['total_valid_votes']);
+            $electionConstituency->setTotalValidVotes($votes);
 
             // if the constituency censuses were loaded, set ID
             if ($constituencies->count()) {
@@ -218,9 +221,10 @@ abstract class AppController {
      * which have surpassed the vote threshold
      *
      * @param  Election $election – object which the parties should be assigned to
-     * @param  array $source      – should be either $_POST or $_SESSION
+     * @param  string   $type     – should be compatible with $dataPools class property
      */
-    private function populateElectionPartiesFromData(Election $election, array $source): void {
+    private function populateElectionPartiesFromData(Election $election, string $type): void {
+        $source              = $this->selectDataSource($type);
         $totalVotes          = $election->getTotalValidVotes();
         $thresholdPercentage = $election->getThresholdPercentage();
 
@@ -230,13 +234,11 @@ abstract class AppController {
         // TODO: get previosly stored election parties and remove elements which are not in $source
         // instead of overwriting from scratch
         
-        $electionParties = new ObjectCollection();
-        $passedParties   = new ObjectCollection();
-
+        $electionParties   = new ObjectCollection();
+        
         foreach ($data as $item) {
-            $partyVotes      = $item['total_votes'];
-            $partyPercentage = $this->calculatePartyPercentage($partyVotes, $totalVotes);
-
+            $partyId       = $item['party_id'];
+            $partyVotes    = $item['total_votes'];
             $electionParty = new ElectionParty();
 
             $electionParty->setPartyId($item['party_id'])
@@ -251,67 +253,45 @@ abstract class AppController {
                 $i++;
             }
 
-            if ($partyPercentage >= $thresholdPercentage) {
-                // load additional party information (title, abbreviation, percentage) for passed parties
-                $party = $electionParty->getParty();
-                $electionParty
-                              ->setVirtualColumn('votes_percentage', $partyPercentage)
-                              ->setVirtualColumn('party_title', $party->getTitle())
-                              ->setVirtualColumn('party_abbreviation', $party->getAbbreviation());
-
-                $this->populateElectionPartyVotesFromData($electionParty, $source);
-                $passedParties->append($electionParty);
-            }
-
             $electionParties->append($electionParty);
         }
 
         $election->setElectionParties($electionParties);
         $election->setVirtualColumn('election_parties_count', $electionParties->count());
-        $election->setVirtualColumn('passed_parties', $passedParties);
     }
 
     /**
-     * Populates a collection of ElectionPartyVote objects from $source
-     * and stores it in the passed $party parameter
+     * Get passed parties, loop through all of them,
+     * for each party loop through data, create
+     * ElectionPartyVotes collection, and store it
+     * as a $party association
      *
-     * @param  ElectionParty $party – object which the votes should be assigned to
-     * @param  array $source        – should be either $_POST or $_SESSION
+     * @param Election $election – object which holds passed parties
+     * @param string   $type     – should be compatible with $dataPools class property
      */
-    protected function populateElectionPartyVotesFromData(ElectionParty $party, array $source): void {
-        $data    = $source['parties_votes'] ?? [];
-        $partyId = $party->getPartyId();
+    protected function populateElectionPartiesVotesFromData(Election $election, string $type): void {
+        $source        = $this->selectDataSource($type);
+        $passedParties = $election->getPassedParties();
+        $data          = $source['parties_votes'] ?? [];
 
-        $partyVotes = new ObjectCollection();
+        foreach ($passedParties as $party) {
+            $partyId    = $party->getPartyId();
+            $partyVotes = new ObjectCollection();
 
-        if (isset($data[$partyId])) {
-            foreach ($data[$partyId] as $constId => $votes) {
-                $partyVote = new ElectionPartyVote();
+            if (isset($data[$partyId])) {
+                foreach ($data[$partyId] as $constId => $votes) {
+                    $partyVote = new ElectionPartyVote();
 
-                $partyVote->setElectionPartyId($partyId)
-                          ->setConstituencyId($constId)
-                          ->setVotes($votes);
+                    $partyVote->setElectionPartyId($partyId)
+                              ->setConstituencyId($constId)
+                              ->setVotes($votes);
 
-                $partyVotes->append($partyVote);
+                    $partyVotes->append($partyVote);
+                }
             }
+
+            $party->setElectionPartyVotes($partyVotes);
         }
-
-        $party->setElectionPartyVotes($partyVotes);
-    }
-
-    /**
-     * Calculates the percentage of votes a party has received in comparison to all votes
-     *
-     * @param  int   $partyVotes
-     * @param  int   $totalVotes
-     * @return float percentage
-     */
-    private function calculatePartyPercentage(int $partyVotes, int $totalVotes): float {
-        if ($totalVotes === 0) {
-            return 0;
-        }
-
-        return $partyVotes / $totalVotes * 100;
     }
 
     /**
@@ -360,9 +340,7 @@ abstract class AppController {
             $censusId       = $item->getConstituencyCensusId();
             $constituencyId = $constituenciesArray[$censusId]['Id'];
 
-            $constituencyTotalVotes[$constituencyId] = [
-                'total_valid_votes' => $item->getTotalValidVotes(),
-            ];
+            $constituencyTotalVotes[$constituencyId] = $item->getTotalValidVotes();
         }
 
         $_SESSION = [
@@ -377,6 +355,24 @@ abstract class AppController {
             'parties_votes'          => $partiesVotes,
             'constituency_votes'     => $constituencyTotalVotes,
         ];
+    }
+
+    /**
+     * select by type the data source to populate propel objects
+     *
+     * @param  string $type
+     * @return array  data
+     */
+    private function selectDataSource(string $type): array {
+        if ($type === 'post') {
+            return $_POST;
+        }
+        elseif ($type === 'session') { 
+            return $_SESSION;
+        }
+        else {
+            throw new Exception ("No such data source type");
+        }
     }
 
 }

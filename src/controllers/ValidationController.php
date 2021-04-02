@@ -33,12 +33,8 @@ class ValidationController extends AppController {
 
         try {
             $election = $this->getElectionFromSession();
-            $this->populateIndependentCandidatesFromData($election, $_POST);
-
-            $passedParties = $election->getVirtualColumn('passed_parties');
-            foreach ($passedParties as $party) {
-                $this->populateElectionPartyVotesFromData($party, $_POST);
-            }
+            $this->populateIndependentCandidatesFromData($election, 'post');
+            $this->populateElectionPartiesVotesFromData($election, 'post');
 
             $this->updatePartiesColors($election);
 
@@ -86,7 +82,7 @@ class ValidationController extends AppController {
      * @param Election $election – Object from which passed parties get extracted
      */
     private function updatePartiesColors(Election $election): void {
-        $passedParties = $election->getVirtualColumn('passed_parties');
+        $passedParties = $election->getPassedParties();
         $data          = $_POST['parties'] ?? [];
 
         foreach ($passedParties as $item) {

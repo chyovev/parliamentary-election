@@ -2,16 +2,19 @@
 <section id="final">
     <h3>Окончателно разпределение на мандати между партии и коалиции по <a href="https://www.lex.bg/laws/ldoc/2136112596#i_2867" title="Методика за определяне на резултатите от гласуването за народни представители" target="_blank">т.4.6.9</a></h3>
     <table class="results fullwidth">
-        <tr>
-            <th rowspan="2" colspan="2">Район</th>
-            <th colspan="{$passedParties|@count}" class="uppercase center">Партия/коалиция</th>
-            <th rowspan="2" class="center">Общо</th>
-        <tr>
-            {foreach $passedParties as $item}
-                <th class="center"><abbr title="{$item['party_title']|escape}">{$item['party_abbreviation']|default:$item['party_title']|escape}</abbr></th>
-            {/foreach}
-        </tr>
+        <thead>
+            <tr>
+                <th rowspan="2" colspan="2">Район</th>
+                <th colspan="{$passedParties|@count}" class="uppercase center">Партия/коалиция</th>
+                <th rowspan="2" class="center">Общо</th>
+            <tr>
+                {foreach $passedParties as $item}
+                    <th class="center"><abbr title="{$item['party_title']|escape}">{$item['party_abbreviation']|default:$item['party_title']|escape}</abbr></th>
+                {/foreach}
+            </tr>
+        </thead>
 
+        <tbody>
         {assign var=totalMandates   value=0}
         {foreach $constituencies as $item}
             <tr>
@@ -33,6 +36,8 @@
                 <td class="center">{$constituencyMandates}</td>
             </tr>
         {/foreach}
+        </tbody>
+        <tfoot>
         <tr class="bold">
             <td colspan="2" class="center">Общо</td>
             {foreach $passedParties as $item}
@@ -40,6 +45,7 @@
             {/foreach}
             <td class="center">{$totalMandates}</td>
         </tr>
+        </tfoot>
     </table>
 </section>
 {/if}

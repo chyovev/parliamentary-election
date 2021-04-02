@@ -1,7 +1,7 @@
 <li class="ms-elem-selection">
     <span class="handle"></span>
     <span class="title">
-        <abbr title="{$label|default:'%label%'}">{$abbr|default:$label|default:'%abbr%'}</abbr>
+        <span class="ord">{($ord+1)|default:1}</span>. <abbr title="{$label|default:'%label%'}">{$abbr|default:$label|default:'%abbr%'}</abbr>
     </span>
     <span class="none">{$label|default:'%label%'}</span>
     <span class="votes">

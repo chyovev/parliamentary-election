@@ -53,6 +53,7 @@ var App = {
 
         // set the ord field of the last added element
         $('input[name$="[ord]"]:last').val(addedPartiesCount);
+        $('.ord:last').html(addedPartiesCount + 1);
 
         App.updateQuickSearchCache();
         App.updatePartiesCount();
@@ -86,6 +87,7 @@ var App = {
 
         App.updateQuickSearchCache();
         App.updatePartiesCount();
+        App.setPartiesOrd();
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -121,15 +123,18 @@ var App = {
             placeholder: 'ui-state-highlight',
             forcePlaceholderSize: true,
             axis: 'y',
-            stop: App.onSortableStop
+            stop: App.setPartiesOrd
         });
     },
 
     ///////////////////////////////////////////////////////////////////////////
     // update ord field for all parties
-    onSortableStop: function() {
+    setPartiesOrd: function() {
         $('input[name$="[ord]"]').each(function(index) {
             $(this).val(index);
+        });
+        $('.ord').each(function(index) {
+            $(this).html(index+1);
         });
     },
 

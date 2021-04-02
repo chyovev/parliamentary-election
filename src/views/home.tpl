@@ -58,6 +58,7 @@
 
     <section>
         <h2>Партии, участващи в изборите (<span id="parties-count">{$selectedParties|@count|default:0}</span>)</h2>
+        <div class="row">Желателно е подредбата на партиите да съответства на номерата им,<br /> тъй като номерата играят роля при преразпределянето на мандати.<br /><br /></div>
 
         <script type="text/template" id="party-template">
             {include file='elements/party-list-template.tpl'}
@@ -92,7 +93,7 @@
             {foreach $constituencies as $item}
                 <li>
                     <strong>{$item['title']|escape}</strong>:
-                    <input type="text" size="2" class="constituency_votes-{$item['id']}" name="constituency_votes[{$item['id']}][total_valid_votes]" value="{$item['total_valid_votes']|default:0}" /> гласа
+                    <input type="text" size="2" class="constituency_votes-{$item['id']}" name="constituency_votes[{$item['id']}]" value="{$item['total_valid_votes']|default:0}" /> гласа
                 </li>
             {/foreach}
         </ol>
