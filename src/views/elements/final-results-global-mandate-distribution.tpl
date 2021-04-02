@@ -68,7 +68,7 @@
             piechart_colors = [];
             
         {foreach $passedParties as $item}
-            piechart_data.push(['{$item['party_title']|escape}', {$item["votes_percentage"]|percentage}, '{$item['party_abbreviation']|default:$item['party_title']|escape}', {$item[HareNiemeyerInterface::MANDATES_COLUMN]}]);
+            piechart_data.push(['{$item['party_title']|escape}', {$item["votes_percentage"]|number_format:2}, '{$item['party_abbreviation']|default:$item['party_title']|escape}', {$item[HareNiemeyerInterface::MANDATES_COLUMN]}]);
             piechart_colors.push('{$item['party_color']}');
         {/foreach}
         

@@ -59,6 +59,12 @@ class ValidationController extends AppController {
         $this->renderJSONContent($response);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // completely reset the session
+    public function reset() {
+        $_SESSION = [];
+        $this->renderJSONContent(['status' => true]);
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -371,7 +377,7 @@ class ValidationController extends AppController {
      */
     private function groupPartiesVotesAndCandidatesByConstituency(Election $election, array $constituencies): array {
         $candidates            = $election->getIndependentCandidates();
-        $electionParties       = $election->getElectionParties();
+        $passedParties         = $election->getPassedParties();
         
         $groupedByConstituency = [];
 
@@ -389,14 +395,15 @@ class ValidationController extends AppController {
         }
 
         // add all parties' votes to the respective constituencies
-        foreach ($electionParties as $party) {
+        foreach ($passedParties as $party) {
             $votes = $party->getElectionPartyVotes();
+            $partyId = $party->getPartyId();
 
             foreach ($votes as $item) {
                 $constituencyId = $item->getConstituencyId();
                 $this->checkIfConstituencyExists($constituencies, $constituencyId);
 
-                $groupedByConstituency[$constituencyId]['parties'][] = $item;
+                $groupedByConstituency[$constituencyId]['parties'][$partyId] = $item;
             }
         }
 
@@ -440,8 +447,7 @@ class ValidationController extends AppController {
 
         // validate parties votes (if any)
         if (isset($group['parties'])) {
-            foreach ($group['parties'] as $item) {
-                $partyId = $item->getElectionParty()->getPartyId();
+            foreach ($group['parties'] as $partyId => $item) {
                 $inputId = sprintf('party-field-%s-%s', $constituencyId, $partyId);
                 $allFieldsErrorIds[] = $inputId;
 

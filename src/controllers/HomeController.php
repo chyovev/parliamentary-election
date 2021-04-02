@@ -12,7 +12,7 @@ class HomeController extends AppController {
         $assemblies       = AssemblyTypeQuery::create()->find();
         $censuses         = PopulationCensusQuery::create()->getAllTypesWithPopulation();
         $this->allParties = PartyQuery::create()->addAscendingOrderByColumn('title')->find();
-        $officialResults  = ElectionQuery::create()->select(['slug'])->findByOfficial(1);
+        $officialResults  = ElectionQuery::create()->addAscendingOrderByColumn('slug')->select(['slug'])->findByOfficial(1);
 
         $this->loadElectionProperties();
         $this->setProgressSteps(1);

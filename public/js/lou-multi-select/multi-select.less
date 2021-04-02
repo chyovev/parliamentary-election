@@ -110,19 +110,21 @@
     }
 }
 
+.ms-elem-selection {
+    position: relative;
+}
+.actions {
+    position: absolute;
+    right: 5px;
+    top: 2px;
+}
 .edit-votes, .remove-party {
     background: url(../img/delete.png) no-repeat 50% 50%;
     background-size: 20px;
-    position: absolute;
-    right: 5px;
     width: 24px;
     height: 24px;
+    display: inline-block;
     cursor: pointer;
-    position: absolute;
-}
-.votes {
-    float: right;
-    margin-right: 60px;
 }
 .edit-votes {
     background-image: url(../img/edit.png);
@@ -139,6 +141,21 @@
     cursor: move;
     position: absolute;
 }
-.ms-elem-selection .title {
+.ms-elem-selection .row-wrapper {
+    display: table;
+    width: calc(~"100% - 85px");
     margin-left: 30px;
+    .title-wrapper {
+        display: table-cell;
+        .title {
+            white-space: nowrap;
+            width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+    .votes {
+        display: table-cell;
+        text-align: right;
+    }
 }

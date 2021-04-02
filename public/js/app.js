@@ -471,14 +471,23 @@ var App = {
     resetForm: function(e) {
         e.preventDefault();
 
+        var url = $(this).attr('data-url');
+
         $('input[type="text"]:not(.search-input)').val(0);
         $('.ms-list.parties').html('');
         $('.ms-elem-selectable').removeClass('ms-selected');
         $('#parties-count').html('0');
         $('.threshold_percentage').val(4);
         $('.assembly_type_id').val($('.assembly_type_id option:first').val());
-
+        
         App.updateQuickSearchCache();
+
+        // response is not relevant
+        return $.ajax({
+            url:  url,
+            type: 'GET'
+        });
+
     },
 
     ///////////////////////////////////////////////////////////////////////////
