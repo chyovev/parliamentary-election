@@ -95,7 +95,7 @@
 <form class="popup-wrapper ajax-form" method="post" action="{url controller='validation' action='constituencies'}" data-success-action="App.closePopupForm()">
     <div id="popup">
         <img src="{$_root}img/close.svg" title="Затвори" class="close-popup" />
-        <h2 class="center">Попълване на мандати за <span class="mmc"></span></h2>
+        <h2 class="center">Гласове за <span class="mmc"></span></h2>
         <section class="parties"></section>
     </div>
 </form>

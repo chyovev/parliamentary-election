@@ -1,7 +1,7 @@
 <hr />
 <section>
     <div class="center">
-        <h2 class="map" id="map">Въвеждане на гласове в МИР</h2>
+        <h2 class="map" id="map">Въвеждане на гласове в МИР <a href="#" class="reset-form" data-url="{url controller='validation' action='reset'}" data-step="{$currentStep}" title="Премахване на гласовете и на независимите кандидати">Нулиране</a></h2>
         <p>За да въведете гласовете в даден МИР, натиснете върху него.<br />Попълнените МИР-ове са оцветени в зелено на картата.</p>
         <svg xmlns="http://www.w3.org/2000/svg" width="900" height="550">
             <g class="constituencies">
@@ -51,7 +51,8 @@
                 </div>
                 <div class="bottom center">
                     <div class="error-message center const_{$const['id']}_message"></div>
-                    <button type="submit">Запази</button>
+                    <button type="button" class="reset-form" data-url="{url controller='validation' action='reset'}" data-constituency="{$const['id']}">Нулирай</button>
+                    <button type="submit" class="save">Запази</button>
                 </div>
             </div>
         {/foreach}

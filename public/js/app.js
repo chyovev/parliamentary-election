@@ -298,6 +298,7 @@ var App = {
         var $this            = $(this),
             id               = $this.attr('data-constituency-id'),
             title            = $this.attr('data-title'),
+            popupTitle       = title.match(/[0-9]/) ? title : 'МИР ' + id + '. ' + title;
             $fieldsRepo      = $('#constituency-' + id + '-data'),
             $popupForm       = $('.popup-wrapper'),
             $popupFormTitle  = $popupForm.find('.mmc'),
@@ -309,7 +310,7 @@ var App = {
         $target.addClass('active');
 
         if ($popupFormBody.html() === '') {
-            $popupFormTitle.html(title);
+            $popupFormTitle.html(popupTitle);
             $popupFormBody.html($fieldsRepo.html());
             $popupForm.attr('data-const-id', id);
         }
@@ -406,8 +407,6 @@ var App = {
             : $listItem.removeClass('independent');
 
         App.dismissModal();
-
-        e.preventDefault();
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -471,20 +470,52 @@ var App = {
     resetForm: function(e) {
         e.preventDefault();
 
-        var url = $(this).attr('data-url');
+        var $this       = $(this),
+            url         = $this.attr('data-url'),
+            currentStep = $this.attr('data-step'),
+            constId     = $this.attr('data-constituency')
+            data        = constId ? {constituency: constId} : {step: currentStep};
 
-        $('input[type="text"]:not(.search-input)').val(0);
-        $('.ms-list.parties').html('');
-        $('.ms-elem-selectable').removeClass('ms-selected');
-        $('#parties-count').html('0');
-        $('.threshold_percentage').val(4);
-        $('.assembly_type_id').val($('.assembly_type_id option:first').val());
-        
-        App.updateQuickSearchCache();
+        if (constId) {
+            var $popupForm    = $('.popup-wrapper'),
+                $repoForm     = $('#constituency-'+constId+'-data'),
+                $mapIndicator = $('[data-constituency-id="'+constId+'"]');
+
+            $popupForm.find('input[type="text"][name*="votes"]').val(0);
+            $popupForm.find('.independent-list').html('');
+            $popupForm.find('.local-ind-counter').html('0');
+
+            $repoForm.find('input[name*="votes"]').val(0).attr('value', 0);
+            $repoForm.find('.independent-list').html('');
+            $repoForm.find('.local-ind-counter').html('0');
+
+            $mapIndicator.removeClass('completed').removeClass('independent');
+        }
+        else if (currentStep == 2) {
+            $('.completed').removeClass('completed');
+            $('.independent').removeClass('independent');
+            $('input[name^="parties_votes"]').val(0).attr('value', 0);
+            $('.independent-list').html('');
+            $('.local-ind-counter').html('0');
+            $('.next-page').fadeOut('normal', function() { $(this).remove(); });
+        }
+        else {
+            $('input[type="text"]:not(.search-input)').val(0);
+            $('.ms-list.parties').html('');
+            $('.ms-elem-selectable').removeClass('ms-selected');
+            $('#parties-count').html('0');
+            $('.threshold_percentage').val(4);
+            $('.assembly_type_id').val($('.assembly_type_id option:first').val());
+            $('.population_census_id').val($('.population_census_id option:first').val());
+            $('.next-page').fadeOut('normal', function() { $(this).remove(); });
+
+            App.updateQuickSearchCache();
+        }
 
         // response is not relevant
         return $.ajax({
             url:  url,
+            data: data,
             type: 'GET'
         });
 

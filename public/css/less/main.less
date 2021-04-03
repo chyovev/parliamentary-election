@@ -147,13 +147,16 @@ button {
     transition: border-color 0.3s;
     -webkit-appearance: none; /* override ios default button style */
     border-radius: 5px;
-    &:not([disabled]):hover, &:not([disabled]):focus {
-        border-color: @darkblue;
+    &.save {
+        background: url(../img/save.png) no-repeat 15px 50%;
+        background-size: 22px;
+        padding-right: 30px;
     }
-    &[disabled] {
-        cursor: not-allowed;
-        color: #646464;
-        background-color: #c4c3c3;
+    &.reset-form {
+        background: url(../img/eraser.png) no-repeat 15px 50%;
+        background-size: 22px;
+        padding-right: 30px;
+        margin-right: 30px;
     }
 }
 table.results, table.results tr, table.results th, table.results td {
@@ -344,7 +347,10 @@ header + nav {
     font-size: 21px;
     font-weight: bold;
 }
-.reset-form {
+a.reset-form {
+    background: url(../img/eraser.png) no-repeat 0% 50%;
+    background-size: 24px;
+    padding-left: 30px;
     float: right;
-    font-size: 20px;
+    font-size: 18px;
 }

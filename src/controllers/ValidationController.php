@@ -28,8 +28,7 @@ class ValidationController extends AppController {
 
     ///////////////////////////////////////////////////////////////////////////
     public function constituencies() {
-        $requestParams  = Router::getCurrentRequestParams();
-        $constituencyId = $requestParams['id'] ?? NULL;
+        $constituencyId = Router::getRequestParam('id');
 
         try {
             $election = $this->getElectionFromSession();
@@ -60,9 +59,44 @@ class ValidationController extends AppController {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // completely reset the session
+    // reset current page input fields
     public function reset() {
-        $_SESSION = [];
+        $currentStep  = (int) Router::getRequestParam('step');
+        $constituency = (int) Router::getRequestParam('constituency');
+
+        // if it's just a single constituency,
+        // loop through all parties and candidates stored in session
+        // and unset their votes in said constituency
+        if ($constituency) {
+            if ($_SESSION['parties_votes']) {
+                foreach ($_SESSION['parties_votes'] as $partyId => $group) {
+                    unset($_SESSION['parties_votes'][$partyId][$constituency]);
+                }
+            }
+            if ($_SESSION['independent_candidates']) {
+                foreach ($_SESSION['independent_candidates'] as $key => $item) {
+                    if ($item['constituency_id'] === $constituency) {
+                        unset($_SESSION['independent_candidates'][$key]);
+                    }
+                }
+            }
+        }
+
+        // if it's a step, butcher pretty much everything past that step
+        else {
+            switch ($currentStep) {
+                case 2:
+                    $_SESSION['independent_candidates'] = [];
+                    $_SESSION['parties_votes']          = [];
+                    $_SESSION['reached_step']           = $currentStep;
+                    break;
+
+                // if step 1 or something else, delete whole session
+                default:
+                    $_SESSION = [];
+            }
+        }
+
         $this->renderJSONContent(['status' => true]);
     }
 
