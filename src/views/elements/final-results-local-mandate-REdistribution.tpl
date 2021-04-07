@@ -10,21 +10,25 @@
         <div class="row bold">Преразпределяне на мандати по (<a href="https://www.lex.bg/laws/ldoc/2136112596#i_2867" title="Методика за определяне на резултатите от гласуването за народни представители" target="_blank">т.4.6.8</a>):</div>
 
         {if isset($data['iteration_remainders'])}
-        <table class="results">
-            <tr>
-                <th>Партия/коалиция</th>
-                <th>Избирателен район</th>
-                <th>Остатък</th>
-            </tr>
+        <table class="results sortable">
+            <thead>
+                <tr>
+                    <th class="sortable"><span>Партия/коалиция</span></th>
+                    <th class="sortable"><span>Избирателен район</span></th>
+                    <th class="sortable asc"><span>Остатък</span></th>
+                </tr>
+            </thead>
 
+            <tbody>
             {foreach $data['iteration_remainders'] as $item}
                 {assign var=constituency value=$constituencies[$item['constituency_id']]}
                 <tr{if $item@first} class="blue"{/if}>
                     <td>{$data['parties'][$item['party_id']]['party_abbreviation']|default:$data['parties'][$item['party_id']]['party_title']|escape}</td>
-                    <td>{$constituency['id']}. {$constituency['title']|escape}</td>
-                    <td>{$item['remainder']|number:15}</td>
+                    <td data-value="{$constituency['id']}">{$constituency['id']}. {$constituency['title']|escape}</td>
+                    <td data-value="{$item['remainder']}">{$item['remainder']|number:15}</td>
                 </tr>
             {/foreach}
+            </tbody>
         </table>
         {/if}
 

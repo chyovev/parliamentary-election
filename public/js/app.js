@@ -26,12 +26,17 @@ var App = {
         $(document).on('mouseenter', 'a[data-constituency-id]', App.hoverConstituency);
         $(document).on('mouseleave', 'a[data-constituency-id]', App.unhoverConstituency);
         $(document).on('click', '[data-constituency-id]', App.mapConstituencyClick);
+        $(document).on('mouseenter', 'path[data-constituency-id]', App.mapTooltipShow);
+        $(document).on('mouseleave', 'path[data-constituency-id]', App.mapTooltipHide);
+        $(document).on('mousemove',  'path[data-constituency-id]', App.mapTooltipMove);
         $(document).keyup(App.onKeyUp);
         $(document).on('click', '.close-popup', App.dismissModal);
         $(document).on('submit', '.ajax-form', App.submitFormData);
         $(document).on('click', '.add-independent', App.addIndependentCandidate);
         $(document).on('click', '.remove-independent', App.removeIndependentCandidate);
         $(document).on('click', '.reset-form', App.resetForm);
+        $(document).on('click', '.download-chart', App.downloadChart);
+        $(document).on('click', 'table.sortable th.sortable', App.sortTable);
         $(document).on('click', 'a[href^="#"]', App.scrollToElement); // keep last in bind function
     },
 
@@ -212,6 +217,7 @@ var App = {
                 renderer: $.jqplot.PieRenderer,
                 rendererOptions: {
                     showDataLabels: true,
+                    dataLabels: piechart_labels,
                     padding: 10,
                     sliceMargin: 0,
                     shadow: false
@@ -233,12 +239,9 @@ var App = {
                 useAxesFormatters: false,
                 tooltipFormatString: '%s',
                 tooltipContentEditor: function(str, seriesIndex, pointIndex, jqPlot) {
-                    var el       = jqPlot.data[seriesIndex][pointIndex],
-                        abbr     = el[2],
-                        mandates = el[3]
-                        suffix   = el[3] > 1 ? 'мандата' : 'мандат';
+                    var el = jqPlot.data[seriesIndex][pointIndex];
 
-                    return abbr + ': ' + mandates + ' ' + suffix;
+                    return el[0];
                 }
             }
         });
@@ -318,6 +321,32 @@ var App = {
         // reset the form before showing it to get rid of potential
         // previous red borders of required validation
         $popupForm.trigger('reset').fadeIn();
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    mapTooltipShow: function(e) {
+        var $this   = $(this),
+            title   = $this.attr('data-title'),
+            id      = $this.attr('data-constituency-id'),
+            tooltip = title.match(/[0-9]/) ? title : ('МИР ' + id + ' ' + title);
+            x       = e.pageX + 20 + 'px',
+            y       = e.pageY - 10 + 'px';
+
+        $('.map-tooltip').text(tooltip).css({left: x, top: y}).show();
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    mapTooltipHide: function() {
+        $('.map-tooltip').hide();
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    mapTooltipMove: function(e) {
+        e.stopPropagation();
+
+        var x = e.pageX + 5 + 'px',
+            y = e.pageY + 'px';
+        $('.map-tooltip').css({left: x, top: y});
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -519,6 +548,65 @@ var App = {
             type: 'GET'
         });
 
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    downloadChart: function(e) {
+        var chartSrc = $('#piechart').jqplotToImageStr({backgroundColor: '#F2F3F4'});
+
+        $(this).attr('href', chartSrc);
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    sortTable: function(e) {
+        e.preventDefault();
+
+        var $th     = $(this),
+            thIndex = $th.index(),
+            $table  = $th.closest('table'),
+            $tbody  = $table.find('tbody').eq(0),
+            rows    = $tbody.find('tr').toArray().sort(App.comparer(thIndex));
+
+        // if the current cell heading doesn't have desc class,
+        // add it, remove asc class and reverse all rows
+        if ( ! $th.hasClass('desc')) {
+            rows = rows.reverse();
+            $th.removeClass('asc').addClass('desc');
+        }
+        else {
+            $th.removeClass('desc').addClass('asc');
+        }
+
+        // remove asc and desc class from all other cell headings
+        $th.siblings().removeClass('asc desc');
+
+        for (var i = 0; i < rows.length; i++){
+            $tbody.append(rows[i])
+        }
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    comparer: function(index) {
+        return function(a, b) {
+            var valA = App.getCellValue(a, index),
+                valB = App.getCellValue(b, index);
+
+            // if both cells' values are numbers,
+            // use their difference for the sorting
+            if ($.isNumeric(valA) && $.isNumeric(valB)) {
+                return valA - valB;
+            }
+
+            // otherwise compare them as strings
+            return valA.toString().localeCompare(valB);
+        }
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    getCellValue: function(row, index) {
+        var $cell = $(row).children('td').eq(index);
+
+        return $cell.attr('data-value') || $cell.text()
     },
 
     ///////////////////////////////////////////////////////////////////////////

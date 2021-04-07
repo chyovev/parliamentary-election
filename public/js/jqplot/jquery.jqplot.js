@@ -9276,9 +9276,10 @@
                 $(el).find('div.jqplot-table-legend-swatch-outline').each(function() {
                     // get the first div and stroke it
                     var elem = $(this);
+                    var parent = elem.parent();
                     newContext.strokeStyle = elem.css('border-top-color');
-                    var l = left + elem.position().left;
-                    var t = top + elem.position().top;
+                    var l = left + parent.position().left + elem.position().left;
+                    var t = top + parent.position().top + elem.position().top - 1;
                     newContext.strokeRect(l, t, elem.innerWidth(), elem.innerHeight());
 
                     // now fill the swatch

@@ -18,60 +18,56 @@
                 <span>Общ брой на партиите и коалициите, преминали долната граница: <strong>{$passedParties|@count}</strong></span>
             </div>
 
-            <table class="results fullwidth">
-                <tr class="heading">
-                    <th class="center">#</th>
-                    <th>Цвят</th>
-                    <th class="left">Партия/коалиция</th>
-                    <th>Гласове</th>
-                    <th>Процент</th>
-                    <th>Мандати</th>
-                </tr>
+            <table class="results fullwidth sortable">
+                <thead>
+                    <tr class="heading">
+                        <th class="center sortable asc"><span>#</span></th>
+                        <th>Цвят</th>
+                        <th class="left sortable"><span>Партия/коалиция</span></th>
+                        <th class="sortable"><span>Гласове</span></th>
+                        <th class="sortable"><span>Процент</span></th>
+                        <th class="sortable"><span>Мандати</span></th>
+                    </tr>
+                </thead>
                 
                 {assign var=mandates value=0}
                 {assign var=percentages value=0}
                 {assign var=votes value=0}
 
-                {foreach $passedParties as $item}
-                    {$mandates    = $mandates + $item[HareNiemeyerInterface::MANDATES_COLUMN]}
-                    {$percentages = $percentages + $item['votes_percentage']}
-                    {$votes       = $votes + $item['total_votes']}
-                    <tr>
-                        <td class="center">{$item['ord']+1}</td>
-                        <td class="center"><input type="hidden" class="color-picker" name="parties[{$item['party_id']}][party_color]" value="{$item['party_color']}" data-colors-index="{$item@index}" /></td>
-                        <td>{$item['party_title']|escape}</td>
-                        <td class="center">{$item['total_votes']|number}</td>
-                        <td class="center">{$item['votes_percentage']|percentage}%</td>
-                        <td class="center">{$item[HareNiemeyerInterface::MANDATES_COLUMN]}</td>
-                    </tr>
-                {/foreach}
+                <tbody>
+                    {foreach $passedParties as $item}
+                        {$mandates    = $mandates + $item[HareNiemeyerInterface::MANDATES_COLUMN]}
+                        {$percentages = $percentages + $item['votes_percentage']}
+                        {$votes       = $votes + $item['total_votes']}
+                        <tr>
+                            <td class="center">{$item['ord']+1}</td>
+                            <td class="center"><input type="hidden" class="color-picker" name="parties[{$item['party_id']}][party_color]" value="{$item['party_color']}" data-colors-index="{$item@index}" /></td>
+                            <td>{$item['party_title']|escape}</td>
+                            <td class="center" data-value="{$item['total_votes']}">{$item['total_votes']|number}</td>
+                            <td class="center" data-value="{$item['votes_percentage']}">{$item['votes_percentage']|percentage}%</td>
+                            <td class="center">{$item[HareNiemeyerInterface::MANDATES_COLUMN]}</td>
+                        </tr>
+                    {/foreach}
+                </tbody>
 
-                <tr class="bold">
-                    <td class="center">&mdash;</td>
-                    <td class="center">&mdash;</td>
-                    <td>Общо</td>
-                    <td class="center">{$votes|number}</td>
-                    <td class="center">{min($percentages, 100)|percentage}%</td>
-                    {if $mandates > 0 && $mandates < $assembly['total_mandates']}
-                        <td class="center red"><em><abbr title="Възможен е жребий на ЦИК за преразпределяне на липсващите мандати">{$mandates}</abbr></em></td>
-                    {else}
-                        <td class="center">{$mandates}</td>
-                    {/if}
-                </tr>
+                <tfoot>
+                    <tr class="bold">
+                        <td class="center">&mdash;</td>
+                        <td class="center">&mdash;</td>
+                        <td>Общо</td>
+                        <td class="center">{$votes|number}</td>
+                        <td class="center">{min($percentages, 100)|percentage}%</td>
+                        {if $mandates > 0 && $mandates < $assembly['total_mandates']}
+                            <td class="center red"><em><abbr title="Възможен е жребий на ЦИК за преразпределяне на липсващите мандати">{$mandates}</abbr></em></td>
+                        {else}
+                            <td class="center">{$mandates}</td>
+                        {/if}
+                    </tr>
+                </tfoot>
             </table>
 
-            <div class="chart-wrapper">
-                <div id="piechart" class="condensed"></div>
-
-                <script type="text/javascript">
-                var piechart_data   = [],
-                    piechart_colors = [];
-                    
-                {foreach $passedParties as $item}
-                    piechart_data.push(['{$item['party_title']|escape}', {$item["votes_percentage"]|number_format:2}, '{$item['party_abbreviation']|default:$item['party_title']|escape}', {$item[HareNiemeyerInterface::MANDATES_COLUMN]}]);
-                    piechart_colors.push('{$item['party_color']}');
-                {/foreach}
-                </script>
+            <div class="chart-wrapper relative">
+                {include file='elements/piechart.tpl'}
 
                 {if $passedParties|@count > 1}
                     <p><strong title="Nota bene">NB!</strong> За крайните резултати трябва във всеки МИР <a href="#map">да въведете</a> получените гласове за всяка от партиите, преминали границата за представителство, както и за независимите кандидати.</p>

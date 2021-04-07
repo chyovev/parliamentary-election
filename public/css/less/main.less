@@ -164,7 +164,7 @@ table.results, table.results tr, table.results th, table.results td {
     border-collapse: collapse;
     font-size: 14px;
 }
-table thead {
+table thead.sticky {
     position: sticky;
     top: 0px;
 }
@@ -199,6 +199,26 @@ table.results {
             background-color: @blue;
             color: white;
             padding: 10px;
+            span::after {
+                content: ' ';
+                display: inline-block;
+                width: 10px;
+            }
+            &.asc, &.desc {
+                background-color: #183353;
+            }
+            &.asc span::after {
+                content: '↓';
+            }
+            &.desc span::after {
+                content: '↑';
+            }
+            &:not(.desc), &:not(.asc) {
+                span {
+                    position: relative;
+                    left: 5px;
+                }
+            }
         }
         td {
             padding: 5px;
@@ -207,7 +227,7 @@ table.results {
 }
 .chart-wrapper {
     margin: 50px 0px;
-    #piechart.condensed, > p {
+    #piechart.condensed, > p.condensed {
         width: 49%;
         display: inline-block;
         vertical-align: top;
@@ -351,6 +371,33 @@ a.reset-form {
     background: url(../img/eraser.png) no-repeat 0% 50%;
     background-size: 24px;
     padding-left: 30px;
-    float: right;
     font-size: 18px;
+    position: absolute;
+    right: 0px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.relative {
+    position: relative;
+}
+.map-tooltip {
+    display: none;
+    position: absolute;
+    padding: 7px;
+    color: mix(black, white, 70%);
+    background-color: fade(white, 90%);
+    border: 1px solid mix(black, white, 20%);
+    border-radius: 3px;
+    box-shadow: 0 1px 3px 1px fade(black, 45%);
+}
+.download-chart {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    text-decoration: none;
+    font-size: 13px;
+    text-transform: uppercase;
+    img {
+        vertical-align: middle;
+    }
 }

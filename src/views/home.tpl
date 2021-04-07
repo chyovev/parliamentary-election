@@ -4,13 +4,13 @@
         <h3>Показване на резултати от парламентарни избори:</h3>
         <ul>
             {foreach $official as $slug}
-                <li><a class="bold" href="{url controller='home' action='index' slug=$slug}">{$slug}</a></li>
+                <li><a class="bold" href="{url controller='results' action='definitive' slug=$slug}">{$slug}</a></li>
             {/foreach}
         </ul>
     </section>
     {/if}
     <section>
-        <h2>Обща информация <a href="#" class="reset-form" data-url="{url controller='validation' action='reset'}" data-step="{$currentStep}" title="Изтрий полетата и премахни избраните партии">Нулиране</a></h2>
+        <h2 class="relative">Обща информация <a href="#" class="reset-form" data-url="{url controller='validation' action='reset'}" data-step="{$currentStep}" title="Изтрий полетата и премахни избраните партии">Нулиране</a></h2>
         <div class="row">
             <span>Парламентарни избори за:</span>
             <select name="assembly_type_id" class="assembly_type_id">

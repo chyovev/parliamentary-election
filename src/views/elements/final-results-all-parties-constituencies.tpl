@@ -2,7 +2,7 @@
 <section id="final">
     <h2>Окончателно разпределение на мандати между партии и коалиции по <a href="https://www.lex.bg/laws/ldoc/2136112596#i_2867" title="Методика за определяне на резултатите от гласуването за народни представители" target="_blank">т.4.6.9</a></h2>
     <table class="results fullwidth">
-        <thead>
+        <thead class="sticky">
             <tr>
                 <th rowspan="2" colspan="2">Район</th>
                 <th colspan="{$passedParties|@count}" class="uppercase center">Партия/коалиция</th>
