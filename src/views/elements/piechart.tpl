@@ -15,8 +15,8 @@ var piechart_data   = [],
 {if isset($includeCandidates) && $includeCandidates}
     {foreach $candidates as $item}
         {if !isset($item['is_elected']) || !$item['is_elected']}{continue}{/if}
-        piechart_data.push(['{$item['name']|escape}', 5, '{$item['name']|escape}', {1}]);
-        piechart_labels.push('1%');
+        piechart_data.push(['{$item['name']|escape} &mdash; 1 мандат', 8, '{$item['name']|escape}', {1}]);
+        piechart_labels.push('{$item['percentage']|percentage}%');
     {/foreach}
 {/if}
 </script>

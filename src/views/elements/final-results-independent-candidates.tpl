@@ -1,6 +1,6 @@
 {if isset($candidates) && $candidates}
 <section id="independent">
-    <h2>Независими кандидати</h2>
+    <h2><span class="independent-box"></span> Независими кандидати</h2>
      <table class="results fullwidth sortable">
         <thead>
             <tr class="heading">

@@ -111,15 +111,21 @@ var App = {
             $wrapper     = $this.closest('.ms-elem-selection'),
             party        = $wrapper.find('.title').text().trim(),
             $counter     = $wrapper.find('.count'),
-            old_votes    = parseInt($counter.html())
+            $input       = $wrapper.find('input[name$="[total_votes]"]'),
+            old_votes    = parseInt($input.val())
             votes        = prompt('Общ брой гласове в страната и чужбина за:\n' + party, old_votes),
             votes_number = isNaN(parseInt(votes)) ? 0 : parseInt(votes);
 
         // update the values only if the dialog window was *not* dismissed
         if (votes !== null) {
-            $counter.html(votes_number);
-            $wrapper.find('input[name$="[total_votes]"]').val(votes_number);
+            $counter.html(App.prettyNumber(votes_number));
+            $input.val(votes_number);
         }
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    prettyNumber: function(number) {
+        return parseInt(number).toLocaleString('de-DE').replace(/\./gi, ' ');
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -318,6 +324,15 @@ var App = {
             $popupForm.attr('data-const-id', id);
         }
 
+        // add color boxes in front of each party
+        $popupFormBody.find('.party-color').remove();
+        $popupFormBody.find('.parties-list').find('.row').each(function() {
+            var party_id = $(this).attr('data-party-id'),
+                colorBox = App.generatePartyColorBox(party_id);
+
+            $(this).prepend(colorBox);
+        });
+
         // reset the form before showing it to get rid of potential
         // previous red borders of required validation
         $popupForm.trigger('reset').fadeIn();
@@ -328,16 +343,50 @@ var App = {
         var $this   = $(this),
             title   = $this.attr('data-title'),
             id      = $this.attr('data-constituency-id'),
-            tooltip = title.match(/[0-9]/) ? title : ('МИР ' + id + ' ' + title);
+            html    = title.match(/[0-9]/) ? title : ('МИР ' + id + ' ' + title),
+            $repo   = $('#constituency-' + id + '-data'),
             x       = e.pageX + 20 + 'px',
             y       = e.pageY - 10 + 'px';
 
-        $('.map-tooltip').text(tooltip).css({left: x, top: y}).show();
+        html = '<span class="title center">' + html + '</span>';
+
+        // add parties and candidates votes to popup
+        $repo.find('.row').each(function() {
+            var $row   = $(this),
+                votes  = $row.find('input[type="text"]:last').val() || '0';
+
+            // if the row is a party, add a color box
+            if ( ! $row.hasClass('independent-item')) {
+                var party     = $row.find('input[type="text"]:first').attr('data-title'),
+                    party_id  = $row.find('input[type="text"]:first').attr('data-party-id'),
+                    box       = App.generatePartyColorBox(party_id);
+            }
+            else {
+                var party = $row.find('input[type="text"]:first').val().trim(),
+                    box   = '<span class="independent-box"></span>';
+            }
+
+            html += '<div class="row">' + box + '<strong>'+ party + '</strong>: ' + App.prettyNumber(votes) + '</div>';
+        });
+
+        $('.map-tooltip').html(html).css({left: x, top: y}).fadeIn(100);
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    generatePartyColorBox: function(party_id) {
+        var color = App.getPartyColor(party_id);
+
+        return '<span class="party-color" style="background-color: ' + color + '"></span>';
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    getPartyColor: function(party_id) {
+        return $('input[name="parties['+party_id+'][party_color]"]').val();
     },
 
     ///////////////////////////////////////////////////////////////////////////
     mapTooltipHide: function() {
-        $('.map-tooltip').hide();
+        $('.map-tooltip').stop().hide();
     },
 
     ///////////////////////////////////////////////////////////////////////////

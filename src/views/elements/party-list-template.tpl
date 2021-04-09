@@ -8,7 +8,7 @@
             </div>
         </div>
         <div class="votes">
-            (<span class="count">{$votes|default:0}</span> гласа)
+            (<span class="count">{$votes|number|default:0}</span> гласа)
             <input type="hidden" value="{$votes|default:0}" name="parties[{$id|default:'%id%'}][total_votes]" />
         </div>
     </div>

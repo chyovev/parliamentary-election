@@ -27,7 +27,7 @@
         {assign var=diff value=$local - $global}
         <tr {if $receivingPartyId} class="{if $receivingPartyId == $party['party_id']}receiving{elseif $givingPartyId == $party['party_id']}giving{/if}"{/if}>
             <td class="center">{$party['ord']+1}</td>
-            <td>{$party['party_abbreviation']|default:$party['party_title']|escape}</td>
+            <td><span class="party-color" style="background-color: {$party['party_color']}"></span> {$party['party_abbreviation']|default:$party['party_title']|escape}</td>
             {if isset($showRemainder) && $showRemainder}
                 <td data-value="{$remainder|default:0}"{if $has_received} class="blue"{/if}>{if $remainder}{$remainder|number:15}{/if}</td>
             {/if}

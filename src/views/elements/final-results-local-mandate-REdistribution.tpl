@@ -23,7 +23,7 @@
             {foreach $data['iteration_remainders'] as $item}
                 {assign var=constituency value=$constituencies[$item['constituency_id']]}
                 <tr{if $item@first} class="blue"{/if}>
-                    <td>{$data['parties'][$item['party_id']]['party_abbreviation']|default:$data['parties'][$item['party_id']]['party_title']|escape}</td>
+                    <td><span class="party-color" style="background-color: {$data['parties'][$item['party_id']]['party_color']}"></span> {$data['parties'][$item['party_id']]['party_abbreviation']|default:$data['parties'][$item['party_id']]['party_title']|escape}</td>
                     <td data-value="{$constituency['id']}">{$constituency['id']}. {$constituency['title']|escape}</td>
                     <td data-value="{$item['remainder']}">{$item['remainder']|number:15}</td>
                 </tr>
@@ -42,7 +42,7 @@
             {if !$receivingPartyId}
                 <div class="row"><span class="bold">МИР {$constituencyTitle}:</span> Не е намерена партия, на която да се даде мандат</div>
             {else}
-                <div class="row"><span class="bold">МИР {$constituencyTitle}:</span> отнемане на мандат от <span class="red bold">{$data['parties'][$givingPartyId]['party_title']|escape}</span> → даване на мандат на <span class="green bold">{$data['parties'][$receivingPartyId]['party_title']|escape}</span></div>
+                <div class="row"><span class="bold">МИР {$constituencyTitle}:</span> отнемане на мандат от <span class="bold" style="color: {$data['parties'][$givingPartyId]['party_color']}">{$data['parties'][$givingPartyId]['party_title']|escape}</span> → даване на мандат на <span class="bold" style="color: {$data['parties'][$receivingPartyId]['party_color']}">{$data['parties'][$receivingPartyId]['party_title']|escape}</span></div>
             {/if}
         {/if}
 

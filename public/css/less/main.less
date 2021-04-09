@@ -383,12 +383,39 @@ a.reset-form {
 .map-tooltip {
     display: none;
     position: absolute;
+    z-index: 1;
     padding: 7px;
     color: mix(black, white, 70%);
-    background-color: fade(white, 90%);
+    background-color: fade(white, 85%);
     border: 1px solid mix(black, white, 20%);
-    border-radius: 3px;
-    box-shadow: 0 1px 3px 1px fade(black, 45%);
+    border-radius: 5px;
+    box-shadow: 0 1px 3px 1px fade(black, 20%);
+    text-align: left;
+    .title {
+        font-weight: bold;
+        display: block;
+        border-bottom: 1px dotted mix(black, white, 70%);
+        margin-bottom: 5px;
+        padding-bottom: 5px;
+    }
+    .row {
+        margin: 5px 0px;
+        line-height: 1em;
+    }
+}
+.party-color, .independent-box {
+    width: 15px;
+    height: 15px;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+.party-color {
+    border: 1px solid @grey;
+}
+.independent-box {
+    background: url(../img/independent-candidate.svg) no-repeat 50% 50%;
+    background-size: 15px;
 }
 .download-chart {
     position: absolute;

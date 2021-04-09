@@ -28,7 +28,7 @@
                 {foreach $localDistribution[$item['id']]['parties'] as $party}
                     <tr>
                         <td class="center">{$party['ord']+1}</td>
-                        <td>{$party['party_title']|escape}</td>
+                        <td><span class="party-color" style="background-color: {$party['party_color']}"></span> {$party['party_title']|escape}</td>
                         <td class="center" data-value="{$party['total_votes']}">{$party['total_votes']|number}</td>
                         <td class="center{if $party[HareNiemeyerInterface::RECEIVED_MANDATE_COLUMN]} blue{/if}" data-value="{$party[HareNiemeyerInterface::REMAINDER_COLUMN]}">{$party[HareNiemeyerInterface::REMAINDER_COLUMN]|number:15}</td>
                         <td class="center">{$party[HareNiemeyerInterface::MANDATES_COLUMN]}</td>
@@ -64,7 +64,7 @@
                 {foreach $localDistribution[$item['id']]['remainders'] as $party}
                 <tr>
                     <td class="center">{$party['ord']+1}</td>
-                    <td>{$party['party_title']|escape}</td>
+                    <td><span class="party-color" style="background-color: {$party['party_color']}"></span> {$party['party_title']|escape}</td>
                     <td class="center{if $party[HareNiemeyerInterface::RECEIVED_MANDATE_COLUMN]} blue{/if}" data-value="{$party[HareNiemeyerInterface::REMAINDER_COLUMN]}">{$party[HareNiemeyerInterface::REMAINDER_COLUMN]|number:15}</td>
                 </tr>
                 {/foreach}

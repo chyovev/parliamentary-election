@@ -9,7 +9,7 @@
                 <th rowspan="2" class="center">Общо</th>
             <tr>
                 {foreach $passedParties as $item}
-                    <th class="center"><abbr title="{$item['party_title']|escape}">{$item['party_abbreviation']|default:$item['party_title']|escape}</abbr></th>
+                    <th class="center"><span class="party-color" style="background-color: {$item['party_color']}"></span> <abbr title="{$item['party_title']|escape}">{$item['party_abbreviation']|default:$item['party_title']|escape}</abbr></th>
                 {/foreach}
             </tr>
         </thead>
