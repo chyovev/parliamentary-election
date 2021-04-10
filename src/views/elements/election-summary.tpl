@@ -31,6 +31,11 @@
     </div>
 
     <div class="row">
+        <span>&nbsp; &nbsp; &nbsp; &rdsh; от тях гласували с „Не подкрепям никого“: <strong>{$election['trust_no_one_votes']|number}</strong>
+        {include file='elements/trust-no-one-tooltip.tpl'}
+    </div>
+
+    <div class="row">
         <span>Брой <em>недействителни</em> гласове в страната и чужбина: <strong>{$election['total_invalid_votes']|number}</strong></span>
     </div>
 

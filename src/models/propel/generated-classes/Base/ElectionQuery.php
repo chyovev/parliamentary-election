@@ -27,6 +27,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElectionQuery orderByActiveSuffrage($order = Criteria::ASC) Order by the active_suffrage column
  * @method     ChildElectionQuery orderByThresholdPercentage($order = Criteria::ASC) Order by the threshold_percentage column
  * @method     ChildElectionQuery orderByTotalValidVotes($order = Criteria::ASC) Order by the total_valid_votes column
+ * @method     ChildElectionQuery orderByTrustNoOneVotes($order = Criteria::ASC) Order by the trust_no_one_votes column
  * @method     ChildElectionQuery orderByTotalInvalidVotes($order = Criteria::ASC) Order by the total_invalid_votes column
  * @method     ChildElectionQuery orderByOfficial($order = Criteria::ASC) Order by the official column
  * @method     ChildElectionQuery orderByCreatedAt($order = Criteria::ASC) Order by the created_at column
@@ -39,6 +40,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElectionQuery groupByActiveSuffrage() Group by the active_suffrage column
  * @method     ChildElectionQuery groupByThresholdPercentage() Group by the threshold_percentage column
  * @method     ChildElectionQuery groupByTotalValidVotes() Group by the total_valid_votes column
+ * @method     ChildElectionQuery groupByTrustNoOneVotes() Group by the trust_no_one_votes column
  * @method     ChildElectionQuery groupByTotalInvalidVotes() Group by the total_invalid_votes column
  * @method     ChildElectionQuery groupByOfficial() Group by the official column
  * @method     ChildElectionQuery groupByCreatedAt() Group by the created_at column
@@ -114,6 +116,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElection findOneByActiveSuffrage(int $active_suffrage) Return the first ChildElection filtered by the active_suffrage column
  * @method     ChildElection findOneByThresholdPercentage(int $threshold_percentage) Return the first ChildElection filtered by the threshold_percentage column
  * @method     ChildElection findOneByTotalValidVotes(int $total_valid_votes) Return the first ChildElection filtered by the total_valid_votes column
+ * @method     ChildElection findOneByTrustNoOneVotes(int $trust_no_one_votes) Return the first ChildElection filtered by the trust_no_one_votes column
  * @method     ChildElection findOneByTotalInvalidVotes(int $total_invalid_votes) Return the first ChildElection filtered by the total_invalid_votes column
  * @method     ChildElection findOneByOfficial(boolean $official) Return the first ChildElection filtered by the official column
  * @method     ChildElection findOneByCreatedAt(string $created_at) Return the first ChildElection filtered by the created_at column
@@ -129,6 +132,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElection requireOneByActiveSuffrage(int $active_suffrage) Return the first ChildElection filtered by the active_suffrage column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElection requireOneByThresholdPercentage(int $threshold_percentage) Return the first ChildElection filtered by the threshold_percentage column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElection requireOneByTotalValidVotes(int $total_valid_votes) Return the first ChildElection filtered by the total_valid_votes column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildElection requireOneByTrustNoOneVotes(int $trust_no_one_votes) Return the first ChildElection filtered by the trust_no_one_votes column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElection requireOneByTotalInvalidVotes(int $total_invalid_votes) Return the first ChildElection filtered by the total_invalid_votes column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElection requireOneByOfficial(boolean $official) Return the first ChildElection filtered by the official column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildElection requireOneByCreatedAt(string $created_at) Return the first ChildElection filtered by the created_at column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -142,6 +146,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildElection[]|ObjectCollection findByActiveSuffrage(int $active_suffrage) Return ChildElection objects filtered by the active_suffrage column
  * @method     ChildElection[]|ObjectCollection findByThresholdPercentage(int $threshold_percentage) Return ChildElection objects filtered by the threshold_percentage column
  * @method     ChildElection[]|ObjectCollection findByTotalValidVotes(int $total_valid_votes) Return ChildElection objects filtered by the total_valid_votes column
+ * @method     ChildElection[]|ObjectCollection findByTrustNoOneVotes(int $trust_no_one_votes) Return ChildElection objects filtered by the trust_no_one_votes column
  * @method     ChildElection[]|ObjectCollection findByTotalInvalidVotes(int $total_invalid_votes) Return ChildElection objects filtered by the total_invalid_votes column
  * @method     ChildElection[]|ObjectCollection findByOfficial(boolean $official) Return ChildElection objects filtered by the official column
  * @method     ChildElection[]|ObjectCollection findByCreatedAt(string $created_at) Return ChildElection objects filtered by the created_at column
@@ -244,7 +249,7 @@ abstract class ElectionQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT id, slug, assembly_type_id, population_census_id, active_suffrage, threshold_percentage, total_valid_votes, total_invalid_votes, official, created_at, updated_at FROM elections WHERE id = :p0';
+        $sql = 'SELECT id, slug, assembly_type_id, population_census_id, active_suffrage, threshold_percentage, total_valid_votes, trust_no_one_votes, total_invalid_votes, official, created_at, updated_at FROM elections WHERE id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -607,6 +612,47 @@ abstract class ElectionQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(ElectionTableMap::COL_TOTAL_VALID_VOTES, $totalValidVotes, $comparison);
+    }
+
+    /**
+     * Filter the query on the trust_no_one_votes column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByTrustNoOneVotes(1234); // WHERE trust_no_one_votes = 1234
+     * $query->filterByTrustNoOneVotes(array(12, 34)); // WHERE trust_no_one_votes IN (12, 34)
+     * $query->filterByTrustNoOneVotes(array('min' => 12)); // WHERE trust_no_one_votes > 12
+     * </code>
+     *
+     * @param     mixed $trustNoOneVotes The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildElectionQuery The current query, for fluid interface
+     */
+    public function filterByTrustNoOneVotes($trustNoOneVotes = null, $comparison = null)
+    {
+        if (is_array($trustNoOneVotes)) {
+            $useMinMax = false;
+            if (isset($trustNoOneVotes['min'])) {
+                $this->addUsingAlias(ElectionTableMap::COL_TRUST_NO_ONE_VOTES, $trustNoOneVotes['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($trustNoOneVotes['max'])) {
+                $this->addUsingAlias(ElectionTableMap::COL_TRUST_NO_ONE_VOTES, $trustNoOneVotes['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        return $this->addUsingAlias(ElectionTableMap::COL_TRUST_NO_ONE_VOTES, $trustNoOneVotes, $comparison);
     }
 
     /**

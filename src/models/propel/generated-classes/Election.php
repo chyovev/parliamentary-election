@@ -2,6 +2,7 @@
 
 use Base\Election as BaseElection;
 use \PopulationCensusQuery as ChildPopulationCensusQuery;
+use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Map\TableMap;
@@ -91,6 +92,18 @@ class Election extends BaseElection
     }
 
     /**
+     * Extend base method by adding default order by `ord` column
+     */
+    public function getElectionParties(Criteria $criteria = null, ConnectionInterface $con = null) {
+        if ( ! $criteria && $this->collElectionParties === NULL) {
+            $criteria = new Criteria();
+            $criteria->addAscendingOrderByColumn('ord');
+        }
+
+        return parent::getElectionParties($criteria, $con);
+    }
+
+    /**
      * if the passed parties property is empty,
      * from all election parties filter the ones which
      * have surpassed the threshold percentage
@@ -103,13 +116,17 @@ class Election extends BaseElection
             $thresholdPercentage = $this->getThresholdPercentage();
             $electionParties     = $this->getElectionParties();
 
+            // trust no one votes should not influence the passing threshold for parties
+            $trustNoOneVotes     = $this->getTrustNoOneVotes();
+            $passingVotes        = $totalVotes - $trustNoOneVotes;
+
             $this->passedParties = new ObjectCollection();
 
             // loop through all election parties,
             // calculate their percentage and compare it to the threshold
             foreach ($electionParties as $item) {
                 $partyVotes      = $item->getTotalVotes();
-                $partyPercentage = $this->calculatePartyPercentage($partyVotes, $totalVotes);
+                $partyPercentage = $this->calculatePartyPercentage($partyVotes, $passingVotes);
 
                 // load additional party information (title, abbreviation, percentage) for passed parties
                 if ($partyPercentage >= $thresholdPercentage) {
@@ -126,6 +143,36 @@ class Election extends BaseElection
         }
 
         return $this->passedParties;
+    }
+
+    /**
+     * Calculates the activity of an election percentage-wise
+     * @return float
+     */
+    public function calculateElectionActivity(): float {
+        $totalValidVotes   = $this->getTotalValidVotes();
+        $totalInvalidVotes = $this->getTotalInvalidVotes();
+        $activeSuffrage    = $this->getActiveSuffrage();
+
+        if ($activeSuffrage === 0) {
+            return 0;
+        }
+
+        return ($totalValidVotes + $totalInvalidVotes) / $activeSuffrage * 100;
+    }
+
+    /**
+     * Calculates what the threshold actually is number-wise
+     * (excluding the trust-no-one votes)
+     *
+     * @return int
+     */
+    public function calculateThresholdVotes(): int {
+        $totalValidVotes     = $this->getTotalValidVotes();
+        $trustNoOneVotes     = $this->getTrustNoOneVotes();
+        $thresholdPercentage = $this->getThresholdPercentage();
+
+        return floor($thresholdPercentage * ($totalValidVotes - $trustNoOneVotes) / 100);
     }
 
     /**

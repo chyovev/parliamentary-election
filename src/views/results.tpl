@@ -68,11 +68,11 @@
 
             <div class="chart-wrapper relative">
                 {include file='elements/piechart.tpl'}
-
-                {if $passedParties|@count > 1}
-                    <p><strong title="Nota bene">NB!</strong> За крайните резултати трябва във всеки МИР <a href="#map">да въведете</a> получените гласове за всяка от партиите, преминали границата за представителство, както и за независимите кандидати.</p>
-                {/if}
             </div>
+            
+            {if $passedParties|@count > 1}
+                <p><strong title="Nota bene">NB!</strong> За крайните резултати трябва във всеки МИР <a href="#map">да въведете</a> получените гласове за всяка от партиите, преминали границата за представителство, както и за независимите кандидати.</p>
+            {/if}
         {/if}
 
     </section>

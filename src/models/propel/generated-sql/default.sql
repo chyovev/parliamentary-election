@@ -73,6 +73,7 @@ CREATE TABLE `elections`
     `active_suffrage` int(11) unsigned DEFAULT 0 NOT NULL,
     `threshold_percentage` int(11) unsigned DEFAULT 0 NOT NULL,
     `total_valid_votes` int(11) unsigned DEFAULT 0 NOT NULL,
+    `trust_no_one_votes` int(11) unsigned DEFAULT 0 NOT NULL COMMENT 'part of total_valid_votes, but gets excluded from threshold votes',
     `total_invalid_votes` int(11) unsigned DEFAULT 0 NOT NULL,
     `official` tinyint(3) unsigned DEFAULT 0 NOT NULL,
     `created_at` DATETIME,

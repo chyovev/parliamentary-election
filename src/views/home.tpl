@@ -44,10 +44,18 @@
         </div>
 
         <div class="row">
+            <span>&nbsp; &nbsp; &nbsp; &rdsh; от тях гласували с „Не подкрепям никого“:</span>
+            <input type="text" size="5" name="trust_no_one_votes" class="trust_no_one_votes" placeholder="0" value="{$election['trust_no_one_votes']|default:'0'}" />
+            {include file='elements/trust-no-one-tooltip.tpl'}
+            <div class="error-message trust_no_one_votes_message"></div>
+        </div>
+
+        <div class="row">
             <span>Брой <em>недействителни</em> гласове в страната и чужбина:</span>
             <input type="text" size="5" name="total_invalid_votes" class="total_invalid_votes" placeholder="0" value="{$election['total_invalid_votes']|default:0}" />
             <div class="error-message total_invalid_votes_message"></div>
         </div>
+
 
         <div class="row">
             <span>Долна граница за представителство:</span>

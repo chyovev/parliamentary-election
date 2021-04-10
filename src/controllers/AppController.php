@@ -102,6 +102,7 @@ abstract class AppController {
         $thresholdPercentage = $source['threshold_percentage'] ?? NULL;
         $totalValidVotes     = $source['total_valid_votes']    ?? NULL;
         $totalInvalidVotes   = $source['total_invalid_votes']  ?? NULL;
+        $trustNoOneVotes     = $source['trust_no_one_votes' ]  ?? NULL;
 
         // on post request, instead of creating a new object,
         // override the one stored in session (if any)
@@ -113,12 +114,13 @@ abstract class AppController {
                  ->setPopulationCensusId($populationCensusId)
                  ->setActiveSuffrage($activeSuffrage)
                  ->setThresholdPercentage($thresholdPercentage)
+                 ->setTrustNoOneVotes($trustNoOneVotes)
                  ->setTotalValidVotes($totalValidVotes)
                  ->setTotalInvalidVotes($totalInvalidVotes);
 
         $election
-                 ->setVirtualColumn('activity', $this->calculateElectionActivity((int) $totalValidVotes, (int) $totalInvalidVotes, (int) $activeSuffrage))
-                 ->setVirtualColumn('threshold_votes', $this->calculateThresholdVotes((int) $thresholdPercentage, (int) $totalValidVotes));
+                 ->setVirtualColumn('activity',        $election->calculateElectionActivity())
+                 ->setVirtualColumn('threshold_votes', $election->calculateThresholdVotes());
 
         $this->populateConstituencyValidVotes($election, $source);
         $this->populateElectionPartiesFromData($election, $type);
@@ -126,31 +128,6 @@ abstract class AppController {
         $this->populateIndependentCandidatesFromData($election, $type);
 
         return $election;
-    }
-
-    /**
-     * Calculate election activity percentage-wise
-     *
-     * @param  int $totalValidVotes
-     * @param  int $totalInvalidVotes
-     * @param  int $activeSuffrage
-     * @return float percent
-     */
-    private function calculateElectionActivity(int $totalValidVotes, int $totalInvalidVotes, int $activeSuffrage) {
-        if ($activeSuffrage === 0) {
-            return 0;
-        }
-
-        return ($totalValidVotes + $totalInvalidVotes) / $activeSuffrage * 100;
-    }
-
-    /**
-     * Calculates what the threshold actually is number-wise
-     *
-     * @return int
-     */
-    public function calculateThresholdVotes(int $thresholdPercentage, int $totalValidVotes) {
-        return floor($thresholdPercentage * $totalValidVotes / 100);
     }
 
     /**
@@ -415,6 +392,7 @@ abstract class AppController {
             'threshold_percentage'   => $election->getThresholdPercentage(),
             'total_valid_votes'      => $election->getTotalValidVotes(),
             'total_invalid_votes'    => $election->getTotalInvalidVotes(),
+            'trust_no_one_votes'     => $election->getTrustNoOneVotes(),
             'parties'                => $parties,
             'independent_candidates' => $candidates,
             'parties_votes'          => $partiesVotes,

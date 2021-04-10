@@ -218,6 +218,7 @@ class ValidationController extends AppController {
     private function validateVotesInformation(Election $election): void {
         $totalValidVotes   = $election->getTotalValidVotes();
         $totalInvalidVotes = $election->getTotalInvalidVotes();
+        $trustNoOneVotes   = $election->getTrustNoOneVotes();
         $activeSuffrage    = $election->getActiveSuffrage();
         $census            = $election->getPopulationCensusWithPopulation();
 
@@ -229,13 +230,17 @@ class ValidationController extends AppController {
             $this->addValidationError('total_valid_votes', 'Моля, въведете брой действителни гласове.');
         }
 
+        if ($trustNoOneVotes < 0) {
+            $this->addValidationError('trust_no_one_votes', 'Моля, въведете брой гласове „Не подкрепям никого“.');
+        }
+
         // if the active suffrage is greater than the population
         if ($census && $activeSuffrage > $census->getPopulation()) {
             $this->addValidationError('active_suffrage', 'Не може броят на имащите право на глас да надвишава броя на населението.');
         }
 
         // if there are more votes than people entitled to vote, abort
-        if ($totalValidVotes + $totalInvalidVotes > $activeSuffrage) {
+        if ($totalValidVotes + $totalInvalidVotes + $trustNoOneVotes > $activeSuffrage) {
             $this->addValidationError('total_valid_votes', 'Не може общият брой гласове да надвишава броя на имащите право на глас.');
         }
 
@@ -359,7 +364,7 @@ class ValidationController extends AppController {
             $this->addValidationError('parties', 'Поне една партия трябва да има повече от 0 гласа.');
         }
         elseif ($partiesVotesSum < 0 || $partiesVotesSum > $totalValidVotes) {
-            $this->addValidationError('parties', 'Общият брой гласове на партиите надвишава броя на действителните гласове.');
+            $this->addValidationError('parties', sprintf('Общият брой гласове на партиите (%s) надвишава броя на действителните гласове (%s)', $partiesVotesSum, $totalValidVotes));
         }
 
     }

@@ -1,16 +1,14 @@
 {if isset($constituenciesMandates)}
 <section id="final">
     <h2>Окончателно разпределение на мандати между партии и коалиции по <a href="https://www.lex.bg/laws/ldoc/2136112596#i_2867" title="Методика за определяне на резултатите от гласуването за народни представители" target="_blank">т.4.6.9</a></h2>
-    <table class="results fullwidth">
+    <table class="results fullwidth sortable">
         <thead class="sticky">
             <tr>
-                <th rowspan="2" colspan="2">Район</th>
-                <th colspan="{$passedParties|@count}" class="uppercase center">Партия/коалиция</th>
-                <th rowspan="2" class="center">Общо</th>
-            <tr>
+                <th class="sortable asc"><span>Район</span></th>
                 {foreach $passedParties as $item}
-                    <th class="center"><span class="party-color" style="background-color: {$item['party_color']}"></span> <abbr title="{$item['party_title']|escape}">{$item['party_abbreviation']|default:$item['party_title']|escape}</abbr></th>
+                    <th class="center sortable"><span><div class="party-color" style="background-color: {$item['party_color']}"></div> <abbr title="{$item['party_title']|escape}">{$item['party_abbreviation']|default:$item['party_title']|escape}</abbr></span></th>
                 {/foreach}
+                <th class="sortable center"><span>Мандати</span></th>
             </tr>
         </thead>
 
@@ -18,8 +16,7 @@
         {assign var=totalMandates   value=0}
         {foreach $constituencies as $item}
             <tr>
-                <td class="center">{$item['id']}</td>
-                <td>{$item['title']|escape}</td>
+                <td data-value="{$item['id']}">{$item['id']}. {$item['title']|escape}</td>
                 {assign var=constituencyMandates value=0}
                 {foreach $passedParties as $party}
                     {assign var=partyId  value=$party['party_id']}
@@ -39,7 +36,7 @@
         </tbody>
         <tfoot>
         <tr class="bold">
-            <td colspan="2" class="center">Общо</td>
+            <td class="center">Общо</td>
             {foreach $passedParties as $item}
                 <td class="center">{$partiesMandates[$item['party_id']]}</td>
             {/foreach}
