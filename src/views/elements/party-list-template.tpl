@@ -3,7 +3,7 @@
     <div class="row-wrapper">
         <div class="title-wrapper">
             <div class="title">
-                <span class="ord">{($ord+1)|default:1}</span>. {$label|default:'%label%'}
+                <span class="ord">{$ord|default:1}</span>. {$label|default:'%label%'}
                 <span class="none">{$abbr|default:'%abbr%'}</span>
             </div>
         </div>
@@ -17,7 +17,7 @@
         <span class="remove-party" title="Премахни"></span>
     </div>
     <input type="hidden" name="parties[{$id|default:'%id%'}][party_id]" value="{$id|default:'%id%'}" />
-    <input type="hidden" name="parties[{$id|default:'%id%'}][ord]" value="{$ord|default:0}" />
+    <input type="hidden" name="parties[{$id|default:'%id%'}][ord]" value="{$ord|default:1}" />
     {if isset($color) && $color}
     <input type="hidden" name="parties[{$id|default:'%id%'}][color]" value="{$color}" />
     {/if}

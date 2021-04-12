@@ -436,3 +436,30 @@ img.help {
     position: relative;
     top: 2px;
 }
+#scroll-top {
+    background: url(../img/arrow-up.png) no-repeat 50% 50% fade(white, 45%);
+    border: 1px solid fade(white, 75%);
+    position: fixed;
+    opacity: 0.8;
+    cursor: pointer;
+    animation-name: arrow-up;
+    animation-duration: 5s;
+    animation-iteration-count: infinite;
+    animation-delay: 1s;
+    transition: background-color 0.3s;
+    width: 46px;
+    height: 46px;
+    border-radius: 7px;
+    background-size: 30px;
+    bottom: 30px;
+    right: 50px;
+    &:hover {
+        background-color: fade(white, 60%);
+    }
+}
+@keyframes arrow-up {
+    0%   { background-position-y: 50%; }
+    6%   { background-position-y: 35%; }
+    12%  { background-position-y: 50%; }
+    100% { background-position-y: 50%; }
+}

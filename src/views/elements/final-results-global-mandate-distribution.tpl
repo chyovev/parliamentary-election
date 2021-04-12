@@ -24,7 +24,7 @@
         <tbody>
         {foreach $passedParties as $item}
             <tr>
-                <td class="center">{$item['ord']+1}</td>
+                <td class="center">{$item['ord']}</td>
                 <td><span class="party-color" style="background-color: {$item['party_color']}"></span> {$item['party_title']|escape}</td>
                 <td class="center" data-value="{$item['total_votes']}">{$item['total_votes']|number}</td>
                 <td class="center" data-value="{$item['votes_percentage']}">{$item['votes_percentage']|percentage}%</td>

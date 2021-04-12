@@ -5,7 +5,7 @@
         <p>За да въведете гласовете в даден МИР, натиснете върху него.<br />Попълнените МИР-ове са оцветени в зелено на картата.</p>
         <svg xmlns="http://www.w3.org/2000/svg" width="900" height="550">
             <g class="constituencies">
-                {foreach $coordinates as $item}
+                {foreach $constituencies as $item}
                     <path{if isset($partiesVotes[$item['id']])} class="completed"{/if} data-constituency-id="{$item['id']}" data-title="{$item['title']|escape}" d="{$item['coordinates']}" />
                 {/foreach}
             </g>

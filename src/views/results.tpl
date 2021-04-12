@@ -40,7 +40,7 @@
                         {$percentages = $percentages + $item['votes_percentage']}
                         {$votes       = $votes + $item['total_votes']}
                         <tr>
-                            <td class="center">{$item['ord']+1}</td>
+                            <td class="center">{$item['ord']}</td>
                             <td class="center"><input type="hidden" class="color-picker" name="parties[{$item['party_id']}][party_color]" value="{$item['party_color']}" data-colors-index="{$item@index}" /></td>
                             <td>{$item['party_title']|escape}</td>
                             <td class="center" data-value="{$item['total_votes']}">{$item['total_votes']|number}</td>

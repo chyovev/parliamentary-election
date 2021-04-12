@@ -109,14 +109,12 @@ class ResultsController extends AppController {
         $assembly       = $election->getAssemblyType();
         $census         = $election->getPopulationCensusWithPopulation();
         $constituencies = $election->getConstituenciesWithPopulation()->toArray(NULL, false, TableMap::TYPE_FIELDNAME);
-        $coordinates    = array_reverse($constituencies, true); // reverse to avoid overlapping of Plovdiv and Plovdiv City
 
         $this->setVars([
             'election'       => $election->toArray(TableMap::TYPE_FIELDNAME),
             'assembly'       => $assembly->toArray(TableMap::TYPE_FIELDNAME),
             'census'         => $census->toArray(TableMap::TYPE_FIELDNAME),
             'constituencies' => $constituencies,
-            'coordinates'    => $coordinates,
         ]);
     }
 

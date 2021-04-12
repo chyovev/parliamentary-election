@@ -87,7 +87,7 @@
                 <ul class="ms-list parties" tabindex="-1">
                 {if isset($selectedParties)}
                     {foreach $selectedParties as $item}
-                        {include file='elements/party-list-template.tpl' label=$item['title']|escape abbr=$item['abbreviation']|escape id=$item['id'] ord=$item@index votes=$item['total_votes'] color=$item['party_color']}
+                        {include file='elements/party-list-template.tpl' label=$item['title']|escape abbr=$item['abbreviation']|escape id=$item['id'] ord=$item['ord']|default:$item@iteration votes=$item['total_votes'] color=$item['party_color']}
                     {/foreach}
                 {/if}
                 </ul>

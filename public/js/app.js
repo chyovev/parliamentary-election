@@ -16,10 +16,12 @@ var App = {
         App.initQuickSearch();
         App.drawPieChart();
         App.drawBarChart();
+        App.detectScroll();
     },
 
     ///////////////////////////////////////////////////////////////////////////
     bind: function() {
+        $(window).scroll(App.detectScroll);
         $(document).on('click', '.ms-elem-selectable', App.addParty);
         $(document).on('click', '.edit-votes', App.editVotes);
         $(document).on('click', '.remove-party', App.removeParty);
@@ -37,7 +39,31 @@ var App = {
         $(document).on('click', '.reset-form', App.resetForm);
         $(document).on('click', '.download-chart', App.downloadChart);
         $(document).on('click', 'table.sortable th.sortable', App.sortTable);
+        $(document).on('click', '#scroll-top', App.scrollToTop);
         $(document).on('click', 'a[href^="#"]', App.scrollToElement); // keep last in bind function
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    detectScroll: function() {
+        App.toggleScrollToTopButton();
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    toggleScrollToTopButton: function() {
+        if (App.animateScrollInProgress) {
+            return;
+        }
+
+        var bodyTopPosition = $('body')[0].getBoundingClientRect().top,
+            viewportHeight  = $(window).height(),
+            thresholdY      = -400, // arbitrary
+            $scrollTopBtn   = $('#scroll-top');
+
+        // if body is 400px scrolled down
+        // show the scroll-top button
+        (bodyTopPosition < thresholdY)
+            ? $scrollTopBtn.fadeIn()
+            : $scrollTopBtn.fadeOut();
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -49,7 +75,8 @@ var App = {
             party             = $this.find('.title').text(),
             abbr              = $this.find('.abbr').text() || party,
             html              = App.getTemplate('#party-template', {id: id, label: party, abbr: abbr}),
-            addedPartiesCount = $('.ms-elem-selection').length;
+            addedPartiesCount = $('.ms-elem-selection').length,
+            newPartyOrd       = addedPartiesCount + 1;
 
         // add new element to the right column
         $('.ms-selection .ms-list').append(html);
@@ -58,8 +85,8 @@ var App = {
         $this.addClass('ms-selected');
 
         // set the ord field of the last added element
-        $('input[name$="[ord]"]:last').val(addedPartiesCount);
-        $('.ord:last').html(addedPartiesCount + 1);
+        $('input[name$="[ord]"]:last').val(newPartyOrd);
+        $('.ord:last').html(newPartyOrd);
 
         App.updateQuickSearchCache();
         App.updatePartiesCount();
@@ -143,7 +170,7 @@ var App = {
     // update ord field for all parties
     setPartiesOrd: function() {
         $('input[name$="[ord]"]').each(function(index) {
-            $(this).val(index);
+            $(this).val(index+1);
         });
         $('.ord').each(function(index) {
             $(this).html(index+1);
@@ -656,6 +683,19 @@ var App = {
         var $cell = $(row).children('td').eq(index);
 
         return $cell.attr('data-value') || $cell.text()
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    scrollToTop: function() {
+        // set flag to true to avoid animate
+        // from firing the toggleScrollToTopButton function
+        App.animateScrollInProgress = true;
+
+        // once the animation is finished, reset the flag and retire the arrow
+        $('html, body').animate({ scrollTop: 0}, 500, function() {
+            App.animateScrollInProgress = false;
+            $('#scroll-top').fadeOut();
+        });
     },
 
     ///////////////////////////////////////////////////////////////////////////
