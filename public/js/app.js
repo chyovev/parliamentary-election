@@ -1,6 +1,7 @@
 var App = {
     hasInited: false,
     pieChart: false,
+    isAjaxInProgress: false,
     qs1: false,
     qs2: false,
 
@@ -40,7 +41,20 @@ var App = {
         $(document).on('click', '.download-chart', App.downloadChart);
         $(document).on('click', 'table.sortable th.sortable', App.sortTable);
         $(document).on('click', '#scroll-top', App.scrollToTop);
+        $(document).on('click', '.copy', App.copyToClipboard);
         $(document).on('click', 'a[href^="#"]', App.scrollToElement); // keep last in bind function
+        $(document).ajaxSend(App.setAjaxInProgress);
+        $(document).ajaxComplete(App.unsetAjaxInProgress);
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    setAjaxInProgress: function() {
+        App.isAjaxInProgress = true;
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    unsetAjaxInProgress: function() {
+        App.isAjaxInProgress = false;
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -429,6 +443,10 @@ var App = {
     submitFormData: function(e) {
         e.preventDefault();
 
+        if (App.isAjaxInProgress) {
+            return;
+        }
+
         var $form       = $(this),
             type        = $form.attr('method'),
             data        = $form.serialize(),
@@ -452,9 +470,17 @@ var App = {
                 dataType: 'JSON',
 
                 success: function(response) {
-                    // if the status was true, redirect to next page
+                    // if the status was true and there's an URL in the response
+                    // that's the election save form
                     if (response.status) {
-                        eval(successFunction);
+                        if (response.url) {
+                            App.electionSaveSuccess(response.url);
+                        }
+
+                        // otherwise execute the successFunction
+                        else {
+                            eval(successFunction);
+                        }
                     }
 
                     // otherwise show errors
@@ -476,6 +502,18 @@ var App = {
             })
         });
 
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    electionSaveSuccess: function(url) {
+        // hide save button's section
+        $('#save-data').closest('section').fadeOut();
+
+        // update current url
+        history.pushState({}, document.title, url);
+
+        // show popup
+        $('#results-url').val(url).select().closest('.popup-wrapper').fadeIn();
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -617,6 +655,10 @@ var App = {
             App.updateQuickSearchCache();
         }
 
+        if (App.isAjaxInProgress) {
+            return;
+        }
+
         // response is not relevant
         return $.ajax({
             url:  url,
@@ -696,6 +738,20 @@ var App = {
             App.animateScrollInProgress = false;
             $('#scroll-top').fadeOut();
         });
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    copyToClipboard: function(e) {
+        e.preventDefault();
+
+        var $this   = $(this),
+            $target = $($this.attr('data-target'));
+
+        $target.focus().select();
+
+        document.execCommand("copy");
+
+        $this.next('.copy-success').fadeIn();
     },
 
     ///////////////////////////////////////////////////////////////////////////

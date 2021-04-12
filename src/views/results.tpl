@@ -1,5 +1,7 @@
+{if $passedParties|@count > 1}
 <form class="ajax-form" method="post" action="{url controller='validation' action='constituencies'}" data-success-action="App.goToPage('{url controller='results' action='definitive'}')">
     <script type="text/javascript">var independent_counter = {$election['independent_candidates_count']|default:0};</script>
+{/if}
     
     {include file='elements/election-summary.tpl'}
 
@@ -80,8 +82,11 @@
 
     {if isset($passedParties) && $passedParties|@count > 1}
         {include file='elements/map-constituencies-bulgaria.tpl'}
+    {else}
+        {include file='elements/save-results.tpl'}
     {/if}
 
+{if $passedParties|@count > 1}
 </form>
 
 <script type="text/template" id="independent-template">
@@ -95,3 +100,4 @@
         <section class="parties"></section>
     </div>
 </form>
+{/if}

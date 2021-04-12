@@ -28,3 +28,7 @@
 {include file='elements/final-results-local-mandate-distribution.tpl'}
 {include file='elements/final-results-local-mandate-REdistribution.tpl'}
 {include file='elements/final-results-all-parties-constituencies.tpl'}
+
+{if ! Router::getRequestParam('slug')}
+    {include file='elements/save-results.tpl'}
+{/if}

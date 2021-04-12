@@ -14,4 +14,8 @@ use Base\ElectionQuery as BaseElectionQuery;
 class ElectionQuery extends BaseElectionQuery
 {
 
+    public function slugExists(string $slug): bool {
+        return self::create()->filterBySlug($slug)->count();
+    }
+
 }

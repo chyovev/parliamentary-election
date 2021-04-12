@@ -525,10 +525,6 @@ class ElectionTableMap extends TableMap
             $criteria = $criteria->buildCriteria(); // build Criteria from Election object
         }
 
-        if ($criteria->containsKey(ElectionTableMap::COL_ID) && $criteria->keyContainsValue(ElectionTableMap::COL_ID) ) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key ('.ElectionTableMap::COL_ID.')');
-        }
-
 
         // Set the correct dbName
         $query = ElectionQuery::create()->mergeWith($criteria);

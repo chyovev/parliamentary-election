@@ -93,6 +93,30 @@ class ResultsController extends AppController {
         $this->displayFullPage('final.tpl', $viewVars);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    public function save() {
+        $election = $this->populateElection('session');
+
+        try {
+            $this->validateSaveData($election);
+
+            // if the saving was successful,
+            // set election as session and generate URL
+            $status = (bool) $election->save();
+            $this->setSessionElection($election);
+            $url    = $this->generateElectionUrl($election->getSlug());
+        }
+        catch (Exception $e) {
+            $errors = [['save', $e->getMessage()]];
+        }
+
+        $response = [
+            'status' => $status ?? false,
+            'url'    => $url    ?? false,
+            'errors' => $errors ?? false,
+        ];
+        $this->renderJSONContent($response);
+    }
 
 
 
@@ -762,5 +786,97 @@ class ResultsController extends AppController {
 
         return $remainders;
     }
+
+    /**
+     * Validate that the session stored step is the final one
+     * and that the to-be-saved election is different than the
+     * one it was used as a basis (if so)
+     * 
+     * @param  Election|null $election
+     * @throws Exception
+     */
+    private function validateSaveData(?Election $election): void {
+        $step = $this->getReachedStep();
+
+        // saving is allowed only when step 3 is reached
+        // or possibly also on step 2 if there are one or less passed parties
+        if ( ! (($step === 2 && $election->getPassedParties()->count() <= 1) || $step === 3)) {
+            throw new Exception('Междинно запазване на резултатите не се поддържа.');
+        }
+
+        // if the session has an ID (if the user has worked on a previously stored election)
+        // check if there are any differences between them
+        $electionId  = $election->getId();
+
+        if ($electionId) {
+            $dbElection = ElectionQuery::create()->findOneById($electionId);
+            
+            // if there are no differences, no need to double-save same election
+            if ($this->areElectionsEqual($dbElection, $election)) {
+                $url = $this->generateElectionUrl($dbElection->getSlug(), $step);
+                throw new Exception(sprintf('Няма промени спрямо симулация %s: <a href="%s">%s</a>', $dbElection->getSlug(), $url, $url));
+            }
+
+            $this->prepareElectionForSave($election);
+        }
+    }
+
+    /**
+     * Check if two Election objects are equal by
+     * converting their data to arrays
+     * and comparing the jsons of those arrays
+     *
+     * @param  Election $election1
+     * @param  Election $election2
+     * @return bool 
+     */
+    private function areElectionsEqual(Election $election1, Election $election2): bool {
+        $election1Data = $this->convertElectionToArray($election1);
+        $election2Data = $this->convertElectionToArray($election2);
+
+        $election1Json = json_encode($election1Data);
+        $election2Json = json_encode($election2Data);
+
+        return ($election1Json === $election2Json);
+    }
+
+    /**
+     * Generate results URL for an election
+     * based on the step that was reached
+     * (if step is 2, the results are preliminary)
+     *
+     * @param  $slug – election slug
+     * @param  $step – optional, if no param, fetch from session
+     * @return $url
+     */
+    private function generateElectionUrl(string $slug, int $step = NULL): string {
+        if ( ! $step) {
+            $step = $this->getReachedStep();
+        }
+
+        $action = ($step === 2) ? 'preliminary' : 'definitive';
+
+        return Router::url(['controller' => 'results', 'action' => $action, 'slug' => $slug], true);
+    }
+
+    /**
+     * If a previously stored election was used as a basis
+     * for the current election, remove the election ID to avoid
+     * overwriting of the basis.
+     * Do the same for the constituencies as they were fetched
+     * from the DB as one-to-many association of the DB election
+     *
+     * @param Election $election
+     */
+    private function prepareElectionForSave(Election $election): void {
+        $election->setId(NULL);
+
+        $electionConstituencies = $election->getElectionConstituencies();
+        foreach ($electionConstituencies as $item) {
+            $item->setElectionId(NULL);
+        }
+        $election->setElectionConstituencies($electionConstituencies);
+    }
+
 
 }

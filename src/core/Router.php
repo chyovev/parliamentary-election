@@ -8,6 +8,7 @@ abstract class Router {
         '/'                              => ['controller' => 'home',       'action' => 'index'],
         '/results'                       => ['controller' => 'results',    'action' => 'preliminary'],
         '/results/final'                 => ['controller' => 'results',    'action' => 'definitive'],
+        '/results/save'                  => ['controller' => 'results',    'action' => 'save'],
         '/validation/election'           => ['controller' => 'validation', 'action' => 'election'],
         '/validation/constituencies'     => ['controller' => 'validation', 'action' => 'constituencies'],
         '/validation/constituencies/:id' => ['controller' => 'validation', 'action' => 'constituencies'],

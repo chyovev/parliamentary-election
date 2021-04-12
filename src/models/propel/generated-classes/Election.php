@@ -184,8 +184,15 @@ class Election extends BaseElection
             return false;
         }
 
+        // generate random slug and make sure
+        // there are no collisions
         if ( ! $this->getSlug()) {
-            $this->setSlug(uniqid());
+            do {
+                $slug = uniqid();
+            }
+            while (ElectionQuery::slugExists($slug));
+
+            $this->setSlug($slug);
         }
 
         return true;

@@ -298,12 +298,15 @@ svg {
     background-color: fade(white, 85%);
     display: none;
     #popup {
-        width: 60%;
         background-color: fade(@grey, 75%);
         border: 1px solid #CCC;
-        border-radius: 40px;
+        border-radius: 20px;
         box-shadow: 0px 0px 50px 10px fade(black, 10%);
-        height: 80vh;
+        &:not(.url-popup) {
+            width: 60%;
+            height: 80vh;
+            border-radius: 40px;
+        }
         position: absolute;
         top: 50%;
         left: 50%;
@@ -462,4 +465,23 @@ img.help {
     6%   { background-position-y: 35%; }
     12%  { background-position-y: 50%; }
     100% { background-position-y: 50%; }
+}
+#results-url {
+    padding-right: 35px;
+}
+.copy {
+    background: url(../img/clipboard.svg) no-repeat 50% 50%;
+    width: 25px;
+    height: 25px;
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    left: -35px;
+    cursor: pointer;
+}
+.copy-success {
+    font-size: 20px;
+    position: relative;
+    left: -25px;
+    color: green;
 }

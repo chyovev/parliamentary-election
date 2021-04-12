@@ -118,6 +118,13 @@ abstract class AppController {
                  ->setTotalValidVotes($totalValidVotes)
                  ->setTotalInvalidVotes($totalInvalidVotes);
 
+        // when loading from session, set id
+        // which will then be used on results' save
+        if ($type === 'session') {
+            $electionId = $source['election_id'] ?? NULL;
+            $election->setId($electionId);
+        }
+
         $election
                  ->setVirtualColumn('activity',        $election->calculateElectionActivity())
                  ->setVirtualColumn('threshold_votes', $election->calculateThresholdVotes());
@@ -335,13 +342,11 @@ abstract class AppController {
 
     /**
      * Transform all Election information into an associative array
-     * and store it in a $_SESSION variable;
-     * then use this array to regenerate those objects when reading from $_SESSSION
-     * (PHP doesn't like it when whole objects get stored in sessions)
      *
      * @param Election $election – object from which information gets extracted
+     * @return array $electionData
      */
-    protected function setSessionElection(Election $election): void {
+    protected function convertElectionToArray(Election $election): array {
         $electionParties       = $election->getElectionParties();
         $independentCandidates = $election->getIndependentCandidates();
         $electionConstituencies= $election->getElectionConstituencies();
@@ -357,7 +362,7 @@ abstract class AppController {
                 'party_id'    => $item->getPartyId(),
                 'total_votes' => $item->getTotalVotes(),
                 'ord'         => $item->getOrd(),
-                'party_color' => $item->getPartyColor(),
+                'party_color' => strtolower($item->getPartyColor()), // lowercase color is needed for election comparison on save
             ];
 
             $partiesConstituenciesVotes = $item->getElectionPartyVotes();
@@ -382,10 +387,8 @@ abstract class AppController {
             $constituencyTotalVotes[$constituencyId] = $item->getTotalValidVotes();
         }
 
-        // used for navigation between the pages
-        $reachedStep = $partiesVotes ? 3 : 2;
-
-        $_SESSION = [
+        $electionData = [
+            'election_id'            => $election->getId(),
             'assembly_type_id'       => $election->getAssemblyTypeId(),
             'population_census_id'   => $election->getPopulationCensusId(),
             'active_suffrage'        => $election->getActiveSuffrage(),
@@ -397,8 +400,24 @@ abstract class AppController {
             'independent_candidates' => $candidates,
             'parties_votes'          => $partiesVotes,
             'constituency_votes'     => $constituencyTotalVotes,
-            'reached_step'           => $reachedStep,
         ];
+
+        return $electionData;
+    }
+
+    /**
+     * Convert Election object to an associative array
+     * and store it in a $_SESSION variable;
+     * then use this array to regenerate those objects when reading from $_SESSSION
+     * (PHP doesn't like it when whole objects get stored in sessions)
+     */
+    protected function setSessionElection(Election $election): void {
+        $data = $this->convertElectionToArray($election);
+
+        // used for navigation between the pages
+        $data['reached_step'] = $data['parties_votes'] ? 3 : 2;
+
+        $_SESSION = $data;
     }
 
     /**

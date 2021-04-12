@@ -45,7 +45,7 @@
             {$candidates[$key]['percentage'] = $item['percentage']}
 
             <tr>
-                <td class="center blue" data-value="{$lastPartyOrd + $item@iteration}" data-value="0">&mdash;</td>
+                <td class="center blue" data-value="{$lastPartyOrd + $item@iteration}">&mdash;</td>
                 <td><span class="independent-box"></span> {$item['name']|escape} (<em>{$constituencies[$item['constituency_id']]['id']}. {$constituencies[$item['constituency_id']]['title']|escape}</em>)</td>
                 <td class="center" data-value="{$item['votes']}">{$item['votes']|number}</td>
                 <td class="center" data-value="{$item['percentage']}">{$item['percentage']|percentage}%</td>
@@ -55,7 +55,7 @@
 
             {$independentMandates = $independentMandates + 1}
             {$totalVotes          = $totalVotes + $item['votes']}
-            {$totalPercentage     = $totalPercentage + $item['votes_percentage']}
+            {$totalPercentage     = $totalPercentage + $item['percentage']}
         {/foreach}
         </tbody>
 
@@ -87,14 +87,14 @@
     {assign var=remaining value=$assembly['total_mandates']-$totalMandates}
     <section>
         {if $remaining == 1}
-            <div class="row">За разпределянето на последния {$remaining} мандат ЦИК трябва да тегли жребий, тъй като следните партии/коалиции имат еднакъв остатък.</div>
+            <div class="row">За разпределянето на последния мандат ЦИК трябва да тегли жребий между следните <strong>{$lottingParties|@count}</strong> партии/коалиции, имащи еднакъв остатък:</div>
         {else}
-            <div class="row">За разпределянето на последните {$remaining} мандата ЦИК трябва да тегли жребий, тъй като следните партии/коалиции имат еднакъв остатък.</div>
+            <div class="row">За разпределянето на последните <strong>{$remaining}</strong> мандата ЦИК трябва да тегли жребий между следните <strong>{$lottingParties|@count}</strong> партии/коалиции, имащи еднакъв остатък:</div>
         {/if}
 
         <ol>
         {foreach $lottingParties as $item}
-            <li><strong>{$item['party_title']|escape}</strong>: <span>{$item[HareNiemeyerInterface::REMAINDER_COLUMN]|number:15}</span></li>
+            <li><span class="party-color" style="background-color: {$item['party_color']}"></span> {$item['party_title']|escape}: <span class="blue">{$item[HareNiemeyerInterface::REMAINDER_COLUMN]|number:15}</span></li>
         {/foreach}
         </ol>
     </section>
