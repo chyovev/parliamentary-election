@@ -112,6 +112,7 @@ class Election extends BaseElection
      */
     public function getPassedParties(): ObjectCollection {
         if ( ! $this->passedParties) {
+            $i                   = 0; // used solely for the random color
             $totalVotes          = $this->getTotalValidVotes();
             $thresholdPercentage = $this->getThresholdPercentage();
             $electionParties     = $this->getElectionParties();
@@ -135,6 +136,13 @@ class Election extends BaseElection
                          ->setVirtualColumn('votes_percentage',   $partyPercentage)
                          ->setVirtualColumn('party_title',        $party->getTitle())
                          ->setVirtualColumn('party_abbreviation', $party->getAbbreviation());
+
+                    // if there's no color associated to the party,
+                    // assign one automatically
+                    if ( ! $item->getPartyColor()) {
+                        $item->setPartyColorAutomatically($i);
+                        $i++;
+                    }
 
                     $this->passedParties->append($item);
                 }

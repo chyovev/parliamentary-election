@@ -270,7 +270,6 @@ abstract class AppController {
         $thresholdPercentage = $election->getThresholdPercentage();
 
         $data = $source['parties'] ?? [];
-        $i    = 0; // used solely for the random color
 
         // load passed parties from session and overwrite only new information
         // instead of a full wipe-out
@@ -291,10 +290,6 @@ abstract class AppController {
 
             if (isset($item['party_color'])) {
                 $electionParty->setPartyColor($item['party_color']);
-            }
-            else {
-                $electionParty->setPartyColorAutomatically($i);
-                $i++;
             }
 
             $electionParties->append($electionParty);
@@ -362,7 +357,7 @@ abstract class AppController {
                 'party_id'    => $item->getPartyId(),
                 'total_votes' => $item->getTotalVotes(),
                 'ord'         => $item->getOrd(),
-                'party_color' => strtolower($item->getPartyColor()), // lowercase color is needed for election comparison on save
+                'party_color' => $item->getPartyColor() ? strtolower($item->getPartyColor()) : NULL, // lowercase color is needed for election comparison on save
             ];
 
             $partiesConstituenciesVotes = $item->getElectionPartyVotes();
