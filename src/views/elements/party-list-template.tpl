@@ -2,19 +2,20 @@
     <span class="handle"></span>
     <div class="row-wrapper">
         <div class="title-wrapper">
-            <div class="title">
-                <span class="ord">{$ord|default:1}</span>. {$label|default:'%label%'}
-                <span class="none">{$abbr|default:'%abbr%'}</span>
+            <div class="title" title="{$label|default:'%label%'|escape}">
+                <span class="ord">{$ord|default:1}</span>. {$label|default:'%label%'|escape}
+                <span class="none">{$abbr|default:'%abbr%'|escape}</span>
             </div>
         </div>
         <div class="votes">
             (<span class="count">{$votes|number|default:0}</span> гласа)
-            <input type="hidden" value="{$votes|default:0}" name="parties[{$id|default:'%id%'}][total_votes]" />
         </div>
+        <input type="text" class="votes-input none" />
+        <input type="hidden" value="{$votes|default:0}" name="parties[{$id|default:'%id%'}][total_votes]" />
     </div>
     <div class="actions">
-        <span class="edit-votes" title="Промени броя гласове"></span>
-        <span class="remove-party" title="Премахни"></span>
+        <span class="edit-votes" title="Редакция на гласовете"></span>
+        <span class="remove-party" title="Премахване на партия"></span>
     </div>
     <input type="hidden" name="parties[{$id|default:'%id%'}][party_id]" value="{$id|default:'%id%'}" />
     <input type="hidden" name="parties[{$id|default:'%id%'}][ord]" value="{$ord|default:1}" />

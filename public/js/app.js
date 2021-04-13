@@ -24,7 +24,7 @@ var App = {
     bind: function() {
         $(window).scroll(App.detectScroll);
         $(document).on('click', '.ms-elem-selectable', App.addParty);
-        $(document).on('click', '.edit-votes', App.editVotes);
+        $(document).on('click', '.edit-votes, .votes', App.showEditVotesField);
         $(document).on('click', '.remove-party', App.removeParty);
         $(document).on('mouseenter', 'a[data-constituency-id]', App.hoverConstituency);
         $(document).on('mouseleave', 'a[data-constituency-id]', App.unhoverConstituency);
@@ -33,6 +33,7 @@ var App = {
         $(document).on('mouseleave', 'path[data-constituency-id]', App.mapTooltipHide);
         $(document).on('mousemove',  'path[data-constituency-id]', App.mapTooltipMove);
         $(document).keyup(App.onKeyUp);
+        $(document).keypress(App.onKeyUp);
         $(document).on('click', '.close-popup', App.dismissModal);
         $(document).on('submit', '.ajax-form', App.submitFormData);
         $(document).on('click', '.add-independent', App.addIndependentCandidate);
@@ -129,12 +130,14 @@ var App = {
 
         // completely remove element from right column
         // and un-select its corresponding element in left column
-        $wrapper.remove();
-        $selected.removeClass('ms-selected');
+        $wrapper.slideUp('fast', function() {
+            $(this).remove();
+            $selected.removeClass('ms-selected');
 
-        App.updateQuickSearchCache();
-        App.updatePartiesCount();
-        App.setPartiesOrd();
+            App.updateQuickSearchCache();
+            App.updatePartiesCount();
+            App.setPartiesOrd();
+        });
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -145,23 +148,45 @@ var App = {
     },
 
     ///////////////////////////////////////////////////////////////////////////
-    editVotes: function(e) {
+    showEditVotesField: function(e) {
         e.preventDefault();
 
         var $this        = $(this),
             $wrapper     = $this.closest('.ms-elem-selection'),
             party        = $wrapper.find('.title').text().trim(),
             $counter     = $wrapper.find('.count'),
-            $input       = $wrapper.find('input[name$="[total_votes]"]'),
-            old_votes    = parseInt($input.val())
-            votes        = prompt('Общ брой гласове в страната и чужбина за:\n' + party, old_votes),
-            votes_number = isNaN(parseInt(votes)) ? 0 : parseInt(votes);
+            $hidden      = $wrapper.find('input[name$="[total_votes]"]'),
+            $input       = $hidden.prev(),
+            old_votes    = isNaN(parseInt($hidden.val())) ? 0 : parseInt($hidden.val());
 
-        // update the values only if the dialog window was *not* dismissed
-        if (votes !== null) {
-            $counter.html(App.prettyNumber(votes_number));
-            $input.val(votes_number);
+        // if the input is not visible, show it
+        if ( ! $input.is(':visible')) {
+            $counter.closest('.votes').hide();
+            $input.animate({width:'show'}, 100).val(old_votes).focus();
         }
+
+        // otherwise submit the votes and hide the field
+        else {
+            App.submitEditVotes($input);
+        }
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    submitEditVotes: function($field) {
+        if ($field.length) {
+            var $hidden  = $field.next(),
+                $counter = $field.prev().find('.count'),
+                votes    = isNaN(parseInt($field.val())) ? 0 : parseInt($field.val());
+
+            $hidden.val(votes);
+            $counter.html(App.prettyNumber(votes));
+            App.hideEditVotesField($field);
+        }
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    hideEditVotesField: function($field) {
+        $field.hide().prev('.votes').show();
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -492,6 +517,8 @@ var App = {
                             $('.' + field).addClass('invalid-field');
                             $('.' + field + '_message').html(message).slideDown();
                         });
+
+                        App.scrollToFirstVisibleError();
                     }
                 },
 
@@ -502,6 +529,19 @@ var App = {
             })
         });
 
+    },
+
+    ///////////////////////////////////////////////////////////////////////////
+    // if there is an error which is NOT in viewport, scroll to it
+    scrollToFirstVisibleError: function() {
+        var $element = $('.invalid-field:visible, .error-message:visible').first();
+
+        if ($element.length && !$element.isInViewport()) {
+            App.animateScrollInProgress = true;
+            $('html, body').animate({ scrollTop: $element.offset().top - 40}, 500, function() {
+                App.animateScrollInProgress = false;
+            });
+        }
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -566,6 +606,16 @@ var App = {
     onKeyUp: function(e) {
         if (e.key === 'Escape') {
             App.dismissModal();
+            App.hideEditVotesField($('.votes-input:focus'));
+        }
+
+        // on enter press, if votes or search input is focused,
+        // don't submit the form
+        else if (e.key === 'Enter' && $('.votes-input, .search-input').is(':focus')) {
+            e.preventDefault();
+
+            App.submitEditVotes($('.votes-input:focus'));
+            return false;
         }
     },
 
@@ -770,3 +820,12 @@ var App = {
 $(document).ready(function() {
     App.init();
 });
+
+$.fn.isInViewport = function() {
+    var elementTop     = $(this).offset().top,
+        elementBottom  = elementTop + $(this).outerHeight(),
+        viewportTop    = $(window).scrollTop(),
+        viewportBottom = viewportTop + $(window).height();
+
+    return elementBottom > viewportTop && elementTop < viewportBottom;
+};

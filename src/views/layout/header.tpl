@@ -6,8 +6,8 @@
     <title>Разпределяне на мандати при парламентарни избори в Република България</title>
     <meta property="og:title" content="Разпределяне на мандати при парламентарни избори в Република България" />
     <meta name="keywods" content="избори, мандати, събрание, гласове, партии, разпределяне" />
-    <link type="text/css" rel="stylesheet" href="{$_root}css/style.css?v=20210410" />
-    <script src="{$_root}js/script.js?v=20210410"></script>
+    <link type="text/css" rel="stylesheet" href="{$_root}css/style.css?v=20210413" />
+    <script src="{$_root}js/script.js?v=20210413"></script>
 </head>
 <body>
     <div class="body-wrapper">
