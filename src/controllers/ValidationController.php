@@ -80,6 +80,9 @@ class ValidationController extends AppController {
                     }
                 }
             }
+
+            // lower the reached step to avoid direct access to definitive results
+            $_SESSION['reached_step'] = min(2, $this->getReachedStep());
         }
 
         // if it's a step, butcher pretty much everything past that step

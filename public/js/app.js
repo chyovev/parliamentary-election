@@ -690,7 +690,6 @@ var App = {
             $('input[name^="parties_votes"]').val(0).attr('value', 0);
             $('.independent-list').html('');
             $('.local-ind-counter').html('0');
-            $('.next-page').fadeOut('normal', function() { $(this).remove(); });
         }
         else {
             $('input[type="text"]:not(.search-input)').val(0);
@@ -700,10 +699,11 @@ var App = {
             $('.threshold_percentage').val(4);
             $('.assembly_type_id').val($('.assembly_type_id option:first').val());
             $('.population_census_id').val($('.population_census_id option:first').val());
-            $('.next-page').fadeOut('normal', function() { $(this).remove(); });
 
             App.updateQuickSearchCache();
         }
+
+        $('.next-page').fadeOut('normal', function() { $(this).remove(); });
 
         if (App.isAjaxInProgress) {
             return;

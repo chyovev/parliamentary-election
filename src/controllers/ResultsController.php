@@ -51,8 +51,9 @@ class ResultsController extends AppController {
             Router::redirect(['controller' => 'home', 'action' => 'index'], 302);
         }
 
-        // if no parties votes could be loaded, redirect to preliminary results
-        elseif ( ! $_SESSION['parties_votes']) {
+        // if no parties votes could be loaded or the reached step is not the last one,
+        // redirect to preliminary results
+        elseif ( ! $_SESSION['parties_votes'] || $this->getReachedStep() < 3) {
             Router::redirect(['controller' => 'results', 'action' => 'preliminary'], 302);
         }
 
