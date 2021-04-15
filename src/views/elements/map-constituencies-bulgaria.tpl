@@ -28,21 +28,18 @@
         {assign var=iterator value=0}
         {foreach $constituencies as $const}
             <div id="constituency-{$const['id']}-data">
-                <h3>Партии/коалиции</h3>
-
+                <div class="votes-wrapper">
                 <div class="parties-list">
+                    <h3>Партии/коалиции</h3>
                 {foreach $passedParties as $party}
                     <div class="row" data-party-id="{$party['party_id']}">
-                        <strong>{$party['party_title']|escape}:</strong>
+                        <strong>{$party['party_abbreviation']|default:$party['party_title']|escape}:</strong>
                         <input type="text" size="5" name="parties_votes[{$party['party_id']}][{$const['id']}]" class="party-field-{$const['id']}-{$party['party_id']}" value="{$partiesVotes[$const['id']][$party['party_id']]|escape|default:0}" data-title="{$party['party_abbreviation']|default:$party['party_title']|escape}" data-party-id="{$party['party_id']}" /> гласа
                     </div>
                 {/foreach}
                 </div>
-
-                <br />
-                <h3>Независими кандидати (<span class="local-ind-counter">{$candidates[$const['id']]|@count|default:0}</span>)</h3>
-                <a href="#" class="add-independent"><img src="{$_root}img/add.svg" title="Добави" />Добавяне на независим кандидат</a>
                 <div class="independent-list">
+                    <h3><a href="#" class="add-independent"><img src="{$_root}img/add.svg" title="Добавяне" /></a> Независими кандидати (<span class="local-ind-counter">{$candidates[$const['id']]|@count|default:0}</span>)</h3>
                     {if isset($candidates[$const['id']])}
 
                         {foreach $candidates[$const['id']] as $item}
@@ -51,6 +48,7 @@
                         {/foreach}
 
                     {/if}
+                </div>
                 </div>
                 <div class="bottom center">
                     <div class="error-message center const_{$const['id']}_message"></div>

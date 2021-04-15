@@ -18,7 +18,7 @@ html, body {
     font-size: 16px;
 }
 body {
-    background-color: @darkblue;
+    background-color: #ececec;
     color: #484848;
     font-family: sans-serif;
 }
@@ -28,6 +28,10 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    box-shadow: 0px 0px 50px 20px fade(black, 10%);
+    border-style: solid;
+    border-color: #bbb;
+    border-width: 0px 1px;
 }
 header {
     background: url(../img/parliament.jpg) no-repeat 50% 40%;
@@ -54,7 +58,7 @@ header {
     }
 }
 main {
-    background-color: @grey;
+    background-color: #f4f4f4;
     padding: 30px 50px 50px 50px;
     flex-grow: 1;
 }
@@ -177,6 +181,7 @@ table.results {
         margin: 20px auto;
     }
     tr {
+        transition: background-color 0.05s;
         &:nth-of-type(even) {
             background-color: #EEEFF0
         }
@@ -329,6 +334,10 @@ svg {
             max-height: calc(~"100% - 160px");
             overflow: auto;
             margin-top: 0px !important;
+            .votes-wrapper {
+                display: table;
+                width: 100%;
+            }
         }
         .bottom {
             position: absolute;
@@ -353,9 +362,13 @@ svg {
     vertical-align: middle;
     cursor: pointer;
 }
+.parties-list {
+    display: table-cell;
+    width: 40%;
+}
 .independent-list {
-    margin-top: 15px;
-    margin-bottom: 50px;
+    display: table-cell;
+    width: 55%;
 }
 .mt-2 {
     margin-top: 20px;
@@ -364,11 +377,14 @@ svg {
     margin-top: 50px;
 }
 header + nav {
-    background-color: #FDFDFD;
-    color: @blue;
+    background-color: @blue;
+    color: white;
     padding: 15px;
     font-size: 21px;
     font-weight: bold;
+    a {
+        color: white;
+    }
 }
 a.reset-form {
     background: url(../img/eraser.png) no-repeat 0% 50%;
@@ -440,8 +456,8 @@ img.help {
     top: 2px;
 }
 #scroll-top {
-    background: url(../img/arrow-up.png) no-repeat 50% 50% fade(white, 45%);
-    border: 1px solid fade(white, 75%);
+    background: url(../img/arrow-up.png) no-repeat 50% 50% fade(black, 20%);
+    border: 1px solid fade(black, 30%);
     position: fixed;
     opacity: 0.8;
     cursor: pointer;
@@ -457,7 +473,7 @@ img.help {
     bottom: 30px;
     right: 50px;
     &:hover {
-        background-color: fade(white, 60%);
+        background-color: fade(black, 15%);
     }
 }
 @keyframes arrow-up {

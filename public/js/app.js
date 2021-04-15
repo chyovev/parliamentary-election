@@ -650,8 +650,8 @@ var App = {
             $counter   = $popupForm.find('.local-ind-counter');
 
         // reduce opacity, slide up and then remove from DOM
-        $row.animate({opacity: 0}, 300, function() {
-            $row.slideUp('normal', function() {
+        $row.animate({opacity: 0}, 250, function() {
+            $row.slideUp('fast', function() {
                 $row.remove();
             });
         });
@@ -675,14 +675,18 @@ var App = {
                 $mapIndicator = $('[data-constituency-id="'+constId+'"]');
 
             $popupForm.find('input[type="text"][name*="votes"]').val(0);
-            $popupForm.find('.independent-list').html('');
+            $popupForm.find('.independent-item').remove();
             $popupForm.find('.local-ind-counter').html('0');
+            $popupForm.find('.error-message').slideUp();
+            $popupForm.find('.invalid-field').removeClass('invalid-field');
 
             $repoForm.find('input[name*="votes"]').val(0).attr('value', 0);
-            $repoForm.find('.independent-list').html('');
+            $repoForm.find('.independent-item').remove();
             $repoForm.find('.local-ind-counter').html('0');
+            $repoForm.find('.error-message').slideUp();
+            $repoForm.find('.invalid-field').removeClass('invalid-field');
 
-            $mapIndicator.removeClass('completed').removeClass('independent');
+            $mapIndicator.removeClass('completed independent invalid-field');
         }
         else if (currentStep == 2) {
             $('.completed').removeClass('completed');

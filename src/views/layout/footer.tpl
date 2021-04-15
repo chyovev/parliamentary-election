@@ -1,5 +1,5 @@
         </main>
-        <footer>Разпределяне на мандати при парламентарни избори в Република България</footer>
+        <footer>Парламентарен изборен симулатор &copy; {date('Y')}</footer>
     </div>
     <div class="none" id="scroll-top" title="Скрол до началото"></div>
 </body>
