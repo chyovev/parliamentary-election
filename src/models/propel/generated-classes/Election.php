@@ -86,7 +86,6 @@ class Election extends BaseElection
             $censusId       = $item->getConstituencyCensusId();
             $votes          = $item->getTotalValidVotes();
 
-
             $constituenciesArray[$censusId]->setVirtualColumn('total_valid_votes', $votes);
         }
     }
@@ -180,7 +179,9 @@ class Election extends BaseElection
         $trustNoOneVotes     = $this->getTrustNoOneVotes();
         $thresholdPercentage = $this->getThresholdPercentage();
 
-        return floor($thresholdPercentage * ($totalValidVotes - $trustNoOneVotes) / 100);
+        $votes = floor($thresholdPercentage * ($totalValidVotes - $trustNoOneVotes) / 100);
+
+        return max(1, $votes);
     }
 
     /**

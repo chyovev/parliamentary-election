@@ -31,11 +31,6 @@ class HomeController extends AppController {
     ///////////////////////////////////////////////////////////////////////////
     private function loadElectionProperties(): void {
         $election       = $this->loadElection();
-        $constituencies = $election
-                        ? $election->getConstituenciesWithPopulation()
-                        : ConstituencyQuery::create()->find();
-
-        $this->setVar('constituencies', $constituencies->toArray(NULL, false, TableMap::TYPE_FIELDNAME));
 
         if ( ! $election) {
             return; 

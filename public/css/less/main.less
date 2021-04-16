@@ -309,6 +309,7 @@ svg {
         box-shadow: 0px 0px 50px 10px fade(black, 10%);
         &:not(.url-popup) {
             width: 60%;
+            min-width: 900px;
             height: 80vh;
             border-radius: 40px;
         }
@@ -504,4 +505,12 @@ img.help {
 input[type="text"].votes-input {
     padding: 1px 2px;
     width: 70px;
+}
+.constituency-votes-wrapper {
+    border-style: dashed;
+    border-color: gray;
+    border-width: 1px 0px;
+    > h3 {
+        margin: 10px 0px;
+    }
 }

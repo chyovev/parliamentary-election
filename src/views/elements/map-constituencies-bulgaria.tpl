@@ -28,6 +28,13 @@
         {assign var=iterator value=0}
         {foreach $constituencies as $const}
             <div id="constituency-{$const['id']}-data">
+                <div class="constituency-votes-wrapper">
+                    <h3>
+                        Общ брой валидни гласове в района: 
+                        <input type="text" size="2" class="constituency_votes-{$const['id']}" name="constituency_votes[{$const['id']}]" value="{$const['total_valid_votes']|default:0}" />
+                        <img src="{$_root}img/info.svg" title="Включително гласовете на партии, които не са преминали границата на представителство" class="help" alt="i" />
+                    </h3>
+                </div>
                 <div class="votes-wrapper">
                 <div class="parties-list">
                     <h3>Партии/коалиции</h3>

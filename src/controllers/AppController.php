@@ -91,7 +91,7 @@ abstract class AppController {
 
     /**
      * Populates an Election object using data from $source
-     * @param  string $type – should be compatible with $dataPools class property
+     * @param  string $type – should be compatible with selectDataSource() class method
      * @return Election
      */
     private function populateElectionFromData(string $type): Election {
@@ -129,7 +129,7 @@ abstract class AppController {
                  ->setVirtualColumn('activity',        $election->calculateElectionActivity())
                  ->setVirtualColumn('threshold_votes', $election->calculateThresholdVotes());
 
-        $this->populateConstituencyValidVotes($election, $source);
+        $this->populateConstituencyValidVotes($election, $type);
         $this->populateElectionPartiesFromData($election, $type);
         $this->populateElectionPartiesVotesFromData($election, $type);
         $this->populateIndependentCandidatesFromData($election, $type);
@@ -140,7 +140,7 @@ abstract class AppController {
     /**
      * Populates a collection of IndependentCandidate objects from $source
      * @param  Election $eleciton – object which independent candidates should be assigned to
-     * @param  string   $type     – should be compatible with $dataPools class property
+     * @param  string   $type     – should be compatible with selectDataSource() class method
      */
     protected function populateIndependentCandidatesFromData(Election $election, string $type): void {
         $source     = $this->selectDataSource($type);
@@ -226,9 +226,11 @@ abstract class AppController {
     /**
      * Populates a collection of ElectionConstituency objects from $source
      * @param  Election $eleciton – object which election constituencies should be assigned to
-     * @param  array    $source   – should be either $_POST or $_SESSION
+     * @param  string   $type     – should be compatible with selectDataSource() class method
      */
-    private function populateConstituencyValidVotes(Election $election, array $source): void {
+    protected function populateConstituencyValidVotes(Election $election, string $type): void {
+        $source = $this->selectDataSource($type);
+
         // election constituencies need to be associated
         // with the constituency census they belong to
         $constituencies = $election->getConstituenciesWithPopulation();
@@ -238,6 +240,11 @@ abstract class AppController {
 
         $data                   = $source['constituency_votes'] ?? [];
         $electionConstituencies = new ObjectCollection();
+
+        // on post requests, merge session stored data + post data
+        if ($type === 'post') {
+            $data += $_SESSION['constituency_votes'];
+        }
 
         foreach ($data as $constituencyId => $votes) {
             $electionConstituency = new ElectionConstituency();
@@ -262,7 +269,7 @@ abstract class AppController {
      * which have surpassed the vote threshold
      *
      * @param  Election $election – object which the parties should be assigned to
-     * @param  string   $type     – should be compatible with $dataPools class property
+     * @param  string   $type     – should be compatible with selectDataSource() class method
      */
     private function populateElectionPartiesFromData(Election $election, string $type): void {
         $source              = $this->selectDataSource($type);
@@ -306,7 +313,7 @@ abstract class AppController {
      * as a $party association
      *
      * @param Election $election – object which holds passed parties
-     * @param string   $type     – should be compatible with $dataPools class property
+     * @param string   $type     – should be compatible with selectDataSource() class method
      */
     protected function populateElectionPartiesVotesFromData(Election $election, string $type): void {
         $source        = $this->selectDataSource($type);

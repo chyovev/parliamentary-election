@@ -1,5 +1,7 @@
 <?php
 
+use Propel\Runtime\Exception\PropelException;
+
 class ValidationController extends AppController {
 
     private $validationErrors = [];
@@ -34,6 +36,7 @@ class ValidationController extends AppController {
             $election = $this->getElectionFromSession();
             $this->populateIndependentCandidatesFromData($election, 'post');
             $this->populateElectionPartiesVotesFromData($election, 'post');
+            $this->populateConstituencyValidVotes($election, 'post');
 
             if ($constituencyId) {
                 $this->deleteIndependentCandidatesIfNecessary($election, $constituencyId);
@@ -81,6 +84,9 @@ class ValidationController extends AppController {
                 }
             }
 
+            // unset total valid votes for the constituency
+            unset($_SESSION['constituency_votes'][$constituency]);
+
             // lower the reached step to avoid direct access to definitive results
             $_SESSION['reached_step'] = min(2, $this->getReachedStep());
         }
@@ -91,6 +97,7 @@ class ValidationController extends AppController {
                 case 2:
                     $_SESSION['independent_candidates'] = [];
                     $_SESSION['parties_votes']          = [];
+                    $_SESSION['constituency_votes']     = [];
                     $_SESSION['reached_step']           = $currentStep;
                     break;
 
@@ -181,7 +188,6 @@ class ValidationController extends AppController {
         $this->validateVotesInformation($election);
         $this->validateThreshold($election);
         $this->validateElectionParties($election, 2);
-        $this->validateElectionConstituencies($election);
 
         if ($this->validationErrors) {
             $this->throwValidationErrors();
@@ -305,53 +311,6 @@ class ValidationController extends AppController {
     }
 
     /**
-     * Validates election's associated constituencies (votes, IDs)
-     * and adds validation errors on failure
-     * 
-     * @param Election $election    – Object from which passed election parties get extracted
-     * @param int      $minParties
-     */
-    private function validateElectionConstituencies(Election $election): void {
-        $constituencies     = $election->getConstituenciesWithPopulation();
-        $constituencyErrors = false;
-        $emptyVotesError    = 0;
-        $votesSum           = 0;
-
-        foreach ($constituencies as $item) {
-            $votes          = $item->getVirtualColumn('total_valid_votes');
-            $population     = $item->getPopulation();
-            $title          = $item->getTitle();
-
-            $fieldId        = sprintf('constituency_votes-%s', $item->getId());
-
-            // require min votes
-            if ($votes <= 0) {
-                $this->addValidationError($fieldId, 'Моля, въведете валиден брой гласове за района.');
-                $emptyVotesError = true;
-            }
-
-            // but don't allow too many votes
-            elseif ($votes > $population) {
-                $this->addValidationError($fieldId, sprintf('Броят гласове надвишава броя на населението за района: %s.', $population));
-                $this->addValidationError('constituencies_fields', sprintf('Броят гласове в МИР %s надвишава броя на населението за района: %s.', $title, $population));
-            }
-
-            $votesSum += $votes;
-        }
-
-        // check if all votes exceed the people entitled to vote
-        if ($votesSum > $election->getActiveSuffrage()) {
-            $this->addValidationError('constituencies_fields', 'Броят гласове във всички МИР надвишава броя души, имащи право на глас.');
-        }
-
-        // if the validation failed due to too few votes,
-        // show a global message
-        if ($emptyVotesError) {
-            $this->addValidationError('constituencies_fields', 'Моля, отстранете нередностите по посочените избирателни райони.');
-        }
-    }
-
-    /**
      * Validates election's associated parties' votes
      * and adds validation errors on failure
      * 
@@ -382,6 +341,7 @@ class ValidationController extends AppController {
     private function validationStep2(Election $election, string $constituencyId = NULL): void {
         $constituencies        = $election->getConstituenciesWithPopulation()->toKeyIndex();
         $groupedByConstituency = $this->groupPartiesVotesAndCandidatesByConstituency($election, $constituencies);
+        $exceededValidVotes    = false; // flag for whether total constituency valid votes exceed the active suffrage
 
         // if there's a constituency id specified,
         // overwrite all groups using only its data
@@ -391,21 +351,49 @@ class ValidationController extends AppController {
         }
 
         // otherwise check all constituencies
+        $constituenciesValidVotesSum = 0;
+
         foreach ($groupedByConstituency as $constId => $group) {
+            $constituencyValidVotes      = $this->getConstituencyValidVotes($constituencies[$constId]);
             $totalConstituencyPopulation = $constituencies[$constId]->getPopulation();
-            $this->validateSingleConstituencyVotes($group, $constId, $totalConstituencyPopulation);
+            $this->validateSingleConstituencyVotes($group, $constId, $constituencyValidVotes, $totalConstituencyPopulation);
+
+            $constituenciesValidVotesSum += $constituencyValidVotes;
         }
 
-        // if there were any validation errors, throw na exception
+        // check if all votes exceed the people entitled to vote
+        if ($constituenciesValidVotesSum > $election->getActiveSuffrage()) {
+            $exceededValidVotes = true;
+            $this->addValidationError('constituencies_fields', 'Броят гласове във всички МИР надвишава броя души, имащи право на глас.');
+        }
+
+        // if there were any validation errors, throw an exception
         if ($this->validationErrors) {
 
             // if all constituencies were checked (no constituency_id parameter was psased),
             // add another validation which prints a global message
-            if ( ! $constituencyId) {
+            if ( ! $constituencyId && ! $exceededValidVotes) {
                 $this->addValidationError('constituencies_fields', 'Моля, отстранете нередностите по посочените избирателни райони.');
             }
 
             $this->throwValidationErrors();
+        }
+    }
+
+    /**
+     * Tries to get the virtual column of a constituency
+     * holding the total valid votes.
+     * If it fails, show 0.
+     *
+     * @param  Constituency
+     * @return int
+     */
+    private function getConstituencyValidVotes(Constituency $constituency) {
+        try {
+            return $constituency->getVirtualColumn('total_valid_votes');
+        }
+        catch (PropelException $e) {
+            return 0;
         }
     }
 
@@ -457,10 +445,11 @@ class ValidationController extends AppController {
      * 
      * @param  array $group          – array with all votes grouped respectively by 'candidates' and 'parties'
      * @param  int   $constituencyId – which constituency's votes are being validated
+     * @param  int   $constValidVotes – how many valid votes there are in the constituency
      * @param  int   $constPopulation – population fo the constituency for the selected population census
      */
-    private function validateSingleConstituencyVotes(array $group = [], int $constituencyId, int $constPopulation): void {
-        $constitutionErrorMessageId = sprintf('const_%s', $constituencyId);
+    private function validateSingleConstituencyVotes(array $group = [], int $constituencyId, int $constValidVotes, int $constPopulation): void {
+        $constituencyErrorMessageId = sprintf('const_%s', $constituencyId);
         $candidatesVotesSum         = 0;
         $partiesVotesSum            = 0;
         $allFieldsErrorIds          = []; // if multiple constituencies fields fail, add the constituency id to this array
@@ -472,13 +461,13 @@ class ValidationController extends AppController {
 
                 // validate candidate name (and break out of cycle on error)
                 if ( ! $item->getName()) {
-                    $this->addValidationError($constitutionErrorMessageId, 'Моля, въведете имената на независимите кандидати.');
+                    $this->addValidationError($constituencyErrorMessageId, 'Моля, въведете имената на независимите кандидати.');
                     return;
                 }
 
                 // validate candidate votes (and break out of cycle on error)
                 if ($item->getVotes() < 0) {
-                    $this->addValidationError($constitutionErrorMessageId, 'Моля, въведете гласове за независимите кандидати.');
+                    $this->addValidationError($constituencyErrorMessageId, 'Моля, въведете гласове за независимите кандидати.');
                     return;
                 }
                 else {
@@ -496,7 +485,7 @@ class ValidationController extends AppController {
                 // validate party votes (and break out of cycle on error)
                 if ($item->getVotes() < 0) {
                     $this->addValidationError($inputId, 'Грешка.');
-                    $this->addValidationError($constitutionErrorMessageId, 'Моля, въведете нормално количество гласове за отбелязаните партии.');
+                    $this->addValidationError($constituencyErrorMessageId, 'Моля, въведете нормално количество гласове за отбелязаните партии.');
                     return;
                 }
                 else {
@@ -507,8 +496,8 @@ class ValidationController extends AppController {
 
         $totalVotes = $candidatesVotesSum + $partiesVotesSum;
 
-        if ($totalVotes > $constPopulation) {
-            $markAllFields = sprintf('Общият брой гласове (%s) надвишава броя на населението в района: %s', $totalVotes, $constPopulation);
+        if ($totalVotes > $constValidVotes) {
+            $markAllFields = sprintf('Общият брой гласове (%s) надвишава броя на валидните гласове в района: %s', $totalVotes, $constValidVotes);
         }
 
         // if all votes sum is equal to 0 OR if there were
@@ -519,9 +508,19 @@ class ValidationController extends AppController {
 
         if ($markAllFields) {
             foreach ($allFieldsErrorIds as $inputId) {
-                $this->addValidationError($inputId, '');
+                $this->addValidationError($inputId, 'Грешка.');
             }
-            $this->addValidationError($constitutionErrorMessageId, $markAllFields);
+            $this->addValidationError($constituencyErrorMessageId, $markAllFields);
+        }
+
+        // validate constituency total valid votes
+        if ($constValidVotes <= 0) {
+            $this->addValidationError('constituency_votes-' . $constituencyId, 'Грешка.');
+            $this->addValidationError($constituencyErrorMessageId, 'Моля, въведете валиден общ брой гласове.');
+        }
+        elseif ($constValidVotes > $constPopulation) {
+            $this->addValidationError('constituency_votes-' . $constituencyId, 'Грешка.');
+            $this->addValidationError($constituencyErrorMessageId, sprintf('Броят валидни гласове (%s) надвишава броя на населението за района: %s.', $constValidVotes, $constPopulation));
         }
     }
 

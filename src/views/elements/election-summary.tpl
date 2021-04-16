@@ -44,7 +44,7 @@
     </div>
 
     <div class="row">
-        <span>Долна граница за представителство: <strong>{$election['threshold_percentage']}%</strong> (<em>{$election['threshold_votes']|number} гласа</em>)</span>
+        <span>Долна граница за представителство: <strong>{$election['threshold_percentage']}%</strong> (<em>{$election['threshold_votes']|number} глас{if $election['threshold_votes'] !== 1}а{/if}</em>)</span>
     </div>
 
 </section>
