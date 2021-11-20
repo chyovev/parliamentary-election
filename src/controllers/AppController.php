@@ -243,7 +243,7 @@ abstract class AppController {
 
         // on post requests, merge session stored data + post data
         if ($type === 'post') {
-            $data += $_SESSION['constituency_votes'];
+            $data += ($_SESSION['constituency_votes'] ?? []);
         }
 
         foreach ($data as $constituencyId => $votes) {
